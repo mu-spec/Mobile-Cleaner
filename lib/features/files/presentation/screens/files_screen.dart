@@ -115,6 +115,21 @@ class _CategoryGrid extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 12),
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            key: const Key('open_large_files'),
+            leading: CircleAvatar(
+              backgroundColor: colors.primaryContainer,
+              child: Icon(Icons.data_usage_rounded, color: colors.primary),
+            ),
+            title: const Text('Large Files'),
+            subtitle: const Text('Find your biggest space users'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push(AppRoutes.largeFiles),
+          ),
+        ),
         const SizedBox(height: 18),
         Text('Categories', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),

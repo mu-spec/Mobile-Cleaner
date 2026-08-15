@@ -68,7 +68,7 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 30),
               QuickToolsSection(
                 onPhotos: () => context.go(AppRoutes.photos),
-                onFiles: () => context.go(AppRoutes.files),
+                onFiles: () => context.push(AppRoutes.largeFiles),
                 onApps: () => context.go(AppRoutes.apps),
                 onPermissions: () => context.push(AppRoutes.permissions),
               ),
