@@ -1,21 +1,84 @@
 import 'package:go_router/go_router.dart';
+import 'package:mobile_cleaner/app/shell/app_shell.dart';
+import 'package:mobile_cleaner/features/apps/presentation/screens/apps_screen.dart';
+import 'package:mobile_cleaner/features/cleaner/presentation/screens/clean_screen.dart';
+import 'package:mobile_cleaner/features/files/presentation/screens/files_screen.dart';
 import 'package:mobile_cleaner/features/home/presentation/screens/home_screen.dart';
+import 'package:mobile_cleaner/features/photos/presentation/screens/photos_screen.dart';
 import 'package:mobile_cleaner/features/settings/presentation/screens/settings_screen.dart';
+import 'package:mobile_cleaner/features/splash/presentation/screens/splash_screen.dart';
 
 abstract final class AppRoutes {
-  static const String home = '/';
+  static const String splash = '/splash';
+  static const String home = '/home';
+  static const String clean = '/clean';
+  static const String photos = '/photos';
+  static const String files = '/files';
+  static const String apps = '/apps';
   static const String settings = '/settings';
 }
 
 final GoRouter appRouter = GoRouter(
+  initialLocation: AppRoutes.splash,
   routes: <RouteBase>[
     GoRoute(
-      path: AppRoutes.home,
-      builder: (context, state) => const HomeScreen(),
+      path: AppRoutes.splash,
+      builder: (context, state) => const SplashScreen(),
     ),
-    GoRoute(
-      path: AppRoutes.settings,
-      builder: (context, state) => const SettingsScreen(),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return AppShell(navigationShell: navigationShell);
+      },
+      branches: <StatefulShellBranch>[
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              path: AppRoutes.home,
+              builder: (context, state) => const HomeScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              path: AppRoutes.clean,
+              builder: (context, state) => const CleanScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              path: AppRoutes.photos,
+              builder: (context, state) => const PhotosScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              path: AppRoutes.files,
+              builder: (context, state) => const FilesScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              path: AppRoutes.apps,
+              builder: (context, state) => const AppsScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: <RouteBase>[
+            GoRoute(
+              path: AppRoutes.settings,
+              builder: (context, state) => const SettingsScreen(),
+            ),
+          ],
+        ),
+      ],
     ),
   ],
 );

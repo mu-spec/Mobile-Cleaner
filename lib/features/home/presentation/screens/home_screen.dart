@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -18,14 +16,6 @@ class HomeScreen extends StatelessWidget {
             Text('Mobile Cleaner'),
           ],
         ),
-        actions: <Widget>[
-          IconButton(
-            tooltip: 'Settings',
-            onPressed: () => context.push(AppRoutes.settings),
-            icon: const Icon(Icons.settings_outlined),
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: SafeArea(
         child: ListView(
