@@ -206,7 +206,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('smart_scan_button')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('screen_Clean')), findsOneWidget);
+    expect(find.byKey(const Key('smart_scan_clean')), findsOneWidget);
 
     appRouter.go(AppRoutes.home);
     await tester.pumpAndSettle();
@@ -243,7 +243,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_clean')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('screen_Clean')), findsOneWidget);
+    expect(find.byKey(const Key('smart_scan_clean')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_photos')));
     await tester.pumpAndSettle();
