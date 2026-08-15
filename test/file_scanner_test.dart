@@ -294,10 +294,18 @@ void main() {
       expect(find.byKey(const Key('files_overview')), findsOneWidget);
       expect(find.text('3 files · 130.0 MB'), findsOneWidget);
 
-      // Every category has a card, including the ones with no files.
+      // Every category has a card, including the ones with no files. The
+      // lower grid rows sit below the fold, so scroll each one in first.
       for (final FileCategory category in FileCategory.scannable) {
+        final Finder card = find.byKey(Key('category_card_${category.key}'));
+        await tester.scrollUntilVisible(card, 200, scrollable: find
+            .descendant(
+              of: find.byKey(const Key('files_overview')),
+              matching: find.byType(Scrollable),
+            )
+            .first);
         expect(
-          find.byKey(Key('category_card_${category.key}')),
+          card,
           findsOneWidget,
           reason: '${category.label} card should always be shown',
         );
@@ -334,7 +342,15 @@ void main() {
       await tester.pumpWidget(wrap(const FilesScreen(), result));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('category_card_audio')));
+      final Finder audioCard = find.byKey(const Key('category_card_audio'));
+      await tester.scrollUntilVisible(audioCard, 200, scrollable: find
+            .descendant(
+              of: find.byKey(const Key('files_overview')),
+              matching: find.byType(Scrollable),
+            )
+            .first);
+      await tester.pumpAndSettle();
+      await tester.tap(audioCard);
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('category_list_audio')), findsOneWidget);

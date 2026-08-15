@@ -150,6 +150,21 @@ class _CategoryGrid extends StatelessWidget {
             onTap: () => context.push(AppRoutes.downloadsCleaner),
           ),
         ),
+        const SizedBox(height: 10),
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            key: const Key('open_apk_cleaner'),
+            leading: CircleAvatar(
+              backgroundColor: colors.primaryContainer,
+              child: Icon(Icons.android_rounded, color: colors.primary),
+            ),
+            title: const Text('APK Cleaner'),
+            subtitle: const Text('Remove leftover installers'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push(AppRoutes.apkCleaner),
+          ),
+        ),
         const SizedBox(height: 18),
         Text('Categories', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),

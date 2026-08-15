@@ -134,6 +134,30 @@ Future<void> _pumpFiles(WidgetTester tester, FileScanResult result) async {
   await tester.pumpAndSettle();
 }
 
+/// Scrolls a category card into view, then taps it.
+///
+/// The Files tab now carries three cleaner shortcuts above the grid, so the
+/// lower grid rows sit below the fold on a phone-sized surface.
+Future<void> _tapCategoryCard(
+  WidgetTester tester,
+  FileCategory category,
+) async {
+  final Finder card = find.byKey(Key('category_card_${category.key}'));
+  await tester.scrollUntilVisible(
+    card,
+    200,
+    scrollable: find
+        .descendant(
+          of: find.byKey(const Key('files_overview')),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(card);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('Phase 7 categories', () {
     test('exposes exactly the six required categories in order', () {
@@ -285,11 +309,18 @@ void main() {
       await _pumpFiles(tester, FileScanResult.fromFiles(_libraryFixture()));
 
       for (final FileCategory category in FileCategory.scannable) {
-        expect(
-          find.byKey(Key('category_card_${category.key}')),
-          findsOneWidget,
-          reason: '${category.label} needs a card',
+        final Finder card = find.byKey(Key('category_card_${category.key}'));
+        await tester.scrollUntilVisible(
+          card,
+          200,
+          scrollable: find
+              .descendant(
+                of: find.byKey(const Key('files_overview')),
+                matching: find.byType(Scrollable),
+              )
+              .first,
         );
+        expect(card, findsOneWidget, reason: '${category.label} needs a card');
       }
       expect(find.text('APKs'), findsOneWidget);
     });
@@ -302,8 +333,7 @@ void main() {
       ) async {
         await _pumpFiles(tester, FileScanResult.fromFiles(_libraryFixture()));
 
-        await tester.tap(find.byKey(Key('category_card_${category.key}')));
-        await tester.pumpAndSettle();
+        await _tapCategoryCard(tester, category);
 
         // The right list opened...
         expect(
@@ -346,8 +376,7 @@ void main() {
       ]);
       await _pumpFiles(tester, result);
 
-      await tester.tap(find.byKey(const Key('category_card_apks')));
-      await tester.pumpAndSettle();
+      await _tapCategoryCard(tester, FileCategory.apks);
 
       expect(find.byKey(const Key('category_empty_apks')), findsOneWidget);
       expect(find.text('No APK files found'), findsOneWidget);
@@ -359,8 +388,7 @@ void main() {
     ) async {
       await _pumpFiles(tester, FileScanResult.fromFiles(_libraryFixture()));
 
-      await tester.tap(find.byKey(const Key('category_card_videos')));
-      await tester.pumpAndSettle();
+      await _tapCategoryCard(tester, FileCategory.videos);
 
       expect(find.byKey(const Key('category_header_videos')), findsOneWidget);
       expect(find.text('1 file · 210.0 MB'), findsOneWidget);
@@ -387,8 +415,7 @@ void main() {
       ]);
       await _pumpFiles(tester, result);
 
-      await tester.tap(find.byKey(const Key('category_card_images')));
-      await tester.pumpAndSettle();
+      await _tapCategoryCard(tester, FileCategory.images);
 
       double yOf(String name) => tester.getTopLeft(find.text(name)).dy;
       expect(yOf('big-old.jpg'), lessThan(yOf('small-new.jpg')));
@@ -421,8 +448,7 @@ void main() {
       ]);
       await _pumpFiles(tester, result);
 
-      await tester.tap(find.byKey(const Key('category_card_images')));
-      await tester.pumpAndSettle();
+      await _tapCategoryCard(tester, FileCategory.images);
       expect(find.text('holiday.jpg'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('category_search_button')));
