@@ -5,6 +5,8 @@ import 'package:mobile_cleaner/app/app.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
 import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
+import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
+import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -97,6 +99,39 @@ void main() {
     expect(find.text('Start safe scan'), findsOneWidget);
   });
 
+  testWidgets('home displays real storage values from the repository', (
+    WidgetTester tester,
+  ) async {
+    const int gib = 1024 * 1024 * 1024;
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'onboarding_completed': true,
+      'permission_education_seen': true,
+    });
+    appRouter.go(AppRoutes.splash);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          storageRepositoryProvider.overrideWithValue(
+            const _FakeStorageRepository(
+              StorageInfo(totalBytes: 128 * gib, freeBytes: 46 * gib),
+            ),
+          ),
+        ],
+        child: const MobileCleanerApp(),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 1000));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
+    expect(find.text('64%'), findsOneWidget);
+    expect(find.text('128.0 GB'), findsOneWidget);
+    expect(find.text('82.0 GB'), findsOneWidget);
+    expect(find.text('46.0 GB'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('every bottom tab opens without errors', (
     WidgetTester tester,
   ) async {
@@ -133,6 +168,15 @@ void main() {
     expect(find.text('App version'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+}
+
+class _FakeStorageRepository implements StorageRepository {
+  const _FakeStorageRepository(this.info);
+
+  final StorageInfo info;
+
+  @override
+  Future<StorageInfo> getStorageInfo() async => info;
 }
 
 class _FakePermissionGateway implements AppPermissionGateway {
