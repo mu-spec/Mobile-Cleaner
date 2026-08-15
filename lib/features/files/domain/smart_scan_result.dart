@@ -5,9 +5,9 @@ import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 
 /// The three checks Smart Scan runs.
 enum SmartScanCategory {
-  largeFiles('Large files', 'Files taking the most space'),
-  oldDownloads('Old downloads', 'Downloads you have not touched in a while'),
-  apkInstallers('APK installers', 'Setup files left after installing');
+  largeFiles('Large Files', 'Files taking the most space'),
+  oldDownloads('Old Downloads', 'Downloads you have not touched in a while'),
+  apkInstallers('APK Installers', 'Setup files left after installing');
 
   const SmartScanCategory(this.label, this.description);
 

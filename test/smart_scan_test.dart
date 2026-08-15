@@ -148,7 +148,7 @@ void main() {
       ]);
       expect(
         SmartScanCategory.values.map((SmartScanCategory c) => c.label),
-        <String>['Large files', 'Old downloads', 'APK installers'],
+        <String>['Large Files', 'Old Downloads', 'APK Installers'],
       );
     });
   });
@@ -255,6 +255,62 @@ void main() {
   });
 
   group('Smart Scan screen', () {
+    testWidgets('shows the Potentially Recoverable heading', (
+      WidgetTester tester,
+    ) async {
+      await _pumpSmartScan(tester);
+
+      expect(
+        tester.widget<Text>(find.byKey(const Key('smart_scan_heading'))).data,
+        'Potentially Recoverable',
+      );
+    });
+
+    testWidgets('lists each check with its label and size', (
+      WidgetTester tester,
+    ) async {
+      await _pumpSmartScan(tester);
+
+      // The three spec rows: label on the left, size on the right.
+      const Map<String, String> expected = <String, String>{
+        'largeFiles': 'Large Files',
+        'oldDownloads': 'Old Downloads',
+        'apkInstallers': 'APK Installers',
+      };
+      for (final MapEntry<String, String> entry in expected.entries) {
+        expect(find.text(entry.value), findsOneWidget);
+        expect(
+          find.byKey(Key('smart_group_size_${entry.key}')),
+          findsOneWidget,
+          reason: '${entry.value} needs a size',
+        );
+      }
+    });
+
+    testWidgets('offers Review Cleanup, opening the biggest check', (
+      WidgetTester tester,
+    ) async {
+      await _pumpSmartScan(tester);
+
+      final Finder button = find.byKey(const Key('review_cleanup_button'));
+      expect(button, findsOneWidget);
+      expect(find.text('Review Cleanup'), findsOneWidget);
+      expect(tester.widget<FilledButton>(button).onPressed, isNotNull);
+    });
+
+    testWidgets('Review Cleanup is absent from the clean state', (
+      WidgetTester tester,
+    ) async {
+      await _pumpSmartScan(
+        tester,
+        files: <ScannedFile>[
+          _file(id: '1', name: 'recent.txt', sizeBytes: _mib, daysOld: 1),
+        ],
+      );
+
+      expect(find.byKey(const Key('review_cleanup_button')), findsNothing);
+    });
+
     testWidgets('shows a card for each of the three checks', (
       WidgetTester tester,
     ) async {
@@ -350,26 +406,24 @@ void main() {
         ],
       );
 
-      final ListTile apkTile = tester.widget<ListTile>(
+      final InkWell apkRow = tester.widget<InkWell>(
         find.byKey(const Key('smart_group_apkInstallers')),
       );
-      expect(apkTile.onTap, isNull);
+      expect(apkRow.onTap, isNull);
       expect(
         tester
-            .widget<Text>(
-              find.byKey(const Key('smart_group_summary_apkInstallers')),
-            )
+            .widget<Text>(find.byKey(const Key('smart_group_size_apkInstallers')))
             .data,
-        'Nothing found',
+        'None',
       );
 
-      final ListTile largeTile = tester.widget<ListTile>(
+      final InkWell largeRow = tester.widget<InkWell>(
         find.byKey(const Key('smart_group_largeFiles')),
       );
-      expect(largeTile.onTap, isNotNull);
+      expect(largeRow.onTap, isNotNull);
     });
 
-    testWidgets('group summaries show their own counts and sizes', (
+    testWidgets('each check shows its own recoverable size', (
       WidgetTester tester,
     ) async {
       await _pumpSmartScan(tester);
@@ -377,18 +431,25 @@ void main() {
       // Large files: movie.mp4 800 MB + old-game.apk 500 MB.
       expect(
         tester
-            .widget<Text>(find.byKey(const Key('smart_group_summary_largeFiles')))
+            .widget<Text>(find.byKey(const Key('smart_group_size_largeFiles')))
             .data,
-        '2 files · 1.3 GB',
+        '1.3 GB',
+      );
+      // Old downloads: invoice.pdf 2 MB + old-game.apk 500 MB.
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('smart_group_size_oldDownloads')))
+            .data,
+        '502.0 MB',
       );
       // APKs: tool.apk 20 MB + old-game.apk 500 MB.
       expect(
         tester
             .widget<Text>(
-              find.byKey(const Key('smart_group_summary_apkInstallers')),
+              find.byKey(const Key('smart_group_size_apkInstallers')),
             )
             .data,
-        '2 files · 520.0 MB',
+        '520.0 MB',
       );
     });
   });

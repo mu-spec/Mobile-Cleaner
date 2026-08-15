@@ -50,13 +50,27 @@ against the group rows is not left confused by arithmetic that seems wrong.
 
 ### Screen
 
-- A headline card: recoverable total, distinct file count, and the overlap note
-  when relevant.
-- One card per check with its own count and size. **Empty checks stay visible**
-  but are not tappable — there is nothing to review, and hiding them would make
-  the scan look incomplete.
+Laid out as the phase spec describes:
+
+```
+Potentially Recoverable
+1.3 GB
+across 4 files
+
+Large Files        1.3 GB
+Old Downloads    502.0 MB
+APK Installers   520.0 MB
+
+[ Review Cleanup ]
+```
+
+- A **Potentially Recoverable** panel: the headline total, the distinct file
+  count, then one row per check showing its label and size.
+- **Review Cleanup** opens whichever check holds the most space.
+- **Empty checks stay visible**, showing `None`, but are not tappable — there
+  is nothing to review, and hiding them would make the scan look incomplete.
 - The five biggest items across all checks, using the Phase 8 tile.
-- Tapping a check opens its existing tool.
+- Tapping a row opens that check's existing tool.
 - Pull-to-refresh and a rescan action invalidate all three underlying scans.
 
 ### Deletion stays where it is
@@ -77,10 +91,12 @@ overlap is reported when checks find different files; unique files are ordered
 largest first; non-empty groups rank by size; an all-clear device yields an
 empty result; a missing group still resolves.
 
-**Screen** — a card per check; the combined total (1.3 GB across 4 files); the
+**Screen** — the "Potentially Recoverable" heading; each check listed with its
+label and size; **Review Cleanup** present and enabled, and absent from the
+clean state; a row per check; the combined total (1.3 GB across 4 files); the
 overlap note; **exactly three scans**, no extra pass for the combined view; the
-biggest items listed once; the clean state; an empty check is shown but not
-tappable; group summaries show their own counts and sizes.
+biggest items listed once; the clean state; an empty check is shown as `None`
+and is not tappable.
 
 Two assertions in `widget_test.dart` were updated, since the Clean tab now
 renders Smart Scan rather than the placeholder.
@@ -88,11 +104,13 @@ renders Smart Scan rather than the placeholder.
 ## Device acceptance test
 
 1. Open the **Clean** tab, or tap Smart Scan on Home.
-2. Confirm all three checks appear with plausible counts, and that the headline
-   total is at least as large as the biggest single group.
+2. Confirm the **Potentially Recoverable** panel lists Large Files, Old
+   Downloads, and APK Installers with plausible sizes, and that the headline
+   total is at least as large as the biggest single row.
 3. If a file matches several checks — an old, large `.apk` is the easy case —
    confirm it appears in each relevant group and that the overlap note shows.
-4. Tap each check and confirm it opens the matching tool with the same figures.
+4. Tap each row and confirm it opens the matching tool with the same figures.
+   Tap **Review Cleanup** and confirm it opens the largest check.
 5. Delete something from a tool, return to Smart Scan, and pull to refresh; the
    totals should drop.
 6. On a tidy device, confirm the "Nothing to clean" state.

@@ -72,37 +72,36 @@ class _ScanFindings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    final List<SmartScanGroup> ranked = result.nonEmptyGroups;
+    final SmartScanGroup? biggest = ranked.isEmpty ? null : ranked.first;
 
     return ListView(
       key: const Key('smart_scan_findings'),
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       children: <Widget>[
-        _TotalCard(result: result),
-        const SizedBox(height: 18),
-        Text(
-          'What we found',
-          style: Theme.of(context).textTheme.titleLarge,
+        _RecoverableCard(
+          result: result,
+          onOpenTool: (SmartScanCategory category) =>
+              _openTool(context, category),
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Open a tool to review and remove.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-        ),
-        const SizedBox(height: 12),
-        for (final SmartScanCategory category in SmartScanCategory.values)
-          _GroupCard(
-            group: result.groupFor(category),
-            onOpen: () => _openTool(context, category),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            key: const Key('review_cleanup_button'),
+            // Opens whichever check holds the most space. `_ScanFindings` is
+            // only built for a non-empty result, but read defensively so a
+            // future caller cannot trip over an empty list.
+            onPressed: biggest == null
+                ? null
+                : () => _openTool(context, biggest.category),
+            icon: const Icon(Icons.fact_check_outlined, size: 18),
+            label: const Text('Review Cleanup'),
           ),
-        const SizedBox(height: 18),
-        Text(
-          'Biggest items',
-          style: Theme.of(context).textTheme.titleLarge,
         ),
+        const SizedBox(height: 24),
+        Text('Biggest items', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 6),
         for (final ScannedFile file in result.uniqueFiles.take(5))
           ScannedFileTile(file: file),
@@ -111,11 +110,15 @@ class _ScanFindings extends StatelessWidget {
   }
 }
 
-/// Headline: how much could be recovered in total.
-class _TotalCard extends StatelessWidget {
-  const _TotalCard({required this.result});
+/// The "Potentially Recoverable" panel.
+///
+/// One row per check, each showing its label and size, exactly as the phase
+/// spec lays it out.
+class _RecoverableCard extends StatelessWidget {
+  const _RecoverableCard({required this.result, required this.onOpenTool});
 
   final SmartScanResult result;
+  final ValueChanged<SmartScanCategory> onOpenTool;
 
   @override
   Widget build(BuildContext context) {
@@ -124,17 +127,18 @@ class _TotalCard extends StatelessWidget {
     return Card(
       key: const Key('smart_scan_total_card'),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'Could be recovered',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+              'Potentially Recoverable',
+              key: const Key('smart_scan_heading'),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               ByteFormatter.format(result.totalBytes),
               key: const Key('smart_scan_total_bytes'),
@@ -143,7 +147,7 @@ class _TotalCard extends StatelessWidget {
                 color: colors.primary,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               'across ${result.totalFiles} '
               '${result.totalFiles == 1 ? 'file' : 'files'}',
@@ -152,16 +156,24 @@ class _TotalCard extends StatelessWidget {
                 context,
               ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
             ),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            for (final SmartScanCategory category in SmartScanCategory.values)
+              _RecoverableRow(
+                group: result.groupFor(category),
+                onOpen: () => onOpenTool(category),
+              ),
             if (result.hasOverlap) ...<Widget>[
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
               Text(
                 'Some files match more than one check and are counted once '
-                'here.',
+                'in the total.',
                 key: const Key('smart_scan_overlap_note'),
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
               ),
+              const SizedBox(height: 8),
             ],
           ],
         ),
@@ -170,8 +182,9 @@ class _TotalCard extends StatelessWidget {
   }
 }
 
-class _GroupCard extends StatelessWidget {
-  const _GroupCard({required this.group, required this.onOpen});
+/// One line: `Large Files       4.2 GB`.
+class _RecoverableRow extends StatelessWidget {
+  const _RecoverableRow({required this.group, required this.onOpen});
 
   final SmartScanGroup group;
   final VoidCallback onOpen;
@@ -187,38 +200,45 @@ class _GroupCard extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final bool empty = group.isEmpty;
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      clipBehavior: Clip.antiAlias,
-      child: ListTile(
-        key: Key('smart_group_${group.category.name}'),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: empty
-              ? colors.surfaceContainerHighest
-              : colors.primaryContainer,
-          child: Icon(
-            _icon,
-            color: empty ? colors.onSurfaceVariant : colors.primary,
-          ),
+    return InkWell(
+      key: Key('smart_group_${group.category.name}'),
+      // An empty check has nothing to review.
+      onTap: empty ? null : onOpen,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          children: <Widget>[
+            Icon(
+              _icon,
+              size: 20,
+              color: empty ? colors.onSurfaceVariant : colors.primary,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                group.category.label,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: empty ? colors.onSurfaceVariant : colors.onSurface,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              empty ? 'None' : ByteFormatter.format(group.totalBytes),
+              key: Key('smart_group_size_${group.category.name}'),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: empty ? colors.onSurfaceVariant : colors.onSurface,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: empty ? Colors.transparent : colors.onSurfaceVariant,
+            ),
+          ],
         ),
-        title: Text(
-          group.category.label,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-        subtitle: Text(
-          empty
-              ? 'Nothing found'
-              : '${group.fileCount} '
-                    '${group.fileCount == 1 ? 'file' : 'files'} · '
-                    '${ByteFormatter.format(group.totalBytes)}',
-          key: Key('smart_group_summary_${group.category.name}'),
-        ),
-        trailing: empty
-            ? null
-            : const Icon(Icons.chevron_right_rounded),
-        // An empty check has nothing to review, so it is not tappable.
-        onTap: empty ? null : onOpen,
       ),
     );
   }
