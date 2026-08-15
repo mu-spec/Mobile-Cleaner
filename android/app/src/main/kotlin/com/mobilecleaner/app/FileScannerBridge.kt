@@ -113,21 +113,21 @@ class FileScannerBridge(
                         limit,
                         minSizeBytes,
                         sortOrder,
-                    ) { name, mime -> isDocumentLike(name, mime) }
+                    ) { name, mime, _ -> isDocumentLike(name, mime) }
                     CATEGORY_DOWNLOADS -> mergeNonMedia(
                         CATEGORY_DOWNLOADS,
                         queryDownloads(limit, minSizeBytes, sortOrder),
                         limit,
                         minSizeBytes,
                         sortOrder,
-                    ) { _, _ -> true }
+                    ) { _, _, documentId -> isInDownloads(documentId) }
                     CATEGORY_APKS -> mergeNonMedia(
                         CATEGORY_APKS,
                         queryApks(limit, minSizeBytes, sortOrder),
                         limit,
                         minSizeBytes,
                         sortOrder,
-                    ) { name, mime -> isApkLike(name, mime) }
+                    ) { name, mime, _ -> isApkLike(name, mime) }
                     else -> emptyList()
                 }
                 if (rows.size >= limit) {
@@ -314,6 +314,12 @@ class FileScannerBridge(
             }
         }
 
+        // Direct file access only works before scoped storage. On Android 10+
+        // this walk reads nothing, and SAF is the supported route instead.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return emptyList()
+        }
+
         // Legacy fallback: walk the public Downloads directory directly.
         @Suppress("DEPRECATION")
         val downloadsDir =
@@ -471,7 +477,7 @@ class FileScannerBridge(
         limit: Int,
         minSizeBytes: Long,
         sortOrder: String,
-        accept: (name: String, mimeType: String?) -> Boolean,
+        accept: (name: String, mimeType: String?, documentId: String) -> Boolean,
     ): List<Map<String, Any?>> {
         val trees = grantedTreeUris()
         if (trees.isEmpty()) {
@@ -479,7 +485,10 @@ class FileScannerBridge(
         }
 
         val safRows = try {
-            safScanner.scan(trees, minSizeBytes, limit) { name, mime -> accept(name, mime) }
+            safScanner
+                .scan(trees, minSizeBytes, limit) { name, mime, documentId ->
+                    accept(name, mime, documentId)
+                }
                 .map { row -> row + ("category" to category) }
         } catch (error: Exception) {
             // A broken grant must not fail the whole scan.
@@ -531,26 +540,36 @@ class FileScannerBridge(
         return extension.isNotEmpty() && DOCUMENT_EXTENSIONS.contains(extension)
     }
 
+    /**
+     * True when a SAF document id points inside a Download folder.
+     *
+     * Document ids look like `primary:Download/sub/file.zip`, so the folder
+     * segment is compared rather than the whole string, which stops a name
+     * such as `MyDownloads` from matching.
+     */
+    private fun isInDownloads(documentId: String): Boolean {
+        val path = documentId.substringAfter(':', "")
+        if (path.isEmpty()) return false
+        return path.split('/').dropLast(1).any { segment ->
+            segment.equals("Download", ignoreCase = true) ||
+                segment.equals("Downloads", ignoreCase = true)
+        }
+    }
+
     private fun isApkLike(name: String, mimeType: String?): Boolean {
         if (mimeType?.lowercase() == APK_MIME) return true
         return name.lowercase().substringAfterLast('.', "") == APK_EXTENSION
     }
 
+    /** Row wrapper over [isApkLike] so both sources share one rule. */
     private fun isApk(row: Map<String, Any?>): Boolean {
-        if ((row["mimeType"] as? String)?.lowercase() == APK_MIME) {
-            return true
-        }
-        val name = (row["name"] as? String)?.lowercase() ?: return false
-        return name.substringAfterLast('.', "") == APK_EXTENSION
+        val name = row["name"] as? String ?: return false
+        return isApkLike(name, row["mimeType"] as? String)
     }
 
+    /** Row wrapper over [isDocumentLike] so both sources share one rule. */
     private fun isDocument(row: Map<String, Any?>): Boolean {
-        val mime = (row["mimeType"] as? String)?.lowercase()
-        if (mime != null && DOCUMENT_MIME_PREFIXES.any { mime.startsWith(it) }) {
-            return true
-        }
-        val name = (row["name"] as? String)?.lowercase() ?: return false
-        val extension = name.substringAfterLast('.', "")
-        return extension.isNotEmpty() && DOCUMENT_EXTENSIONS.contains(extension)
+        val name = row["name"] as? String ?: return false
+        return isDocumentLike(name, row["mimeType"] as? String)
     }
 }

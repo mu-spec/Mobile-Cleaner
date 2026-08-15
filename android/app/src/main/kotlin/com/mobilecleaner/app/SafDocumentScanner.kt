@@ -30,6 +30,10 @@ class SafDocumentScanner(private val context: Context) {
      * Walks every granted tree breadth-first and returns raw file rows.
      *
      * [accept] decides which files are kept, so the caller owns categorisation.
+     * It receives the document id as well as the name and MIME type, so a
+     * caller can filter on location — the Downloads category needs this to
+     * avoid claiming files from an unrelated granted folder.
+     *
      * Bounded by [MAX_DIRECTORIES] and [MAX_VISITED_DOCUMENTS] so a pathological
      * folder cannot hang the scan.
      */
@@ -37,7 +41,7 @@ class SafDocumentScanner(private val context: Context) {
         treeUris: List<Uri>,
         minSizeBytes: Long,
         limit: Int,
-        accept: (name: String, mimeType: String?) -> Boolean,
+        accept: (name: String, mimeType: String?, documentId: String) -> Boolean,
     ): List<Map<String, Any?>> {
         val results = mutableListOf<Map<String, Any?>>()
         val seenDocumentIds = mutableSetOf<String>()
@@ -117,7 +121,7 @@ class SafDocumentScanner(private val context: Context) {
                         } else {
                             ""
                         }
-                        if (name.isEmpty() || !accept(name, mimeType)) continue
+                        if (name.isEmpty() || !accept(name, mimeType, documentId)) continue
 
                         val size = if (sizeColumn >= 0 && !rows.isNull(sizeColumn)) {
                             rows.getLong(sizeColumn)
