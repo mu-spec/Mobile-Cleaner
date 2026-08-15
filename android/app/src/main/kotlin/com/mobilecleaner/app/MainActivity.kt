@@ -11,6 +11,8 @@ class MainActivity : FlutterActivity() {
         const val STORAGE_CHANNEL = "com.mobilecleaner.app/storage"
     }
 
+    private var thumbnailLoader: ThumbnailLoader? = null
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
@@ -46,5 +48,18 @@ class MainActivity : FlutterActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             FileScannerBridge.CHANNEL,
         ).setMethodCallHandler(FileScannerBridge(applicationContext))
+
+        val loader = ThumbnailLoader(applicationContext)
+        thumbnailLoader = loader
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            ThumbnailLoader.CHANNEL,
+        ).setMethodCallHandler(loader)
+    }
+
+    override fun onDestroy() {
+        thumbnailLoader?.dispose()
+        thumbnailLoader = null
+        super.onDestroy()
     }
 }

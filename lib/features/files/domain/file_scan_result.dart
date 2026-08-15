@@ -133,14 +133,31 @@ class FileScanResult {
   }
 
   /// Comparator matching a [FileListSort] choice.
+  ///
+  /// Every comparator falls back to the file name so that equal sizes or
+  /// identical timestamps still produce a stable, predictable order.
   static Comparator<ScannedFile> compareFiles(FileListSort sort) {
+    int byName(ScannedFile a, ScannedFile b) =>
+        a.name.toLowerCase().compareTo(b.name.toLowerCase());
+
     return switch (sort) {
-      FileListSort.largest => (ScannedFile a, ScannedFile b) =>
-        b.sizeBytes.compareTo(a.sizeBytes),
-      FileListSort.newest => (ScannedFile a, ScannedFile b) =>
-        b.dateModified.compareTo(a.dateModified),
-      FileListSort.name => (ScannedFile a, ScannedFile b) =>
-        a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      FileListSort.largest => (ScannedFile a, ScannedFile b) {
+        final int result = b.sizeBytes.compareTo(a.sizeBytes);
+        return result != 0 ? result : byName(a, b);
+      },
+      FileListSort.smallest => (ScannedFile a, ScannedFile b) {
+        final int result = a.sizeBytes.compareTo(b.sizeBytes);
+        return result != 0 ? result : byName(a, b);
+      },
+      FileListSort.newest => (ScannedFile a, ScannedFile b) {
+        final int result = b.dateModified.compareTo(a.dateModified);
+        return result != 0 ? result : byName(a, b);
+      },
+      FileListSort.oldest => (ScannedFile a, ScannedFile b) {
+        final int result = a.dateModified.compareTo(b.dateModified);
+        return result != 0 ? result : byName(a, b);
+      },
+      FileListSort.name => byName,
     };
   }
 

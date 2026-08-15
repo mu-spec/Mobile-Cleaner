@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
@@ -94,6 +97,15 @@ const Map<FileCategory, String> _expectedFileFor = <FileCategory, String>{
   FileCategory.apks: 'app-release.apk',
 };
 
+/// Thumbnails come from a platform channel that does not exist in tests.
+/// Returning null everywhere makes tiles fall back to their category icon.
+class _NoThumbnails implements ThumbnailRepository {
+  const _NoThumbnails();
+
+  @override
+  Future<Uint8List?> load(ScannedFile file, {int size = 128}) async => null;
+}
+
 class _StubRepository implements FileScannerRepository {
   const _StubRepository(this.result);
 
@@ -109,6 +121,7 @@ Widget _wrap(FileScanResult result) {
   return ProviderScope(
     overrides: [
       fileScannerRepositoryProvider.overrideWithValue(_StubRepository(result)),
+      thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
     ],
     child: const MaterialApp(home: FilesScreen()),
   );

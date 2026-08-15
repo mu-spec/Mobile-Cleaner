@@ -58,12 +58,18 @@ enum FileCategory {
 
 /// How a category list is ordered in the UI.
 enum FileListSort {
-  largest('Largest first'),
-  newest('Newest first'),
-  name('Name (A-Z)');
+  largest('Largest', 'Largest first'),
+  smallest('Smallest', 'Smallest first'),
+  newest('Newest', 'Newest first'),
+  oldest('Oldest', 'Oldest first'),
+  name('Name', 'Name (A-Z)');
 
-  const FileListSort(this.label);
+  const FileListSort(this.shortLabel, this.label);
 
+  /// Compact label used in chips and menu rows.
+  final String shortLabel;
+
+  /// Descriptive label shown in the list header.
   final String label;
 }
 

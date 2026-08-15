@@ -45,6 +45,15 @@ class ScannedFile {
   /// Bucket-relative path, e.g. `DCIM/Camera/`.
   final String? relativePath;
 
+  /// True when the platform can render a visual preview of this file.
+  ///
+  /// Only images and videos get thumbnails; everything else uses an icon.
+  bool get supportsThumbnail =>
+      category == FileCategory.images ||
+      category == FileCategory.videos ||
+      (mimeType?.startsWith('image/') ?? false) ||
+      (mimeType?.startsWith('video/') ?? false);
+
   /// True when the file is an Android installer package.
   bool get isApk =>
       extension == 'apk' ||

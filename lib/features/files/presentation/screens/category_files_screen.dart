@@ -104,7 +104,23 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
                       PopupMenuItem<FileListSort>(
                         key: Key('sort_option_${option.name}'),
                         value: option,
-                        child: Text(option.label),
+                        child: Row(
+                          children: <Widget>[
+                            Icon(
+                              option == _sort
+                                  ? Icons.radio_button_checked_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              size: 18,
+                              color: option == _sort
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(option.label),
+                          ],
+                        ),
                       ),
                   ],
             ),
@@ -147,6 +163,11 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
                     totalBytes: totalBytes,
                     sort: _sort,
                   ),
+                  _SortBar(
+                    selected: _sort,
+                    onSelected: (FileListSort value) =>
+                        setState(() => _sort = value),
+                  ),
                   Expanded(
                     child: ListView.separated(
                       key: Key('category_list_${widget.category.key}'),
@@ -165,6 +186,39 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+/// Horizontal row of sort chips, so all five orders are one tap away.
+class _SortBar extends StatelessWidget {
+  const _SortBar({required this.selected, required this.onSelected});
+
+  final FileListSort selected;
+  final ValueChanged<FileListSort> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        key: const Key('sort_bar'),
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        children: <Widget>[
+          for (final FileListSort option in FileListSort.values)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                key: Key('sort_chip_${option.name}'),
+                label: Text(option.shortLabel),
+                selected: option == selected,
+                onSelected: (_) => onSelected(option),
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+        ],
       ),
     );
   }

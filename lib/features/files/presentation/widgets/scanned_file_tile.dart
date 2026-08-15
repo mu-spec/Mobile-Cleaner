@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
+import 'package:mobile_cleaner/core/utils/date_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/file_thumbnail.dart';
 
+/// A single row in a file list: thumbnail/icon, name, size, and date.
 class ScannedFileTile extends StatelessWidget {
   const ScannedFileTile({required this.file, this.onTap, super.key});
 
@@ -12,101 +14,109 @@ class ScannedFileTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
+
     return ListTile(
       key: Key('file_tile_${file.id}'),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-      leading: CircleAvatar(
-        backgroundColor: colors.primaryContainer,
-        child: Icon(
-          iconForCategory(file.category),
-          size: 20,
-          color: colors.primary,
-        ),
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      leading: FileThumbnail(file: file),
       title: Text(
         file.name,
+        key: Key('file_name_${file.id}'),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
-      subtitle: Text(
-        '${_formatDate(file.dateModified)} · ${file.folderName}',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.bodySmall
-            ?.copyWith(color: colors.onSurfaceVariant),
-      ),
-      trailing: Text(
-        ByteFormatter.format(file.sizeBytes),
-        style: const TextStyle(fontWeight: FontWeight.w700),
-      ),
-      onTap: onTap ?? () => _showDetails(context),
-    );
-  }
-
-  void _showDetails(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (BuildContext sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  file.name,
-                  style: Theme.of(sheetContext).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 16),
-                _DetailRow(
-                  label: 'Type',
-                  value: file.mimeType ?? file.category.label,
-                ),
-                _DetailRow(
-                  label: 'Size',
-                  value: ByteFormatter.format(file.sizeBytes),
-                ),
-                _DetailRow(
-                  label: 'Modified',
-                  value: _formatDate(file.dateModified),
-                ),
-                _DetailRow(
-                  label: 'Location',
-                  value: file.path.isNotEmpty ? file.path : file.uri,
-                ),
-              ],
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 3),
+        child: Row(
+          children: <Widget>[
+            Text(
+              ByteFormatter.format(file.sizeBytes),
+              key: Key('file_size_${file.id}'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colors.onSurface,
+              ),
             ),
-          ),
-        );
-      },
+            Text(
+              '  ·  ',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+            ),
+            Flexible(
+              child: Text(
+                DateFormatter.relative(file.dateModified),
+                key: Key('file_date_${file.id}'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              ),
+            ),
+          ],
+        ),
+      ),
+      trailing: Icon(
+        Icons.info_outline_rounded,
+        size: 19,
+        color: colors.onSurfaceVariant,
+      ),
+      onTap: onTap ?? () => showFileDetails(context, file),
     );
   }
+}
 
-  String _formatDate(DateTime date) {
-    if (date.millisecondsSinceEpoch == 0) {
-      return 'Unknown date';
-    }
-    final String day = date.day.toString().padLeft(2, '0');
-    const List<String> months = <String>[
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '$day ${months[date.month - 1]} ${date.year}';
-  }
+/// Bottom sheet describing one file in full.
+void showFileDetails(BuildContext context, ScannedFile file) {
+  showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    isScrollControlled: true,
+    builder: (BuildContext sheetContext) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  FileThumbnail(file: file, size: 54),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      file.name,
+                      style: Theme.of(sheetContext).textTheme.titleMedium,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _DetailRow(
+                label: 'Type',
+                value: file.mimeType ?? file.category.label,
+              ),
+              _DetailRow(
+                label: 'Size',
+                value: ByteFormatter.format(file.sizeBytes),
+              ),
+              _DetailRow(
+                label: 'Modified',
+                value: DateFormatter.format(file.dateModified),
+              ),
+              _DetailRow(
+                label: 'Location',
+                value: file.path.isNotEmpty ? file.path : file.uri,
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class _DetailRow extends StatelessWidget {

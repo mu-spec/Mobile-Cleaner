@@ -1,10 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/app/app.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
+import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
 import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
 import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
@@ -275,7 +279,16 @@ final _offlineDataOverrides = [
   fileScannerRepositoryProvider.overrideWithValue(
     _EmptyFileScannerRepository(),
   ),
+  thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
 ];
+
+/// Thumbnails come from a platform channel that does not exist in tests.
+class _NoThumbnails implements ThumbnailRepository {
+  const _NoThumbnails();
+
+  @override
+  Future<Uint8List?> load(ScannedFile file, {int size = 128}) async => null;
+}
 
 class _EmptyFileScannerRepository implements FileScannerRepository {
   @override
