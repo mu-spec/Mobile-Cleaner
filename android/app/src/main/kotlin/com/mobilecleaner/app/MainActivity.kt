@@ -14,6 +14,7 @@ class MainActivity : FlutterActivity() {
 
     private var thumbnailLoader: ThumbnailLoader? = null
     private var safAccess: SafAccessBridge? = null
+    private var deleteBridge: DeleteBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -59,6 +60,14 @@ class MainActivity : FlutterActivity() {
             FileScannerBridge.CHANNEL,
         ).setMethodCallHandler(FileScannerBridge(applicationContext, saf))
 
+        val deleter = DeleteBridge(applicationContext)
+        deleter.activity = this
+        deleteBridge = deleter
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            DeleteBridge.CHANNEL,
+        ).setMethodCallHandler(deleter)
+
         val loader = ThumbnailLoader(applicationContext)
         thumbnailLoader = loader
         MethodChannel(
@@ -71,6 +80,9 @@ class MainActivity : FlutterActivity() {
         if (safAccess?.handleActivityResult(requestCode, resultCode, data) == true) {
             return
         }
+        if (deleteBridge?.handleActivityResult(requestCode, resultCode, data) == true) {
+            return
+        }
         super.onActivityResult(requestCode, resultCode, data)
     }
 
@@ -79,6 +91,8 @@ class MainActivity : FlutterActivity() {
         thumbnailLoader = null
         safAccess?.activity = null
         safAccess = null
+        deleteBridge?.activity = null
+        deleteBridge = null
         super.onDestroy()
     }
 }

@@ -8,13 +8,15 @@ import 'package:mobile_cleaner/features/files/domain/downloads_summary.dart';
 import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/downloads_provider.dart';
+import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 
-/// Downloads cleaner: find stale downloads by age and select them in bulk.
+/// Downloads cleaner: find stale downloads by age and remove them in bulk.
 ///
-/// Read-only in this phase. Selection is built here so a later phase can
-/// attach a delete action without reworking the list.
+/// Deletion runs through the shared Review, Confirm, Delete, Result flow, so
+/// nothing is removed without an explicit in-app confirmation.
 class DownloadsCleanerScreen extends ConsumerStatefulWidget {
   const DownloadsCleanerScreen({super.key});
 
@@ -59,6 +61,25 @@ class _DownloadsCleanerScreenState
 
   void _clearSelection() {
     setState(() => _selection = _selection.clear());
+  }
+
+  /// Runs the shared Review -> Confirm -> Delete -> Result flow, then drops
+  /// whatever really went and rescans so the list reflects the device.
+  Future<void> _deleteSelected() async {
+    final DeleteResult? result = await runDeleteFlow(
+      context: context,
+      ref: ref,
+      selection: _selection,
+    );
+    if (result == null || !mounted) {
+      return;
+    }
+    if (result.deletedCount > 0) {
+      setState(() {
+        _selection = _selection.deselectAll(result.deletedFiles);
+      });
+      ref.invalidate(downloadsScanProvider);
+    }
   }
 
   @override
@@ -130,7 +151,11 @@ class _DownloadsCleanerScreenState
         ),
       ),
       bottomNavigationBar: selecting
-          ? _SelectionBar(selection: _selection, onClear: _clearSelection)
+          ? _SelectionBar(
+              selection: _selection,
+              onClear: _clearSelection,
+              onDelete: _deleteSelected,
+            )
           : null,
     );
   }
@@ -278,10 +303,15 @@ class _TotalCard extends StatelessWidget {
 
 /// Bottom bar summarising the current multi-selection.
 class _SelectionBar extends StatelessWidget {
-  const _SelectionBar({required this.selection, required this.onClear});
+  const _SelectionBar({
+    required this.selection,
+    required this.onClear,
+    required this.onDelete,
+  });
 
   final FileSelection selection;
   final VoidCallback onClear;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -324,11 +354,9 @@ class _SelectionBar extends StatelessWidget {
                 child: const Text('Clear'),
               ),
               const SizedBox(width: 4),
-              // Deletion arrives in a later phase; the affordance is shown
-              // disabled so the flow is visible but cannot act yet.
               FilledButton.icon(
                 key: const Key('selection_delete'),
-                onPressed: null,
+                onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline_rounded, size: 18),
                 label: const Text('Delete'),
               ),

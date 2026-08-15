@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:mobile_cleaner/features/files/data/delete_repository.dart';
 import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
+import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:mobile_cleaner/features/files/domain/apk_summary.dart';
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
@@ -91,6 +93,21 @@ class _StubRepository implements FileScannerRepository {
   }
 }
 
+/// Deletion is confirmed by a real platform dialog, which does not exist in
+/// tests. Recording the request keeps these suites hermetic.
+class _RecordingDeleteRepository implements DeleteRepository {
+  final List<List<ScannedFile>> requests = <List<ScannedFile>>[];
+
+  @override
+  Future<DeleteResult> deleteFiles(List<ScannedFile> files) async {
+    requests.add(files);
+    return DeleteResult(
+      deletedFiles: files,
+      failures: const <DeleteFailure>[],
+    );
+  }
+}
+
 class _NoThumbnails implements ThumbnailRepository {
   const _NoThumbnails();
 
@@ -111,6 +128,7 @@ Future<_StubRepository> _pumpApkCleaner(
       overrides: [
         fileScannerRepositoryProvider.overrideWithValue(repository),
         thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
+        deleteRepositoryProvider.overrideWithValue(_RecordingDeleteRepository()),
       ],
       child: const MaterialApp(home: ApkCleanerScreen()),
     ),
@@ -417,7 +435,7 @@ void main() {
       expect(find.byKey(const Key('apk_selection_bar')), findsNothing);
     });
 
-    testWidgets('delete stays disabled in this phase', (
+    testWidgets('delete is enabled once something is selected', (
       WidgetTester tester,
     ) async {
       await _pumpApkCleaner(tester);
@@ -428,7 +446,7 @@ void main() {
       final FilledButton button = tester.widget<FilledButton>(
         find.byKey(const Key('apk_selection_delete')),
       );
-      expect(button.onPressed, isNull);
+      expect(button.onPressed, isNotNull);
     });
 
     testWidgets('shows a reassuring empty state', (WidgetTester tester) async {
