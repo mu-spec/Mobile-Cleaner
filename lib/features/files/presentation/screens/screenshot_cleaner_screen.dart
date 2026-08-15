@@ -12,6 +12,7 @@ import 'package:mobile_cleaner/features/files/presentation/providers/screenshot_
 import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
 
 /// Screenshot cleaner: find screenshots and remove the ones no longer needed.
 ///
@@ -147,10 +148,15 @@ class _ScreenshotCleanerScreenState
         ),
       ),
       bottomNavigationBar: selecting
-          ? _SelectionBar(
+          ? SelectionActionBar(
               selection: _selection,
               onClear: _clearSelection,
               onDelete: _deleteSelected,
+              barKey: const Key('screenshot_selection_bar'),
+              countKey: const Key('screenshot_selection_count'),
+              bytesKey: const Key('screenshot_selection_bytes'),
+              clearKey: const Key('screenshot_selection_clear'),
+              deleteKey: const Key('screenshot_selection_delete'),
             )
           : null,
     );
@@ -211,7 +217,9 @@ class _ScreenshotList extends StatelessWidget {
     return ListView(
       key: const Key('screenshot_list'),
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
+      // Extra bottom room while selecting, so the action bar never
+      // covers the last row.
+      padding: EdgeInsets.fromLTRB(16, 6, 16, selection.isEmpty ? 28 : 104),
       children: <Widget>[
         _TotalCard(summary: summary),
         const SizedBox(height: 12),
@@ -307,73 +315,6 @@ class _TotalCard extends StatelessWidget {
               ],
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Bottom bar summarising the current multi-selection.
-class _SelectionBar extends StatelessWidget {
-  const _SelectionBar({
-    required this.selection,
-    required this.onClear,
-    required this.onDelete,
-  });
-
-  final FileSelection selection;
-  final VoidCallback onClear;
-  final VoidCallback onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
-    return Material(
-      key: const Key('screenshot_selection_bar'),
-      color: colors.surfaceContainerHighest,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      '${selection.count} selected',
-                      key: const Key('screenshot_selection_count'),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      ByteFormatter.format(selection.totalBytes),
-                      key: const Key('screenshot_selection_bytes'),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              TextButton(
-                key: const Key('screenshot_selection_clear'),
-                onPressed: onClear,
-                child: const Text('Clear'),
-              ),
-              const SizedBox(width: 4),
-              FilledButton.icon(
-                key: const Key('screenshot_selection_delete'),
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                label: const Text('Delete'),
-              ),
-            ],
-          ),
         ),
       ),
     );
