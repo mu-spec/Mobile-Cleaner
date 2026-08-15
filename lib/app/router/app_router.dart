@@ -4,12 +4,16 @@ import 'package:mobile_cleaner/features/apps/presentation/screens/apps_screen.da
 import 'package:mobile_cleaner/features/cleaner/presentation/screens/clean_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/files_screen.dart';
 import 'package:mobile_cleaner/features/home/presentation/screens/home_screen.dart';
+import 'package:mobile_cleaner/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:mobile_cleaner/features/permissions/presentation/screens/permission_education_screen.dart';
 import 'package:mobile_cleaner/features/photos/presentation/screens/photos_screen.dart';
 import 'package:mobile_cleaner/features/settings/presentation/screens/settings_screen.dart';
 import 'package:mobile_cleaner/features/splash/presentation/screens/splash_screen.dart';
 
 abstract final class AppRoutes {
   static const String splash = '/splash';
+  static const String onboarding = '/onboarding';
+  static const String permissions = '/permissions';
   static const String home = '/home';
   static const String clean = '/clean';
   static const String photos = '/photos';
@@ -24,6 +28,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.splash,
       builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.onboarding,
+      builder: (context, state) => const OnboardingScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.permissions,
+      builder: (context, state) => const PermissionEducationScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
