@@ -44,13 +44,13 @@ void main() {
 
     await tester.tap(find.byKey(const Key('permission_secondary_action')));
     await tester.pumpAndSettle();
-    expect(find.text('Start safe scan'), findsOneWidget);
+    expect(find.text('Smart Scan'), findsOneWidget);
 
     appRouter.go(AppRoutes.splash);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pumpAndSettle();
-    expect(find.text('Start safe scan'), findsOneWidget);
+    expect(find.text('Smart Scan'), findsOneWidget);
     expect(find.text('Understand Your Storage'), findsNothing);
 
     await tester.tap(find.byKey(const Key('nav_settings')));
@@ -61,7 +61,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('onboarding_skip')));
     await tester.pumpAndSettle();
-    expect(find.text('Start safe scan'), findsOneWidget);
+    expect(find.text('Smart Scan'), findsOneWidget);
   });
 
   testWidgets('denied permission is handled without a crash', (
@@ -96,7 +96,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('permission_secondary_action')));
     await tester.pumpAndSettle();
-    expect(find.text('Start safe scan'), findsOneWidget);
+    expect(find.text('Smart Scan'), findsOneWidget);
   });
 
   testWidgets('home displays real storage values from the repository', (
@@ -129,6 +129,58 @@ void main() {
     expect(find.text('128.0 GB'), findsOneWidget);
     expect(find.text('82.0 GB'), findsOneWidget);
     expect(find.text('46.0 GB'), findsOneWidget);
+    expect(find.byKey(const Key('smart_scan_button')), findsOneWidget);
+    expect(find.byKey(const Key('home_settings_button')), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('recommendations_section')),
+      300,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const Key('home_dashboard')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.byKey(const Key('quick_tools_section')), findsOneWidget);
+    expect(find.byKey(const Key('recommendations_section')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Smart Scan and Settings actions open their screens', (
+    WidgetTester tester,
+  ) async {
+    const int gib = 1024 * 1024 * 1024;
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'onboarding_completed': true,
+      'permission_education_seen': true,
+    });
+    appRouter.go(AppRoutes.splash);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          storageRepositoryProvider.overrideWithValue(
+            const _FakeStorageRepository(
+              StorageInfo(totalBytes: 128 * gib, freeBytes: 46 * gib),
+            ),
+          ),
+        ],
+        child: const MobileCleanerApp(),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 1000));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('smart_scan_button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('screen_Clean')), findsOneWidget);
+
+    appRouter.go(AppRoutes.home);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('home_settings_button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Settings'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -145,7 +197,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pumpAndSettle();
 
-    expect(find.text('Start safe scan'), findsOneWidget);
+    expect(find.text('Smart Scan'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_clean')));
     await tester.pumpAndSettle();
