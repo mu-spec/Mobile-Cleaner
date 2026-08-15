@@ -103,6 +103,28 @@ Future<_StubRepository> _pumpCleaner(
   return repository;
 }
 
+/// Scrolls a chip into view inside the horizontal filter bar.
+Future<void> _scrollToAgeChip(
+  WidgetTester tester,
+  DownloadAgeFilter filter,
+) async {
+  await tester.scrollUntilVisible(
+    find.byKey(Key('age_filter_${filter.name}')),
+    120,
+    scrollable: find.descendant(
+      of: find.byKey(const Key('downloads_filter_bar')),
+      matching: find.byType(Scrollable),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _tapAgeChip(WidgetTester tester, DownloadAgeFilter filter) async {
+  await _scrollToAgeChip(tester, filter);
+  await tester.tap(find.byKey(Key('age_filter_${filter.name}')));
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('DownloadAgeFilter', () {
     test('offers exactly the four required thresholds', () {
@@ -322,9 +344,12 @@ void main() {
     ) async {
       await _pumpCleaner(tester);
 
+      // The bar scrolls horizontally, so later chips need scrolling in.
       for (final DownloadAgeFilter option in DownloadAgeFilter.values) {
+        final Finder chip = find.byKey(Key('age_filter_${option.name}'));
+        await _scrollToAgeChip(tester, option);
         expect(
-          find.byKey(Key('age_filter_${option.name}')),
+          chip,
           findsOneWidget,
           reason: '${option.label} chip should be visible',
         );
@@ -359,8 +384,7 @@ void main() {
       await _pumpCleaner(tester);
       expect(find.text('month-old.zip'), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('age_filter_year1')));
-      await tester.pumpAndSettle();
+      await _tapAgeChip(tester, DownloadAgeFilter.year1);
 
       expect(find.text('ancient.iso'), findsOneWidget);
       expect(find.text('month-old.zip'), findsNothing);
@@ -373,10 +397,8 @@ void main() {
       final _StubRepository repository = await _pumpCleaner(tester);
       expect(repository.scanCount, 1);
 
-      await tester.tap(find.byKey(const Key('age_filter_days90')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('age_filter_months6')));
-      await tester.pumpAndSettle();
+      await _tapAgeChip(tester, DownloadAgeFilter.days90);
+      await _tapAgeChip(tester, DownloadAgeFilter.months6);
 
       expect(repository.scanCount, 1);
     });
@@ -508,8 +530,7 @@ void main() {
       );
 
       // Only the 400 day old file survives this threshold.
-      await tester.tap(find.byKey(const Key('age_filter_year1')));
-      await tester.pumpAndSettle();
+      await _tapAgeChip(tester, DownloadAgeFilter.year1);
 
       expect(
         tester.widget<Text>(find.byKey(const Key('selection_count'))).data,

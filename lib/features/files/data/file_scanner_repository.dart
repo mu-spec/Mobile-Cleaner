@@ -58,6 +58,7 @@ class MediaStoreFileScannerRepository implements FileScannerRepository {
       files,
       durationMillis: _readInt(payload['durationMillis']) ?? 0,
       truncated: payload['truncated'] == true,
+      needsFolderAccess: payload['needsFolderAccess'] == true,
       categories: request.categories,
     );
   }

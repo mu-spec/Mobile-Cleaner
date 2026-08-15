@@ -18,7 +18,12 @@ import java.io.File
  * Phase 6 only reads metadata: name, path/URI, size, type, and date. Nothing
  * is opened, moved, or deleted here.
  */
-class FileScannerBridge(private val context: Context) : MethodChannel.MethodCallHandler {
+class FileScannerBridge(
+    private val context: Context,
+    private val safAccess: SafAccessBridge,
+) : MethodChannel.MethodCallHandler {
+
+    private val safScanner = SafDocumentScanner(context)
 
     companion object {
         const val CHANNEL = "com.mobilecleaner.app/file_scanner"
@@ -32,6 +37,13 @@ class FileScannerBridge(private val context: Context) : MethodChannel.MethodCall
 
         private const val DEFAULT_LIMIT_PER_CATEGORY = 500
         private const val MAX_LIMIT_PER_CATEGORY = 5000
+
+        /** Categories scoped storage hides from MediaStore. */
+        private val NON_MEDIA_CATEGORIES = setOf(
+            CATEGORY_DOCUMENTS,
+            CATEGORY_DOWNLOADS,
+            CATEGORY_APKS,
+        )
 
         private const val APK_MIME = "application/vnd.android.package-archive"
         private const val APK_EXTENSION = "apk"
@@ -95,9 +107,27 @@ class FileScannerBridge(private val context: Context) : MethodChannel.MethodCall
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                         CATEGORY_AUDIO, limit, minSizeBytes, sortOrder, null, null,
                     )
-                    CATEGORY_DOCUMENTS -> queryDocuments(limit, minSizeBytes, sortOrder)
-                    CATEGORY_DOWNLOADS -> queryDownloads(limit, minSizeBytes, sortOrder)
-                    CATEGORY_APKS -> queryApks(limit, minSizeBytes, sortOrder)
+                    CATEGORY_DOCUMENTS -> mergeNonMedia(
+                        CATEGORY_DOCUMENTS,
+                        queryDocuments(limit, minSizeBytes, sortOrder),
+                        limit,
+                        minSizeBytes,
+                        sortOrder,
+                    ) { name, mime -> isDocumentLike(name, mime) }
+                    CATEGORY_DOWNLOADS -> mergeNonMedia(
+                        CATEGORY_DOWNLOADS,
+                        queryDownloads(limit, minSizeBytes, sortOrder),
+                        limit,
+                        minSizeBytes,
+                        sortOrder,
+                    ) { _, _ -> true }
+                    CATEGORY_APKS -> mergeNonMedia(
+                        CATEGORY_APKS,
+                        queryApks(limit, minSizeBytes, sortOrder),
+                        limit,
+                        minSizeBytes,
+                        sortOrder,
+                    ) { name, mime -> isApkLike(name, mime) }
                     else -> emptyList()
                 }
                 if (rows.size >= limit) {
@@ -106,11 +136,20 @@ class FileScannerBridge(private val context: Context) : MethodChannel.MethodCall
                 files.addAll(rows)
             }
 
+            val grantedTrees = safAccess.grantedTrees()
+            val needsAccess = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                grantedTrees.isEmpty() &&
+                requested.any { it in NON_MEDIA_CATEGORIES }
+
             result.success(
                 mapOf(
                     "files" to files,
                     "truncated" to truncated,
                     "durationMillis" to (System.currentTimeMillis() - startedAt),
+                    // Scoped storage hides other apps' non-media files, so the
+                    // UI needs to know when a folder grant would reveal more.
+                    "needsFolderAccess" to needsAccess,
+                    "grantedFolders" to grantedTrees,
                 ),
             )
         } catch (security: SecurityException) {
@@ -416,6 +455,85 @@ class FileScannerBridge(private val context: Context) : MethodChannel.MethodCall
         "date_desc" -> "${MediaStore.MediaColumns.DATE_MODIFIED} DESC"
         "name_asc" -> "${MediaStore.MediaColumns.DISPLAY_NAME} ASC"
         else -> "${MediaStore.MediaColumns.SIZE} DESC"
+    }
+
+    /**
+     * Combines MediaStore rows with SAF rows for a non-media category.
+     *
+     * MediaStore only reports non-media files this app itself created, so on
+     * Android 10+ it under-reports badly. Any folder the user granted through
+     * SAF is walked as well, and the two sets are merged and de-duplicated by
+     * name plus size, since the same file has a different URI in each source.
+     */
+    private fun mergeNonMedia(
+        category: String,
+        mediaStoreRows: List<Map<String, Any?>>,
+        limit: Int,
+        minSizeBytes: Long,
+        sortOrder: String,
+        accept: (name: String, mimeType: String?) -> Boolean,
+    ): List<Map<String, Any?>> {
+        val trees = grantedTreeUris()
+        if (trees.isEmpty()) {
+            return mediaStoreRows
+        }
+
+        val safRows = try {
+            safScanner.scan(trees, minSizeBytes, limit) { name, mime -> accept(name, mime) }
+                .map { row -> row + ("category" to category) }
+        } catch (error: Exception) {
+            // A broken grant must not fail the whole scan.
+            emptyList()
+        }
+
+        val combined = mutableListOf<Map<String, Any?>>()
+        val seen = mutableSetOf<String>()
+        for (row in mediaStoreRows + safRows) {
+            val name = (row["name"] as? String)?.lowercase().orEmpty()
+            val size = (row["sizeBytes"] as? Number)?.toLong() ?: 0L
+            if (!seen.add("$name:$size")) continue
+            combined += row
+        }
+
+        return sortRows(combined, sortOrder).take(limit)
+    }
+
+    private fun grantedTreeUris(): List<Uri> {
+        return safAccess.grantedTrees().mapNotNull { tree ->
+            (tree["uri"] as? String)?.let(Uri::parse)
+        }
+    }
+
+    private fun sortRows(
+        rows: List<Map<String, Any?>>,
+        sortOrder: String,
+    ): List<Map<String, Any?>> {
+        fun size(row: Map<String, Any?>) = (row["sizeBytes"] as? Number)?.toLong() ?: 0L
+        fun modified(row: Map<String, Any?>) =
+            (row["dateModifiedMillis"] as? Number)?.toLong() ?: 0L
+        fun name(row: Map<String, Any?>) = (row["name"] as? String)?.lowercase().orEmpty()
+
+        return when (sortOrder) {
+            "date_desc" -> rows.sortedByDescending { modified(it) }
+            "name_asc" -> rows.sortedBy { name(it) }
+            else -> rows.sortedByDescending { size(it) }
+        }
+    }
+
+    /** Name/MIME classifier shared by the MediaStore and SAF paths. */
+    private fun isDocumentLike(name: String, mimeType: String?): Boolean {
+        if (isApkLike(name, mimeType)) return false
+        val mime = mimeType?.lowercase()
+        if (mime != null && DOCUMENT_MIME_PREFIXES.any { mime.startsWith(it) }) {
+            return true
+        }
+        val extension = name.lowercase().substringAfterLast('.', "")
+        return extension.isNotEmpty() && DOCUMENT_EXTENSIONS.contains(extension)
+    }
+
+    private fun isApkLike(name: String, mimeType: String?): Boolean {
+        if (mimeType?.lowercase() == APK_MIME) return true
+        return name.lowercase().substringAfterLast('.', "") == APK_EXTENSION
     }
 
     private fun isApk(row: Map<String, Any?>): Boolean {

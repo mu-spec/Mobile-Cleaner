@@ -87,10 +87,13 @@ class _FilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      key: const Key('large_files_filter_bar'),
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-      child: Row(
+    // Horizontally scrollable: three chips do not fit on narrow phones.
+    return SizedBox(
+      height: 52,
+      child: ListView(
+        key: const Key('large_files_filter_bar'),
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
         children: <Widget>[
           for (final LargeFileFilter option in LargeFileFilter.values)
             Padding(

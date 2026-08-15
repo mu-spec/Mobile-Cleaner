@@ -1,5 +1,6 @@
 package com.mobilecleaner.app
 
+import android.content.Intent
 import android.os.Environment
 import android.os.StatFs
 import io.flutter.embedding.android.FlutterActivity
@@ -12,6 +13,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private var thumbnailLoader: ThumbnailLoader? = null
+    private var safAccess: SafAccessBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -44,10 +46,18 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
+        val saf = SafAccessBridge(applicationContext)
+        saf.activity = this
+        safAccess = saf
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            SafAccessBridge.CHANNEL,
+        ).setMethodCallHandler(saf)
+
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             FileScannerBridge.CHANNEL,
-        ).setMethodCallHandler(FileScannerBridge(applicationContext))
+        ).setMethodCallHandler(FileScannerBridge(applicationContext, saf))
 
         val loader = ThumbnailLoader(applicationContext)
         thumbnailLoader = loader
@@ -57,9 +67,18 @@ class MainActivity : FlutterActivity() {
         ).setMethodCallHandler(loader)
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (safAccess?.handleActivityResult(requestCode, resultCode, data) == true) {
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
     override fun onDestroy() {
         thumbnailLoader?.dispose()
         thumbnailLoader = null
+        safAccess?.activity = null
+        safAccess = null
         super.onDestroy()
     }
 }

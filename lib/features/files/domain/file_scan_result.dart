@@ -46,6 +46,7 @@ class FileScanResult {
     required this.scannedAt,
     this.durationMillis = 0,
     this.truncated = false,
+    this.needsFolderAccess = false,
   });
 
   /// Builds a result (and its per-category summaries) from a flat file list.
@@ -54,6 +55,7 @@ class FileScanResult {
     DateTime? scannedAt,
     int durationMillis = 0,
     bool truncated = false,
+    bool needsFolderAccess = false,
     List<FileCategory> categories = FileCategory.scannable,
   }) {
     final Map<FileCategory, List<ScannedFile>> grouped =
@@ -79,6 +81,7 @@ class FileScanResult {
       scannedAt: scannedAt ?? DateTime.now(),
       durationMillis: durationMillis,
       truncated: truncated,
+      needsFolderAccess: needsFolderAccess,
     );
   }
 
@@ -97,6 +100,10 @@ class FileScanResult {
 
   /// True when the scan hit its per-category row limit.
   final bool truncated;
+
+  /// True when scoped storage is hiding non-media files and granting a folder
+  /// through the Storage Access Framework would reveal more.
+  final bool needsFolderAccess;
 
   /// Files counted once, even when they appear in more than one category.
   ///

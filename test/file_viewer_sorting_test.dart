@@ -101,7 +101,14 @@ Future<void> _pumpCategory(
 /// Taps a sort chip, scrolling it into view first.
 Future<void> _tapSortChip(WidgetTester tester, FileListSort sort) async {
   final Finder chip = find.byKey(Key('sort_chip_${sort.name}'));
-  await tester.ensureVisible(chip);
+  await tester.scrollUntilVisible(
+    chip,
+    120,
+    scrollable: find.descendant(
+      of: find.byKey(const Key('sort_bar')),
+      matching: find.byType(Scrollable),
+    ),
+  );
   await tester.pumpAndSettle();
   await tester.tap(chip);
   await tester.pumpAndSettle();
@@ -398,9 +405,20 @@ void main() {
     ) async {
       await _pumpCategory(tester, FileCategory.images, fixture());
 
+      // The bar scrolls horizontally, so later chips are not laid out until
+      // they are scrolled into view.
       for (final FileListSort option in FileListSort.values) {
+        final Finder chip = find.byKey(Key('sort_chip_${option.name}'));
+        await tester.scrollUntilVisible(
+          chip,
+          120,
+          scrollable: find.descendant(
+            of: find.byKey(const Key('sort_bar')),
+            matching: find.byType(Scrollable),
+          ),
+        );
         expect(
-          find.byKey(Key('sort_chip_${option.name}')),
+          chip,
           findsOneWidget,
           reason: '${option.shortLabel} chip should be visible',
         );

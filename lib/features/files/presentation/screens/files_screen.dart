@@ -10,6 +10,7 @@ import 'package:mobile_cleaner/features/files/presentation/providers/file_scan_p
 import 'package:mobile_cleaner/features/files/presentation/screens/category_files_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/folder_access_banner.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 
 /// Files tab: a category grid over the Phase 6 scanner.
@@ -77,6 +78,10 @@ class _CategoryGrid extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: <Widget>[
+        if (result.needsFolderAccess) ...<Widget>[
+          const FolderAccessBanner(),
+          const SizedBox(height: 12),
+        ],
         Card(
           key: const Key('files_summary_card'),
           child: Padding(
