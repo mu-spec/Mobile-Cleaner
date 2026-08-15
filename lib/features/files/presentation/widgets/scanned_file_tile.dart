@@ -6,10 +6,25 @@ import 'package:mobile_cleaner/features/files/presentation/widgets/file_thumbnai
 
 /// A single row in a file list: thumbnail/icon, name, size, and date.
 class ScannedFileTile extends StatelessWidget {
-  const ScannedFileTile({required this.file, this.onTap, super.key});
+  const ScannedFileTile({
+    required this.file,
+    this.onTap,
+    this.onLongPress,
+    this.selected,
+    this.selectionMode = false,
+    super.key,
+  });
 
   final ScannedFile file;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+
+  /// Whether this row is currently selected. Null means selection is not in
+  /// use, which keeps every existing caller unchanged.
+  final bool? selected;
+
+  /// When true the row shows a checkbox instead of the details affordance.
+  final bool selectionMode;
 
   @override
   Widget build(BuildContext context) {
@@ -58,12 +73,21 @@ class ScannedFileTile extends StatelessWidget {
           ],
         ),
       ),
-      trailing: Icon(
-        Icons.info_outline_rounded,
-        size: 19,
-        color: colors.onSurfaceVariant,
-      ),
+      trailing: selectionMode
+          ? Checkbox(
+              key: Key('file_checkbox_${file.id}'),
+              value: selected ?? false,
+              onChanged: onTap == null ? null : (_) => onTap!(),
+            )
+          : Icon(
+              Icons.info_outline_rounded,
+              size: 19,
+              color: colors.onSurfaceVariant,
+            ),
+      selected: selected ?? false,
+      selectedTileColor: colors.primary.withValues(alpha: 0.08),
       onTap: onTap ?? () => showFileDetails(context, file),
+      onLongPress: onLongPress,
     );
   }
 }
