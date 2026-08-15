@@ -4,17 +4,20 @@ import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 
 /// Bottom action bar shown whenever files are selected in a cleaner.
 ///
-/// One implementation shared by every cleaner, so the Delete action cannot be
-/// present in one tool and missing in another.
+/// One implementation shared by every selectable screen, so the Delete action
+/// cannot be present in one tool and missing in another, and so there is only
+/// ever one route into the Phase 12 safe-delete flow.
 ///
-/// Laid out defensively, because the previous per-screen version was a fixed
-/// [Row] that could overflow on narrow devices or at large system font
-/// scales, pushing the Delete button off-screen:
+/// ## Staying above the system navigation bar
 ///
-/// - the count and size column is [Flexible] and ellipsises rather than
-///   forcing the row wider than the screen,
-/// - the Delete button keeps its intrinsic width so it is never squeezed out,
-/// - a [SafeArea] with `top: false` keeps it clear of the gesture inset.
+/// The screens wrap their `body` in a `SafeArea`. That consumes the bottom
+/// inset *before* the `Scaffold` lays out `bottomNavigationBar`, so a nested
+/// `SafeArea` here would find nothing left to pad and the bar would sit
+/// underneath the gesture pill or button bar — visible in a screenshot, but
+/// unreachable on a real device.
+///
+/// Reading `MediaQuery.viewPaddingOf` gives the true system inset regardless
+/// of what an ancestor already consumed, so the bar always clears it.
 class SelectionActionBar extends StatelessWidget {
   const SelectionActionBar({
     required this.selection,
@@ -25,6 +28,7 @@ class SelectionActionBar extends StatelessWidget {
     required this.bytesKey,
     required this.clearKey,
     required this.deleteKey,
+    this.deletableCount,
     super.key,
   });
 
@@ -39,65 +43,77 @@ class SelectionActionBar extends StatelessWidget {
   final Key clearKey;
   final Key deleteKey;
 
+  /// How many of the selected items Android will actually let us delete.
+  ///
+  /// Null means "all of them". When zero, Delete is disabled rather than
+  /// letting the user start a flow the platform will certainly refuse.
+  final int? deletableCount;
+
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
+
+    // The true system inset, even though an ancestor SafeArea consumed it.
+    final double systemInset = MediaQuery.viewPaddingOf(context).bottom;
+    final int deletable = deletableCount ?? selection.count;
+    final bool canDelete = deletable > 0;
 
     return Material(
       key: barKey,
       color: colors.surfaceContainerHighest,
       elevation: 8,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          child: Row(
-            children: <Widget>[
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      '${selection.count} selected',
-                      key: countKey,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(12, 10, 12, 10 + systemInset),
+        child: Row(
+          children: <Widget>[
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    '${selection.count} selected',
+                    key: countKey,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
-                    Text(
-                      ByteFormatter.format(selection.totalBytes),
-                      key: bytesKey,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
+                  ),
+                  Text(
+                    canDelete && deletable < selection.count
+                        // Be explicit when Android protects some of them.
+                        ? '${ByteFormatter.format(selection.totalBytes)} · '
+                              '$deletable can be deleted'
+                        : ByteFormatter.format(selection.totalBytes),
+                    key: bytesKey,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              TextButton(
-                key: clearKey,
-                onPressed: onClear,
-                child: const Text('Clear'),
+            ),
+            const SizedBox(width: 8),
+            TextButton(
+              key: clearKey,
+              onPressed: onClear,
+              child: const Text('Clear'),
+            ),
+            const SizedBox(width: 4),
+            FilledButton.icon(
+              key: deleteKey,
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.error,
+                foregroundColor: colors.onError,
               ),
-              const SizedBox(width: 4),
-              FilledButton.icon(
-                key: deleteKey,
-                style: FilledButton.styleFrom(
-                  backgroundColor: colors.error,
-                  foregroundColor: colors.onError,
-                ),
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                label: const Text('Delete'),
-              ),
-            ],
-          ),
+              onPressed: canDelete ? onDelete : null,
+              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+              label: const Text('Delete'),
+            ),
+          ],
         ),
       ),
     );

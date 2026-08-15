@@ -27,7 +27,15 @@ Future<DeleteResult?> runDeleteFlow({
     return null;
   }
 
-  final List<ScannedFile> files = selection.files.toList(growable: false);
+  // Only send what Android can act on. A file:// row from the legacy scan
+  // cannot be deleted through MediaStore or SAF, so including it would
+  // guarantee a failure the user did not need to see.
+  final List<ScannedFile> files = selection.deletableFiles.toList(
+    growable: false,
+  );
+  if (files.isEmpty) {
+    return null;
+  }
 
   // Step 1 and 2: review the selection, then confirm.
   final bool confirmed =

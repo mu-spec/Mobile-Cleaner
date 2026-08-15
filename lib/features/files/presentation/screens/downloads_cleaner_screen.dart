@@ -156,6 +156,7 @@ class _DownloadsCleanerScreenState
               selection: _selection,
               onClear: _clearSelection,
               onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
               barKey: const Key('downloads_selection_bar'),
               countKey: const Key('selection_count'),
               bytesKey: const Key('selection_bytes'),

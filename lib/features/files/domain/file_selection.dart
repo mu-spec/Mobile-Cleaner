@@ -27,6 +27,13 @@ class FileSelection {
     (int sum, ScannedFile file) => sum + file.sizeBytes,
   );
 
+  /// Selected files Android will actually let the app delete.
+  Iterable<ScannedFile> get deletableFiles =>
+      _selected.values.where((ScannedFile file) => file.isDeletable);
+
+  /// How many selected files can be deleted. Zero disables the Delete action.
+  int get deletableCount => deletableFiles.length;
+
   bool contains(ScannedFile file) => _selected.containsKey(file.uri);
 
   FileSelection toggle(ScannedFile file) {

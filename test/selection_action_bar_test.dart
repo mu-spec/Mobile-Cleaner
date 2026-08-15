@@ -10,6 +10,7 @@ import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/apk_cleaner_screen.dart';
+import 'package:mobile_cleaner/features/files/presentation/screens/category_files_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/downloads_cleaner_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/screenshot_cleaner_screen.dart';
 import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
@@ -157,6 +158,32 @@ final List<_Case> _cases = <_Case>[
     selectAllKey: 'apk_select_all',
   ),
   _Case(
+    name: 'Images browser',
+    screen: const CategoryFilesScreen(category: FileCategory.images),
+    files: <ScannedFile>[
+      _file(
+        id: '1',
+        name: 'a.jpg',
+        category: FileCategory.images,
+        relativePath: 'DCIM/Camera/',
+        mimeType: 'image/jpeg',
+      ),
+      _file(
+        id: '2',
+        name: 'b.jpg',
+        category: FileCategory.images,
+        sizeBytes: 20 * _mib,
+        relativePath: 'DCIM/Camera/',
+        mimeType: 'image/jpeg',
+      ),
+    ],
+    barKey: 'category_selection_bar',
+    countKey: 'category_selection_count',
+    bytesKey: 'category_selection_bytes',
+    deleteKey: 'category_selection_delete',
+    selectAllKey: 'category_select_all',
+  ),
+  _Case(
     name: 'Screenshot Cleaner',
     screen: const ScreenshotCleanerScreen(),
     files: <ScannedFile>[
@@ -188,6 +215,7 @@ Future<_RecordingDelete> _pump(
   WidgetTester tester,
   _Case testCase, {
   Size size = const Size(420, 900),
+  bool undeletable = false,
 }) async {
   await tester.binding.setSurfaceSize(size);
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -197,7 +225,15 @@ Future<_RecordingDelete> _pump(
     ProviderScope(
       overrides: [
         fileScannerRepositoryProvider.overrideWithValue(
-          _StubScanner(testCase.files),
+          _StubScanner(
+            undeletable
+                ? testCase.files
+                      .map(
+                        (ScannedFile f) => f.copyWith(uri: 'file://${f.path}'),
+                      )
+                      .toList()
+                : testCase.files,
+          ),
         ),
         thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
         storageRepositoryProvider.overrideWithValue(const _FakeStorage()),
@@ -327,6 +363,68 @@ void main() {
               .widget<Text>(find.byKey(const Key('cleanup_storage_recovered')))
               .data,
           '30.0 MB',
+        );
+      });
+
+      testWidgets('stays clear of the system navigation bar', (
+        WidgetTester tester,
+      ) async {
+        // The regression: screens wrap their body in a SafeArea, which
+        // consumes the bottom inset before the Scaffold lays out
+        // bottomNavigationBar. A nested SafeArea in the bar would then pad
+        // by zero and the bar would sit under the gesture pill.
+        const double navInset = 48;
+        await tester.binding.setSurfaceSize(const Size(400, 800));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
+        final _RecordingDelete deleter = _RecordingDelete();
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              fileScannerRepositoryProvider.overrideWithValue(
+                _StubScanner(testCase.files),
+              ),
+              thumbnailRepositoryProvider.overrideWithValue(
+                const _NoThumbnails(),
+              ),
+              storageRepositoryProvider.overrideWithValue(const _FakeStorage()),
+              deleteRepositoryProvider.overrideWithValue(deleter),
+            ],
+            child: MediaQuery(
+              data: const MediaQueryData(
+                padding: EdgeInsets.only(bottom: navInset),
+                viewPadding: EdgeInsets.only(bottom: navInset),
+              ),
+              child: MaterialApp(home: testCase.screen),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await _selectFirst(tester);
+
+        final Rect delete = tester.getRect(find.byKey(Key(testCase.deleteKey)));
+        // The button must sit fully above the system inset.
+        expect(
+          delete.bottom <= 800 - navInset + 0.5,
+          isTrue,
+          reason: 'Delete overlaps the system navigation bar '
+              '(bottom ${delete.bottom} vs limit ${800 - navInset})',
+        );
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('Delete is disabled when nothing selected is deletable', (
+        WidgetTester tester,
+      ) async {
+        await _pump(tester, testCase, undeletable: true);
+        await _selectFirst(tester);
+
+        expect(
+          tester
+              .widget<FilledButton>(find.byKey(Key(testCase.deleteKey)))
+              .onPressed,
+          isNull,
+          reason: 'Android cannot delete a file:// row, so Delete must be off',
         );
       });
 

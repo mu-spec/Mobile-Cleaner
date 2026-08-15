@@ -3,13 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
+import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
+import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/file_scan_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
 
 /// Full, sortable, searchable list of the files inside one category.
 class CategoryFilesScreen extends ConsumerStatefulWidget {
@@ -29,6 +33,41 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
   FileListSort _sort = FileListSort.largest;
   String _query = '';
   bool _searching = false;
+  FileSelection _selection = const FileSelection.empty();
+
+  void _toggle(ScannedFile file) {
+    setState(() => _selection = _selection.toggle(file));
+  }
+
+  void _toggleAll(List<ScannedFile> visible) {
+    setState(() {
+      _selection = _selection.containsAll(visible)
+          ? _selection.deselectAll(visible)
+          : _selection.selectAll(visible);
+    });
+  }
+
+  void _clearSelection() {
+    setState(() => _selection = _selection.clear());
+  }
+
+  /// Runs the shared Phase 12 flow, then drops whatever really went.
+  Future<void> _deleteSelected() async {
+    final DeleteResult? result = await runDeleteFlow(
+      context: context,
+      ref: ref,
+      selection: _selection,
+    );
+    if (result == null || !mounted) {
+      return;
+    }
+    if (result.deletedCount > 0) {
+      setState(() {
+        _selection = _selection.deselectAll(result.deletedFiles);
+      });
+      ref.invalidate(fileScanProvider);
+    }
+  }
 
   @override
   void dispose() {
@@ -64,7 +103,20 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _searching
+        leading: _selection.isNotEmpty
+            ? IconButton(
+                key: const Key('category_cancel_selection'),
+                tooltip: 'Cancel selection',
+                onPressed: _clearSelection,
+                icon: const Icon(Icons.close_rounded),
+              )
+            : null,
+        title: _selection.isNotEmpty
+            ? Text(
+                '${_selection.count} selected',
+                key: const Key('category_title'),
+              )
+            : _searching
             ? TextField(
                 key: const Key('category_search_field'),
                 controller: _searchController,
@@ -77,7 +129,9 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
               )
             : Text(widget.category.label),
         actions: <Widget>[
-          if (_searching)
+          if (_selection.isNotEmpty)
+            const SizedBox.shrink()
+          else if (_searching)
             IconButton(
               key: const Key('category_search_close'),
               tooltip: 'Close search',
@@ -168,17 +222,53 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
                     onSelected: (FileListSort value) =>
                         setState(() => _sort = value),
                   ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: TextButton.icon(
+                        key: const Key('category_select_all'),
+                        onPressed: () => _toggleAll(items),
+                        icon: Icon(
+                          _selection.containsAll(items)
+                              ? Icons.remove_done_rounded
+                              : Icons.done_all_rounded,
+                          size: 18,
+                        ),
+                        label: Text(
+                          _selection.containsAll(items)
+                              ? 'Clear all'
+                              : 'Select all',
+                        ),
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: ListView.separated(
                       key: Key('category_list_${widget.category.key}'),
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+                      // Extra room while selecting so the action bar never
+                      // covers the last row.
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        4,
+                        16,
+                        _selection.isEmpty ? 28 : 104,
+                      ),
                       itemCount: items.length,
                       separatorBuilder:
                           (BuildContext context, int index) =>
                               const Divider(height: 1),
-                      itemBuilder: (BuildContext context, int index) =>
-                          ScannedFileTile(file: items[index]),
+                      itemBuilder: (BuildContext context, int index) {
+                        final ScannedFile file = items[index];
+                        return ScannedFileTile(
+                          file: file,
+                          selectionMode: true,
+                          selected: _selection.contains(file),
+                          onTap: () => _toggle(file),
+                          onLongPress: () => showFileDetails(context, file),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -187,6 +277,19 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
           },
         ),
       ),
+      bottomNavigationBar: _selection.isEmpty
+          ? null
+          : SelectionActionBar(
+              selection: _selection,
+              onClear: _clearSelection,
+              onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
+              barKey: const Key('category_selection_bar'),
+              countKey: const Key('category_selection_count'),
+              bytesKey: const Key('category_selection_bytes'),
+              clearKey: const Key('category_selection_clear'),
+              deleteKey: const Key('category_selection_delete'),
+            ),
     );
   }
 }

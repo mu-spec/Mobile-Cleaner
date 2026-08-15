@@ -157,6 +157,7 @@ class _ApkCleanerScreenState extends ConsumerState<ApkCleanerScreen> {
               selection: _selection,
               onClear: _clearSelection,
               onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
               barKey: const Key('apk_selection_bar'),
               countKey: const Key('apk_selection_count'),
               bytesKey: const Key('apk_selection_bytes'),

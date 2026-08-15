@@ -45,6 +45,14 @@ class ScannedFile {
   /// Bucket-relative path, e.g. `DCIM/Camera/`.
   final String? relativePath;
 
+  /// True when Android will let this app delete the file.
+  ///
+  /// Deletion goes through either MediaStore or the Storage Access Framework,
+  /// and both need a `content://` URI. A `file://` URI comes from the legacy
+  /// pre-scoped-storage directory walk, and `ContentResolver.delete` cannot
+  /// act on it, so offering Delete for one would fail at the platform.
+  bool get isDeletable => uri.startsWith('content://');
+
   /// True when the platform can render a visual preview of this file.
   ///
   /// Only images and videos get thumbnails; everything else uses an icon.

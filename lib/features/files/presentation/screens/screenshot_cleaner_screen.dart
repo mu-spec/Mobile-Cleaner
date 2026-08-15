@@ -152,6 +152,7 @@ class _ScreenshotCleanerScreenState
               selection: _selection,
               onClear: _clearSelection,
               onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
               barKey: const Key('screenshot_selection_bar'),
               countKey: const Key('screenshot_selection_count'),
               bytesKey: const Key('screenshot_selection_bytes'),
