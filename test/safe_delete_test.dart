@@ -12,6 +12,8 @@ import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/apk_cleaner_screen.dart';
+import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
+import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 
 const int _mib = 1024 * 1024;
 
@@ -61,6 +63,43 @@ class _NoThumbnails implements ThumbnailRepository {
   Future<Uint8List?> load(ScannedFile file, {int size = 128}) async => null;
 }
 
+/// The completion screen reads free space, which needs a platform channel
+/// that does not exist in tests.
+class _FakeStorage implements StorageRepository {
+  const _FakeStorage([this.freeBytes = 20 * 1024 * 1024 * 1024]);
+
+  final int freeBytes;
+
+  @override
+  Future<StorageInfo> getStorageInfo() async => StorageInfo(
+    totalBytes: 64 * 1024 * 1024 * 1024,
+    freeBytes: freeBytes,
+  );
+}
+
+/// Storage that cannot be read, to prove the screen degrades gracefully.
+class _FailingStorage implements StorageRepository {
+  const _FailingStorage();
+
+  @override
+  Future<StorageInfo> getStorageInfo() async =>
+      throw Exception('STORAGE_UNAVAILABLE');
+}
+
+/// Deletes only the first file, leaving the rest as failures.
+class _PartialDelete implements DeleteRepository {
+  @override
+  Future<DeleteResult> deleteFiles(List<ScannedFile> files) async {
+    return DeleteResult(
+      deletedFiles: files.take(1).toList(),
+      failures: <DeleteFailure>[
+        for (final ScannedFile f in files.skip(1))
+          DeleteFailure(uri: f.uri, reason: 'Access was denied.'),
+      ],
+    );
+  }
+}
+
 /// Configurable fake so each outcome can be exercised.
 class _FakeDelete implements DeleteRepository {
   _FakeDelete({this.cancelled = false, this.failEvery = false});
@@ -95,6 +134,7 @@ Future<_StubScanner> _pump(
   WidgetTester tester,
   DeleteRepository deleter, {
   List<ScannedFile>? files,
+  StorageRepository storage = const _FakeStorage(),
 }) async {
   await tester.binding.setSurfaceSize(const Size(420, 1000));
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -106,6 +146,7 @@ Future<_StubScanner> _pump(
         fileScannerRepositoryProvider.overrideWithValue(scanner),
         thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
         deleteRepositoryProvider.overrideWithValue(deleter),
+        storageRepositoryProvider.overrideWithValue(storage),
       ],
       child: const MaterialApp(home: ApkCleanerScreen()),
     ),
@@ -395,13 +436,16 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(deleter.requests.single, hasLength(1));
+      expect(find.byKey(const Key('cleanup_complete_screen')), findsOneWidget);
       expect(
-        tester.widget<Text>(find.byKey(const Key('delete_result_title'))).data,
-        'Deleted',
+        tester.widget<Text>(find.byKey(const Key('cleanup_title'))).data,
+        'Cleanup Complete',
       );
       expect(
-        tester.widget<Text>(find.byKey(const Key('delete_result_freed'))).data,
-        'Removed 1 file and freed 60.0 MB.',
+        tester
+            .widget<Text>(find.byKey(const Key('cleanup_storage_recovered')))
+            .data,
+        '60.0 MB',
       );
     });
 
@@ -416,7 +460,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('delete_confirm')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('delete_result_done')));
+      await tester.tap(find.byKey(const Key('cleanup_done')));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('apk_selection_bar')), findsNothing);
@@ -500,7 +544,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('delete_confirm')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('delete_result_done')));
+      await tester.tap(find.byKey(const Key('cleanup_done')));
       await tester.pumpAndSettle();
 
       expect(scanner.scanCount, greaterThan(1));
@@ -547,4 +591,160 @@ void main() {
       expect(after.fileCount, 2);
     });
   });
+
+  group('Cleanup Complete screen', () {
+    testWidgets('reports files deleted, storage recovered, and free space', (
+      WidgetTester tester,
+    ) async {
+      await _pump(
+        tester,
+        _FakeDelete(),
+        // 25 GB free after the cleanup.
+        storage: const _FakeStorage(25 * 1024 * 1024 * 1024),
+      );
+
+      await tester.tap(find.byKey(const Key('apk_select_all')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('apk_selection_delete')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('delete_confirm')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('cleanup_complete_screen')), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('cleanup_title'))).data,
+        'Cleanup Complete',
+      );
+      // Files deleted.
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('cleanup_files_deleted')))
+            .data,
+        '3',
+      );
+      // Storage recovered: 60 + 30 + 10 MB.
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('cleanup_storage_recovered')))
+            .data,
+        '100.0 MB',
+      );
+      // Free storage now, read fresh from the platform.
+      expect(
+        tester.widget<Text>(find.byKey(const Key('cleanup_free_storage'))).data,
+        '25.0 GB',
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('uses the singular form for one file', (
+      WidgetTester tester,
+    ) async {
+      await _pump(tester, _FakeDelete());
+
+      await tester.tap(find.byKey(const Key('file_checkbox_3')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('apk_selection_delete')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('delete_confirm')));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('cleanup_files_deleted')))
+            .data,
+        '1',
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('cleanup_storage_recovered')))
+            .data,
+        '10.0 MB',
+      );
+    });
+
+    testWidgets('a storage read failure does not spoil the result', (
+      WidgetTester tester,
+    ) async {
+      await _pump(tester, _FakeDelete(), storage: const _FailingStorage());
+
+      await tester.tap(find.byKey(const Key('file_checkbox_1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('apk_selection_delete')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('delete_confirm')));
+      await tester.pumpAndSettle();
+
+      // The cleanup still reports what it knows.
+      expect(find.byKey(const Key('cleanup_complete_screen')), findsOneWidget);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('cleanup_storage_recovered')))
+            .data,
+        '60.0 MB',
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('cleanup_free_storage'))).data,
+        'Unavailable',
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a partial delete is flagged on the screen', (
+      WidgetTester tester,
+    ) async {
+      await _pump(tester, _PartialDelete());
+
+      await tester.tap(find.byKey(const Key('apk_select_all')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('apk_selection_delete')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('delete_confirm')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('cleanup_complete_screen')), findsOneWidget);
+      expect(find.byKey(const Key('cleanup_partial_notice')), findsOneWidget);
+      // Only the file that really went is counted.
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('cleanup_files_deleted')))
+            .data,
+        '1',
+      );
+      expect(find.textContaining('could not'), findsOneWidget);
+    });
+
+    testWidgets('cancelling never reaches the completion screen', (
+      WidgetTester tester,
+    ) async {
+      await _pump(tester, _FakeDelete(cancelled: true));
+
+      await tester.tap(find.byKey(const Key('file_checkbox_1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('apk_selection_delete')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('delete_confirm')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('cleanup_complete_screen')), findsNothing);
+      expect(find.byKey(const Key('delete_result_dialog')), findsOneWidget);
+    });
+
+    testWidgets('Done returns to the cleaner', (WidgetTester tester) async {
+      await _pump(tester, _FakeDelete());
+
+      await tester.tap(find.byKey(const Key('file_checkbox_1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('apk_selection_delete')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('delete_confirm')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('cleanup_done')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('cleanup_complete_screen')), findsNothing);
+      expect(find.byKey(const Key('apk_list')), findsOneWidget);
+    });
+  });
+
 }
