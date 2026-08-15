@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/app/app.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
 import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
 import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
@@ -10,9 +12,24 @@ import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUp(() {
+    // `appRouter` is a global singleton shared by every test, so the shell's
+    // selected branch leaks across tests. Reset it to a known state.
+    appRouter.go(AppRoutes.home);
+  });
+
+  /// The default 800x600 test window is shorter than any phone, which pushes
+  /// scrollable content underneath the bottom navigation bar and makes taps
+  /// land on the wrong widget. Use a realistic portrait surface instead.
+  Future<void> usePhoneSurface(WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(420, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+  }
+
   testWidgets('onboarding is first-launch only and can be replayed', (
     WidgetTester tester,
   ) async {
+    await usePhoneSurface(tester);
     SharedPreferences.setMockInitialValues(<String, Object>{});
     appRouter.go(AppRoutes.splash);
 
@@ -22,6 +39,7 @@ void main() {
           permissionGatewayProvider.overrideWithValue(
             _FakePermissionGateway(AppPermissionStatus.denied),
           ),
+          ..._offlineDataOverrides,
         ],
         child: const MobileCleanerApp(),
       ),
@@ -67,6 +85,7 @@ void main() {
   testWidgets('denied permission is handled without a crash', (
     WidgetTester tester,
   ) async {
+    await usePhoneSurface(tester);
     SharedPreferences.setMockInitialValues(<String, Object>{
       'onboarding_completed': true,
       'permission_education_seen': false,
@@ -79,6 +98,7 @@ void main() {
           permissionGatewayProvider.overrideWithValue(
             _FakePermissionGateway(AppPermissionStatus.denied),
           ),
+          ..._offlineDataOverrides,
         ],
         child: const MobileCleanerApp(),
       ),
@@ -102,6 +122,7 @@ void main() {
   testWidgets('home displays real storage values from the repository', (
     WidgetTester tester,
   ) async {
+    await usePhoneSurface(tester);
     const int gib = 1024 * 1024 * 1024;
     SharedPreferences.setMockInitialValues(<String, Object>{
       'onboarding_completed': true,
@@ -116,6 +137,9 @@ void main() {
             const _FakeStorageRepository(
               StorageInfo(totalBytes: 128 * gib, freeBytes: 46 * gib),
             ),
+          ),
+          fileScannerRepositoryProvider.overrideWithValue(
+            _EmptyFileScannerRepository(),
           ),
         ],
         child: const MobileCleanerApp(),
@@ -150,6 +174,7 @@ void main() {
   testWidgets('Smart Scan and Settings actions open their screens', (
     WidgetTester tester,
   ) async {
+    await usePhoneSurface(tester);
     const int gib = 1024 * 1024 * 1024;
     SharedPreferences.setMockInitialValues(<String, Object>{
       'onboarding_completed': true,
@@ -164,6 +189,9 @@ void main() {
             const _FakeStorageRepository(
               StorageInfo(totalBytes: 128 * gib, freeBytes: 46 * gib),
             ),
+          ),
+          fileScannerRepositoryProvider.overrideWithValue(
+            _EmptyFileScannerRepository(),
           ),
         ],
         child: const MobileCleanerApp(),
@@ -180,20 +208,30 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('home_settings_button')));
     await tester.pumpAndSettle();
-    expect(find.text('Settings'), findsOneWidget);
+    // 'Settings' appears both in the app bar and as the bottom nav label.
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: find.text('Settings')),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('every bottom tab opens without errors', (
     WidgetTester tester,
   ) async {
+    await usePhoneSurface(tester);
     SharedPreferences.setMockInitialValues(<String, Object>{
       'onboarding_completed': true,
       'permission_education_seen': true,
     });
     appRouter.go(AppRoutes.splash);
 
-    await tester.pumpWidget(const ProviderScope(child: MobileCleanerApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _offlineDataOverrides,
+        child: const MobileCleanerApp(),
+      ),
+    );
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pumpAndSettle();
 
@@ -209,7 +247,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_files')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('screen_Files')), findsOneWidget);
+    expect(find.byKey(const Key('files_empty')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_apps')));
     await tester.pumpAndSettle();
@@ -220,6 +258,30 @@ void main() {
     expect(find.text('App version'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+}
+
+/// Platform channels are unavailable in widget tests, so stub every data
+/// source that Home and Files read on start-up. Without this the loading
+/// spinners animate forever and `pumpAndSettle` times out.
+final _offlineDataOverrides = [
+  storageRepositoryProvider.overrideWithValue(
+    const _FakeStorageRepository(
+      StorageInfo(
+        totalBytes: 64 * 1024 * 1024 * 1024,
+        freeBytes: 20 * 1024 * 1024 * 1024,
+      ),
+    ),
+  ),
+  fileScannerRepositoryProvider.overrideWithValue(
+    _EmptyFileScannerRepository(),
+  ),
+];
+
+class _EmptyFileScannerRepository implements FileScannerRepository {
+  @override
+  Future<FileScanResult> scan([
+    FileScanRequest request = const FileScanRequest(),
+  ]) async => FileScanResult.fromFiles(const []);
 }
 
 class _FakeStorageRepository implements StorageRepository {

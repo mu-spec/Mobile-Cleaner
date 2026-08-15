@@ -41,5 +41,10 @@ class MainActivity : FlutterActivity() {
                     )
                 }
             }
+
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            FileScannerBridge.CHANNEL,
+        ).setMethodCallHandler(FileScannerBridge(applicationContext))
     }
 }

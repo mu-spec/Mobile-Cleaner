@@ -16,10 +16,13 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Row(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Icon(Icons.auto_awesome_rounded),
             SizedBox(width: 10),
-            Text('Mobile Cleaner'),
+            Flexible(
+              child: Text('Mobile Cleaner', overflow: TextOverflow.ellipsis),
+            ),
           ],
         ),
         actions: <Widget>[
@@ -50,9 +53,8 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(
                 'Understand what is using space, then choose what to review.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
+                style: Theme.of(context).textTheme.bodyLarge
+                    ?.copyWith(color: colors.onSurfaceVariant),
               ),
               const SizedBox(height: 22),
               const StorageOverviewCard(),
@@ -71,9 +73,7 @@ class HomeScreen extends ConsumerWidget {
                 onPermissions: () => context.push(AppRoutes.permissions),
               ),
               const SizedBox(height: 30),
-              RecommendationsCard(
-                onScan: () => context.go(AppRoutes.clean),
-              ),
+              RecommendationsCard(onScan: () => context.go(AppRoutes.clean)),
             ],
           ),
         ),
