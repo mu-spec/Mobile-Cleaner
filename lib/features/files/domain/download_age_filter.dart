@@ -1,3 +1,5 @@
+import 'package:mobile_cleaner/core/utils/file_age.dart';
+
 /// Age thresholds offered by the Downloads cleaner.
 ///
 /// A download matches when it has not been modified for at least [minDays].
@@ -29,29 +31,15 @@ enum DownloadAgeFilter {
 
   /// Whole days between [modified] and [now], never negative.
   ///
-  /// Compared at day boundaries so a file saved earlier today reads as 0 days
-  /// old regardless of the clock time.
-  static int ageInDays(DateTime modified, {DateTime? now}) {
-    final DateTime reference = now ?? DateTime.now();
-    final DateTime startOfToday = DateTime(
-      reference.year,
-      reference.month,
-      reference.day,
-    );
-    final DateTime startOfModified = DateTime(
-      modified.year,
-      modified.month,
-      modified.day,
-    );
-    final int days = startOfToday.difference(startOfModified).inDays;
-    return days < 0 ? 0 : days;
-  }
+  /// Delegates to [FileAge] so every tool measures age identically.
+  static int ageInDays(DateTime modified, {DateTime? now}) =>
+      FileAge.inDays(modified, now: now);
 
   /// True when [modified] is at least [minDays] old.
   bool matches(DateTime modified, {DateTime? now}) {
     // An unknown timestamp must never be reported as ancient and offered
     // for deletion, so it is excluded from every age filter.
-    if (modified.millisecondsSinceEpoch == 0) {
+    if (FileAge.isUnknown(modified)) {
       return false;
     }
     return ageInDays(modified, now: now) >= minDays;

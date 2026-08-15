@@ -247,7 +247,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_photos')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('screen_Photos')), findsOneWidget);
+    expect(find.byKey(const Key('photos_tools')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_files')));
     await tester.pumpAndSettle();
