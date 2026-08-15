@@ -28,15 +28,19 @@ class FileScannerBridge(private val context: Context) : MethodChannel.MethodCall
         private const val CATEGORY_AUDIO = "audio"
         private const val CATEGORY_DOCUMENTS = "documents"
         private const val CATEGORY_DOWNLOADS = "downloads"
+        private const val CATEGORY_APKS = "apks"
 
         private const val DEFAULT_LIMIT_PER_CATEGORY = 500
         private const val MAX_LIMIT_PER_CATEGORY = 5000
+
+        private const val APK_MIME = "application/vnd.android.package-archive"
+        private const val APK_EXTENSION = "apk"
 
         /** Extensions treated as documents when a MIME type is missing. */
         private val DOCUMENT_EXTENSIONS = setOf(
             "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
             "txt", "rtf", "csv", "odt", "ods", "odp", "epub",
-            "md", "json", "xml", "zip", "rar", "7z", "tar", "gz", "apk",
+            "md", "json", "xml", "zip", "rar", "7z", "tar", "gz",
         )
 
         private val DOCUMENT_MIME_PREFIXES = listOf(
@@ -48,7 +52,6 @@ class FileScannerBridge(private val context: Context) : MethodChannel.MethodCall
             "application/zip",
             "application/x-rar",
             "application/x-7z",
-            "application/vnd.android.package-archive",
             "text/",
         )
     }
@@ -94,6 +97,7 @@ class FileScannerBridge(private val context: Context) : MethodChannel.MethodCall
                     )
                     CATEGORY_DOCUMENTS -> queryDocuments(limit, minSizeBytes, sortOrder)
                     CATEGORY_DOWNLOADS -> queryDownloads(limit, minSizeBytes, sortOrder)
+                    CATEGORY_APKS -> queryApks(limit, minSizeBytes, sortOrder)
                     else -> emptyList()
                 }
                 if (rows.size >= limit) {
@@ -193,7 +197,54 @@ class FileScannerBridge(private val context: Context) : MethodChannel.MethodCall
             sortOrder = sortOrder,
         )
 
-        return rows.filter { isDocument(it) }.take(limit)
+        // APKs have their own category, so keep them out of Documents.
+        return rows.filter { isDocument(it) && !isApk(it) }.take(limit)
+    }
+
+    /**
+     * Installer packages anywhere in shared storage.
+     *
+     * Queried by MIME type and by `.apk` name so packages are still found when
+     * MediaStore has not classified the row.
+     */
+    private fun queryApks(
+        limit: Int,
+        minSizeBytes: Long,
+        sortOrder: String,
+    ): List<Map<String, Any?>> {
+        val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        } else {
+            @Suppress("DEPRECATION")
+            MediaStore.Files.getContentUri("external")
+        }
+
+        val selectionParts = mutableListOf<String>()
+        val selectionArgs = mutableListOf<String>()
+
+        selectionParts += if (minSizeBytes > 0) {
+            selectionArgs += minSizeBytes.toString()
+            "${MediaStore.MediaColumns.SIZE} >= ?"
+        } else {
+            "${MediaStore.MediaColumns.SIZE} > 0"
+        }
+
+        selectionParts += "(${MediaStore.MediaColumns.MIME_TYPE} = ? OR " +
+            "${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ?)"
+        selectionArgs += APK_MIME
+        selectionArgs += "%.$APK_EXTENSION"
+
+        val rows = runQuery(
+            collection = collection,
+            category = CATEGORY_APKS,
+            selection = selectionParts.joinToString(" AND "),
+            selectionArgs = selectionArgs.toTypedArray(),
+            limit = limit,
+            sortOrder = sortOrder,
+        )
+
+        // The LIKE clause can match names such as "notes.apk.txt".
+        return rows.filter { isApk(it) }
     }
 
     private fun queryDownloads(
@@ -365,6 +416,14 @@ class FileScannerBridge(private val context: Context) : MethodChannel.MethodCall
         "date_desc" -> "${MediaStore.MediaColumns.DATE_MODIFIED} DESC"
         "name_asc" -> "${MediaStore.MediaColumns.DISPLAY_NAME} ASC"
         else -> "${MediaStore.MediaColumns.SIZE} DESC"
+    }
+
+    private fun isApk(row: Map<String, Any?>): Boolean {
+        if ((row["mimeType"] as? String)?.lowercase() == APK_MIME) {
+            return true
+        }
+        val name = (row["name"] as? String)?.lowercase() ?: return false
+        return name.substringAfterLast('.', "") == APK_EXTENSION
     }
 
     private fun isDocument(row: Map<String, Any?>): Boolean {

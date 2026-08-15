@@ -247,7 +247,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_files')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('files_empty')), findsOneWidget);
+    expect(find.byKey(const Key('files_overview')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_apps')));
     await tester.pumpAndSettle();

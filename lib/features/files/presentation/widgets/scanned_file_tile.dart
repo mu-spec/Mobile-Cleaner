@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_tile.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
 
 class ScannedFileTile extends StatelessWidget {
   const ScannedFileTile({required this.file, this.onTap, super.key});

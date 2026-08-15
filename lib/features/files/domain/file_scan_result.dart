@@ -98,16 +98,51 @@ class FileScanResult {
   /// True when the scan hit its per-category row limit.
   final bool truncated;
 
-  int get totalFiles => files.length;
+  /// Files counted once, even when they appear in more than one category.
+  ///
+  /// A downloaded APK is legitimately both a Download and an APK, so the
+  /// category lists overlap by design. Overview totals must not double count.
+  List<ScannedFile> get uniqueFiles {
+    final Set<String> seen = <String>{};
+    return files
+        .where((ScannedFile file) => seen.add(file.uri))
+        .toList(growable: false);
+  }
 
-  int get totalBytes =>
-      files.fold<int>(0, (int sum, ScannedFile file) => sum + file.sizeBytes);
+  int get totalFiles => uniqueFiles.length;
+
+  int get totalBytes => uniqueFiles.fold<int>(
+    0,
+    (int sum, ScannedFile file) => sum + file.sizeBytes,
+  );
 
   bool get isEmpty => files.isEmpty;
 
   List<ScannedFile> byCategory(FileCategory category) => files
       .where((ScannedFile file) => file.category == category)
       .toList(growable: false);
+
+  /// Files in [category], ordered by [sort].
+  List<ScannedFile> sortedCategory(
+    FileCategory category, {
+    FileListSort sort = FileListSort.largest,
+  }) {
+    final List<ScannedFile> items = List<ScannedFile>.of(byCategory(category))
+      ..sort(compareFiles(sort));
+    return List<ScannedFile>.unmodifiable(items);
+  }
+
+  /// Comparator matching a [FileListSort] choice.
+  static Comparator<ScannedFile> compareFiles(FileListSort sort) {
+    return switch (sort) {
+      FileListSort.largest => (ScannedFile a, ScannedFile b) =>
+        b.sizeBytes.compareTo(a.sizeBytes),
+      FileListSort.newest => (ScannedFile a, ScannedFile b) =>
+        b.dateModified.compareTo(a.dateModified),
+      FileListSort.name => (ScannedFile a, ScannedFile b) =>
+        a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    };
+  }
 
   FileCategorySummary summaryFor(FileCategory category) =>
       summaries[category] ??
@@ -123,9 +158,9 @@ class FileScanResult {
     return values;
   }
 
-  /// The heaviest files across every category.
+  /// The heaviest files across every category, each listed once.
   List<ScannedFile> largestFiles({int limit = 20}) {
-    final List<ScannedFile> sorted = List<ScannedFile>.of(files)
+    final List<ScannedFile> sorted = List<ScannedFile>.of(uniqueFiles)
       ..sort(
         (ScannedFile a, ScannedFile b) => b.sizeBytes.compareTo(a.sizeBytes),
       );

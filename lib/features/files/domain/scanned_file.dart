@@ -45,6 +45,11 @@ class ScannedFile {
   /// Bucket-relative path, e.g. `DCIM/Camera/`.
   final String? relativePath;
 
+  /// True when the file is an Android installer package.
+  bool get isApk =>
+      extension == 'apk' ||
+      mimeType == 'application/vnd.android.package-archive';
+
   /// Lowercase extension without the dot, e.g. `jpg`. Empty when absent.
   String get extension {
     final int dot = name.lastIndexOf('.');

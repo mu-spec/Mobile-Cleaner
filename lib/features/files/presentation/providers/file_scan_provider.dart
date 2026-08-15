@@ -10,16 +10,15 @@ final FutureProvider<FileScanResult> fileScanProvider =
       return ref.watch(fileScannerRepositoryProvider).scan();
     });
 
-/// Files for one category, sorted largest first.
+/// Files belonging to one category, largest first.
+///
+/// Sorting and searching are ephemeral UI concerns, so the category screen
+/// applies those on top of this list rather than rebuilding the scan.
 final categoryFilesProvider =
     FutureProvider.family<List<ScannedFile>, FileCategory>((
       ref,
       FileCategory category,
     ) async {
       final FileScanResult result = await ref.watch(fileScanProvider.future);
-      final List<ScannedFile> files = result.byCategory(category)
-        ..sort(
-          (ScannedFile a, ScannedFile b) => b.sizeBytes.compareTo(a.sizeBytes),
-        );
-      return files;
+      return result.sortedCategory(category);
     });

@@ -273,26 +273,22 @@ void main() {
         )!,
       ]);
 
+      await tester.binding.setSurfaceSize(const Size(420, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(wrap(const FilesScreen(), result));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('files_overview')), findsOneWidget);
       expect(find.text('3 files · 130.0 MB'), findsOneWidget);
-      expect(find.byKey(const Key('category_tile_images')), findsOneWidget);
 
-      // The remaining categories and the largest-files list are below the
-      // fold in a lazy ListView, so scroll them into view first.
-      await tester.scrollUntilVisible(
-        find.byKey(const Key('category_tile_downloads')),
-        320,
-        scrollable: find
-            .descendant(
-              of: find.byKey(const Key('files_overview')),
-              matching: find.byType(Scrollable),
-            )
-            .first,
-      );
-      expect(find.byKey(const Key('category_tile_downloads')), findsOneWidget);
+      // Every category has a card, including the ones with no files.
+      for (final FileCategory category in FileCategory.scannable) {
+        expect(
+          find.byKey(Key('category_card_${category.key}')),
+          findsOneWidget,
+          reason: '${category.label} card should always be shown',
+        );
+      }
 
       await tester.scrollUntilVisible(
         find.text('movie.mp4'),
@@ -320,10 +316,12 @@ void main() {
         )!,
       ]);
 
+      await tester.binding.setSurfaceSize(const Size(420, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(wrap(const FilesScreen(), result));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('category_tile_audio')));
+      await tester.tap(find.byKey(const Key('category_card_audio')));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('category_list_audio')), findsOneWidget);
@@ -334,12 +332,14 @@ void main() {
     testWidgets('shows the empty state when nothing is found', (
       WidgetTester tester,
     ) async {
+      await tester.binding.setSurfaceSize(const Size(420, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(
         wrap(const FilesScreen(), FileScanResult.fromFiles(<ScannedFile>[])),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('files_empty')), findsOneWidget);
+      expect(find.byKey(const Key('files_overview')), findsOneWidget);
       expect(find.text('No files found'), findsOneWidget);
     });
   });

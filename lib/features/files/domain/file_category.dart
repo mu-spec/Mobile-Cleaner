@@ -8,6 +8,7 @@ enum FileCategory {
   audio('audio', 'Audio'),
   documents('documents', 'Documents'),
   downloads('downloads', 'Downloads'),
+  apks('apks', 'APKs'),
   other('other', 'Other');
 
   const FileCategory(this.key, this.label);
@@ -22,14 +23,48 @@ enum FileCategory {
     );
   }
 
-  /// Categories exposed to the user in the Files dashboard.
+  /// Categories exposed to the user in the Files dashboard, in display order.
   static const List<FileCategory> scannable = <FileCategory>[
     FileCategory.images,
     FileCategory.videos,
     FileCategory.audio,
     FileCategory.documents,
     FileCategory.downloads,
+    FileCategory.apks,
   ];
+
+  /// Message shown when the category holds no files.
+  String get emptyMessage => switch (this) {
+    FileCategory.images => 'No images found',
+    FileCategory.videos => 'No videos found',
+    FileCategory.audio => 'No audio files found',
+    FileCategory.documents => 'No documents found',
+    FileCategory.downloads => 'No downloads found',
+    FileCategory.apks => 'No APK files found',
+    FileCategory.other => 'No other files found',
+  };
+
+  /// Short explanation shown under the category title.
+  String get description => switch (this) {
+    FileCategory.images => 'Photos, screenshots, and saved pictures',
+    FileCategory.videos => 'Recordings, clips, and downloaded video',
+    FileCategory.audio => 'Music, voice notes, and sound files',
+    FileCategory.documents => 'PDFs, office files, text, and archives',
+    FileCategory.downloads => 'Everything saved to your Downloads folder',
+    FileCategory.apks => 'Installer packages that are safe to remove',
+    FileCategory.other => 'Files that do not fit another category',
+  };
+}
+
+/// How a category list is ordered in the UI.
+enum FileListSort {
+  largest('Largest first'),
+  newest('Newest first'),
+  name('Name (A-Z)');
+
+  const FileListSort(this.label);
+
+  final String label;
 }
 
 /// Sort order requested from the native scanner.
