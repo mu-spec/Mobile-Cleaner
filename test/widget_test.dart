@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/app/app.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
@@ -247,7 +248,10 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_photos')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('photos_tools')), findsOneWidget);
+    expect(
+      find.byKey(const Key('photo_cleanup_dashboard')),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byKey(const Key('nav_files')));
     await tester.pumpAndSettle();
@@ -280,7 +284,18 @@ final _offlineDataOverrides = [
     _EmptyFileScannerRepository(),
   ),
   thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
+  // The Photos tab composes the duplicate scan, which hashes over a channel.
+  fileHashRepositoryProvider.overrideWithValue(const _NoHashes()),
 ];
+
+/// Hashing is a platform channel too, and the Photos dashboard reaches it.
+class _NoHashes implements FileHashRepository {
+  const _NoHashes();
+
+  @override
+  Future<Map<String, String>> hashFiles(List<ScannedFile> files) async =>
+      const <String, String>{};
+}
 
 /// Thumbnails come from a platform channel that does not exist in tests.
 class _NoThumbnails implements ThumbnailRepository {
