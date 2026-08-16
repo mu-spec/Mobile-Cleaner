@@ -165,6 +165,21 @@ class _CategoryGrid extends StatelessWidget {
             onTap: () => context.push(AppRoutes.apkCleaner),
           ),
         ),
+        const SizedBox(height: 10),
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            key: const Key('open_duplicates'),
+            leading: CircleAvatar(
+              backgroundColor: colors.primaryContainer,
+              child: Icon(Icons.copy_all_rounded, color: colors.primary),
+            ),
+            title: const Text('Duplicates'),
+            subtitle: const Text('Find byte-identical copies'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push(AppRoutes.duplicates),
+          ),
+        ),
         const SizedBox(height: 18),
         Text('Categories', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 4),

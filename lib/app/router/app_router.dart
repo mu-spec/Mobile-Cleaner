@@ -4,6 +4,7 @@ import 'package:mobile_cleaner/features/apps/presentation/screens/apps_screen.da
 import 'package:mobile_cleaner/features/cleaner/presentation/screens/clean_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/apk_cleaner_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/downloads_cleaner_screen.dart';
+import 'package:mobile_cleaner/features/files/presentation/screens/duplicates_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/files_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/large_files_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/large_photos_screen.dart';
@@ -28,6 +29,7 @@ abstract final class AppRoutes {
   static const String apkCleaner = '/apk-cleaner';
   static const String screenshotCleaner = '/screenshot-cleaner';
   static const String largePhotos = '/large-photos';
+  static const String duplicates = '/duplicates';
   static const String apps = '/apps';
   static const String settings = '/settings';
 }
@@ -66,6 +68,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.largePhotos,
       builder: (context, state) => const LargePhotosScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.duplicates,
+      builder: (context, state) => const DuplicatesScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
