@@ -6,6 +6,7 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import io.flutter.plugin.common.MethodCall
@@ -160,7 +161,15 @@ class FileScannerBridge(
                 security.message,
             )
         } catch (error: Exception) {
-            result.error("SCAN_FAILED", "Unable to scan device files.", error.message)
+            // Include the exception type: a bare message is often null, which
+            // left the UI showing "We could not scan your files" with nothing
+            // to diagnose from. This is how the API 30 "Invalid token LIMIT"
+            // failure stayed invisible until a user reported it.
+            result.error(
+                "SCAN_FAILED",
+                "Unable to scan device files.",
+                "${error.javaClass.simpleName}: ${error.message}",
+            )
         }
     }
 
@@ -330,6 +339,63 @@ class FileScannerBridge(
         return walkDirectory(downloadsDir, limit, minSizeBytes, sortOrder)
     }
 
+    /**
+     * Runs a MediaStore query with a row limit, on every supported API level.
+     *
+     * ## Why this is not just `"$column DESC LIMIT $n"`
+     *
+     * Appending `LIMIT` to the sort-order string is the classic MediaStore
+     * idiom, and it worked for years. Android 11 (API 30) added a SQL token
+     * validator to `MediaProvider` that rejects it outright:
+     *
+     * ```
+     * java.lang.IllegalArgumentException: Invalid token LIMIT
+     * ```
+     *
+     * The check applies to apps *targeting* API 30+, so the same APK behaves
+     * differently depending on `targetSdk`, and the crash only appears on
+     * newer devices. Every scan threw, which surfaced in the app as
+     * "We could not scan your files" on Android 11, 12, 13 and 14.
+     *
+     * On API 30+ the limit therefore travels as a real query argument in a
+     * [Bundle]. Below that, the legacy string is still the only option.
+     */
+    private fun queryWithLimit(
+        resolver: ContentResolver,
+        collection: Uri,
+        projection: Array<String>,
+        selection: String?,
+        selectionArgs: Array<String>?,
+        order: String,
+        limit: Int,
+    ): Cursor? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val args = Bundle().apply {
+                putInt(ContentResolver.QUERY_ARG_LIMIT, limit)
+                putString(ContentResolver.QUERY_ARG_SQL_SORT_ORDER, order)
+                if (selection != null) {
+                    putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+                }
+                if (selectionArgs != null) {
+                    putStringArray(
+                        ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS,
+                        selectionArgs,
+                    )
+                }
+            }
+            return resolver.query(collection, projection, args, null)
+        }
+
+        @Suppress("DEPRECATION")
+        return resolver.query(
+            collection,
+            projection,
+            selection,
+            selectionArgs,
+            "$order LIMIT $limit",
+        )
+    }
+
     private fun runQuery(
         collection: Uri,
         category: String,
@@ -356,16 +422,17 @@ class FileScannerBridge(
             projection += MediaStore.Video.Media.DURATION
         }
 
-        val order = "${sortColumn(sortOrder)} LIMIT $limit"
         val resolver: ContentResolver = context.contentResolver
         val results = mutableListOf<Map<String, Any?>>()
 
-        val cursor: Cursor = resolver.query(
-            collection,
-            projection.toTypedArray(),
-            selection.ifEmpty { null },
-            if (selectionArgs.isEmpty()) null else selectionArgs,
-            order,
+        val cursor: Cursor = queryWithLimit(
+            resolver = resolver,
+            collection = collection,
+            projection = projection.toTypedArray(),
+            selection = selection.ifEmpty { null },
+            selectionArgs = if (selectionArgs.isEmpty()) null else selectionArgs,
+            order = sortColumn(sortOrder),
+            limit = limit,
         ) ?: return results
 
         cursor.use { rows ->
