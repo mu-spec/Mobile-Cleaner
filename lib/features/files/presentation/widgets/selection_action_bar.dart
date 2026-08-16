@@ -8,16 +8,18 @@ import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 /// cannot be present in one tool and missing in another, and so there is only
 /// ever one route into the Phase 12 safe-delete flow.
 ///
-/// ## Staying above the system navigation bar
+/// ## Placement
 ///
-/// The screens wrap their `body` in a `SafeArea`. That consumes the bottom
-/// inset *before* the `Scaffold` lays out `bottomNavigationBar`, so a nested
-/// `SafeArea` here would find nothing left to pad and the bar would sit
-/// underneath the gesture pill or button bar — visible in a screenshot, but
-/// unreachable on a real device.
+/// This belongs in the screen's body `Column`, directly below the `Expanded`
+/// scrollable list — **not** in `Scaffold.bottomNavigationBar`. Using the
+/// Scaffold slot made the bar fight the body for the bottom inset, which left
+/// it drawn under the system navigation bar while the body stopped receiving
+/// pointer events, so the list could not be scrolled.
 ///
-/// Reading `MediaQuery.viewPaddingOf` gives the true system inset regardless
-/// of what an ancestor already consumed, so the bar always clears it.
+/// Sitting in the Column means it simply takes the height it needs, the list
+/// keeps the rest, and neither overlaps the other. The screens already wrap
+/// their body in a `SafeArea`, so that ancestor handles the system inset and
+/// this widget must not pad for it again.
 class SelectionActionBar extends StatelessWidget {
   const SelectionActionBar({
     required this.selection,
@@ -53,8 +55,6 @@ class SelectionActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
 
-    // The true system inset, even though an ancestor SafeArea consumed it.
-    final double systemInset = MediaQuery.viewPaddingOf(context).bottom;
     final int deletable = deletableCount ?? selection.count;
     final bool canDelete = deletable > 0;
 
@@ -63,7 +63,8 @@ class SelectionActionBar extends StatelessWidget {
       color: colors.surfaceContainerHighest,
       elevation: 8,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(12, 10, 12, 10 + systemInset),
+        // The body's SafeArea already clears the system navigation bar.
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         child: Row(
           children: <Widget>[
             Flexible(

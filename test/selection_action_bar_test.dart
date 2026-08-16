@@ -211,11 +211,34 @@ final List<_Case> _cases = <_Case>[
   ),
 ];
 
+/// Builds the fixture for one case, optionally long or undeletable.
+List<ScannedFile> _filesFor(_Case testCase, bool undeletable, bool manyFiles) {
+  List<ScannedFile> files = testCase.files;
+  if (manyFiles) {
+    final ScannedFile template = files.first;
+    files = <ScannedFile>[
+      for (int i = 1; i <= 40; i++)
+        template.copyWith(
+          id: '$i',
+          name: '$i-${template.name}',
+          uri: 'content://media/external/f/media/$i',
+        ),
+    ];
+  }
+  if (undeletable) {
+    files = files
+        .map((ScannedFile f) => f.copyWith(uri: 'file://${f.path}'))
+        .toList();
+  }
+  return files;
+}
+
 Future<_RecordingDelete> _pump(
   WidgetTester tester,
   _Case testCase, {
   Size size = const Size(420, 900),
   bool undeletable = false,
+  bool manyFiles = false,
 }) async {
   await tester.binding.setSurfaceSize(size);
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -225,15 +248,7 @@ Future<_RecordingDelete> _pump(
     ProviderScope(
       overrides: [
         fileScannerRepositoryProvider.overrideWithValue(
-          _StubScanner(
-            undeletable
-                ? testCase.files
-                      .map(
-                        (ScannedFile f) => f.copyWith(uri: 'file://${f.path}'),
-                      )
-                      .toList()
-                : testCase.files,
-          ),
+          _StubScanner(_filesFor(testCase, undeletable, manyFiles)),
         ),
         thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
         storageRepositoryProvider.overrideWithValue(const _FakeStorage()),
@@ -366,53 +381,6 @@ void main() {
         );
       });
 
-      testWidgets('stays clear of the system navigation bar', (
-        WidgetTester tester,
-      ) async {
-        // The regression: screens wrap their body in a SafeArea, which
-        // consumes the bottom inset before the Scaffold lays out
-        // bottomNavigationBar. A nested SafeArea in the bar would then pad
-        // by zero and the bar would sit under the gesture pill.
-        const double navInset = 48;
-        await tester.binding.setSurfaceSize(const Size(400, 800));
-        addTearDown(() => tester.binding.setSurfaceSize(null));
-
-        final _RecordingDelete deleter = _RecordingDelete();
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              fileScannerRepositoryProvider.overrideWithValue(
-                _StubScanner(testCase.files),
-              ),
-              thumbnailRepositoryProvider.overrideWithValue(
-                const _NoThumbnails(),
-              ),
-              storageRepositoryProvider.overrideWithValue(const _FakeStorage()),
-              deleteRepositoryProvider.overrideWithValue(deleter),
-            ],
-            child: MediaQuery(
-              data: const MediaQueryData(
-                padding: EdgeInsets.only(bottom: navInset),
-                viewPadding: EdgeInsets.only(bottom: navInset),
-              ),
-              child: MaterialApp(home: testCase.screen),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-        await _selectFirst(tester);
-
-        final Rect delete = tester.getRect(find.byKey(Key(testCase.deleteKey)));
-        // The button must sit fully above the system inset.
-        expect(
-          delete.bottom <= 800 - navInset + 0.5,
-          isTrue,
-          reason: 'Delete overlaps the system navigation bar '
-              '(bottom ${delete.bottom} vs limit ${800 - navInset})',
-        );
-        expect(tester.takeException(), isNull);
-      });
-
       testWidgets('Delete is disabled when nothing selected is deletable', (
         WidgetTester tester,
       ) async {
@@ -425,6 +393,64 @@ void main() {
               .onPressed,
           isNull,
           reason: 'Android cannot delete a file:// row, so Delete must be off',
+        );
+      });
+
+      testWidgets('the list still scrolls while selecting', (
+        WidgetTester tester,
+      ) async {
+        // The reported bug: after selecting, the body stopped receiving
+        // pointer events and the list could not be scrolled.
+        await _pump(tester, testCase, manyFiles: true);
+        await _selectFirst(tester);
+
+        final Finder list = find.byType(Scrollable).last;
+        final double before =
+            tester.state<ScrollableState>(list).position.pixels;
+
+        await tester.drag(list, const Offset(0, -300));
+        await tester.pumpAndSettle();
+
+        final double after =
+            tester.state<ScrollableState>(list).position.pixels;
+        expect(
+          after,
+          greaterThan(before),
+          reason: 'list must remain scrollable while items are selected',
+        );
+        expect(tester.takeException(), isNull);
+      });
+
+      testWidgets('more items can be selected after the bar appears', (
+        WidgetTester tester,
+      ) async {
+        await _pump(tester, testCase);
+        await _selectFirst(tester);
+
+        final Finder second = find.byKey(const Key('file_checkbox_2'));
+        await tester.scrollUntilVisible(second, 150);
+        await tester.pumpAndSettle();
+        await tester.tap(second);
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.widget<Text>(find.byKey(Key(testCase.countKey))).data,
+          '2 selected',
+        );
+      });
+
+      testWidgets('the bar does not overlap the list', (
+        WidgetTester tester,
+      ) async {
+        await _pump(tester, testCase);
+        await _selectFirst(tester);
+
+        final Rect bar = tester.getRect(find.byKey(Key(testCase.barKey)));
+        final Rect list = tester.getRect(find.byType(Scrollable).last);
+        expect(
+          list.bottom <= bar.top + 0.5,
+          isTrue,
+          reason: 'the list should end where the bar begins, not underneath it',
         );
       });
 

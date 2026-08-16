@@ -146,24 +146,25 @@ class _DownloadsCleanerScreenState
                           ),
                   ),
                 ),
+                // In the body, below the Expanded list, so it shares the
+                // Column rather than competing for the Scaffold's bottom slot.
+                if (selecting)
+                  SelectionActionBar(
+                    selection: _selection,
+                    onClear: _clearSelection,
+                    onDelete: _deleteSelected,
+                    deletableCount: _selection.deletableCount,
+                    barKey: const Key('downloads_selection_bar'),
+                    countKey: const Key('selection_count'),
+                    bytesKey: const Key('selection_bytes'),
+                    clearKey: const Key('selection_clear'),
+                    deleteKey: const Key('selection_delete'),
+                  ),
               ],
             );
           },
         ),
       ),
-      bottomNavigationBar: selecting
-          ? SelectionActionBar(
-              selection: _selection,
-              onClear: _clearSelection,
-              onDelete: _deleteSelected,
-              deletableCount: _selection.deletableCount,
-              barKey: const Key('downloads_selection_bar'),
-              countKey: const Key('selection_count'),
-              bytesKey: const Key('selection_bytes'),
-              clearKey: const Key('selection_clear'),
-              deleteKey: const Key('selection_delete'),
-            )
-          : null,
     );
   }
 }
@@ -221,9 +222,7 @@ class _DownloadsList extends StatelessWidget {
     return ListView(
       key: const Key('downloads_list'),
       physics: const AlwaysScrollableScrollPhysics(),
-      // Extra bottom room while selecting, so the action bar never
-      // covers the last row.
-      padding: EdgeInsets.fromLTRB(16, 6, 16, selection.isEmpty ? 28 : 104),
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
       children: <Widget>[
         _TotalCard(summary: summary),
         const SizedBox(height: 12),
