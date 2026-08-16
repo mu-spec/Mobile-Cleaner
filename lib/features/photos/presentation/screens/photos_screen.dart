@@ -76,13 +76,31 @@ class PhotosScreen extends StatelessWidget {
             Card(
               clipBehavior: Clip.antiAlias,
               child: ListTile(
+                key: const Key('open_photo_duplicates'),
+                leading: CircleAvatar(
+                  backgroundColor: colors.primaryContainer,
+                  child: Icon(
+                    Icons.photo_library_rounded,
+                    color: colors.primary,
+                  ),
+                ),
+                title: const Text('Duplicate photos'),
+                subtitle: const Text('Compare copies and keep one'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push(AppRoutes.photoDuplicates),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
                 key: const Key('open_duplicates_from_photos'),
                 leading: CircleAvatar(
                   backgroundColor: colors.primaryContainer,
                   child: Icon(Icons.copy_all_rounded, color: colors.primary),
                 ),
-                title: const Text('Duplicates'),
-                subtitle: const Text('Byte-identical copies'),
+                title: const Text('All duplicates'),
+                subtitle: const Text('Identical copies of any file type'),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => context.push(AppRoutes.duplicates),
               ),
