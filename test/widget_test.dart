@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/app/app.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
+import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
 import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:mobile_cleaner/features/files/data/perceptual_hash_repository.dart';
@@ -260,7 +262,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_apps')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('screen_Apps')), findsOneWidget);
+    expect(find.byKey(const Key('apps_list')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_settings')));
     await tester.pumpAndSettle();
@@ -289,7 +291,47 @@ final _offlineDataOverrides = [
   fileHashRepositoryProvider.overrideWithValue(const _NoHashes()),
   // Similar photos decode over a channel that does not exist in tests.
   perceptualHashRepositoryProvider.overrideWithValue(const _NoFingerprints()),
+  // The Apps tab reads installed packages over a channel.
+  installedAppsRepositoryProvider.overrideWithValue(const _OneFakeApp()),
 ];
+
+/// The Apps tab reads the package list over a channel that does not exist in
+/// tests. One app keeps the list non-empty so `apps_list` renders.
+class _OneFakeApp implements InstalledAppsRepository {
+  const _OneFakeApp();
+
+  @override
+  Future<InstalledAppsSnapshot> getInstalledApps({
+    bool includeIcons = true,
+  }) async => const InstalledAppsSnapshot(
+    apps: <InstalledApp>[
+      InstalledApp(
+        packageName: 'com.example.demo',
+        name: 'Demo',
+        apkBytes: 1024,
+      ),
+    ],
+    sizeDetailSupported: false,
+  );
+
+  @override
+  Future<bool> hasUsageAccess() async => false;
+
+  @override
+  Future<bool> openUsageAccessSettings() async => false;
+
+  @override
+  Future<bool> openApp(String packageName) async => false;
+
+  @override
+  Future<bool> openAppSettings(String packageName) async => false;
+
+  @override
+  Future<bool> requestUninstall(String packageName) async => false;
+
+  @override
+  Future<bool> isInstalled(String packageName) async => true;
+}
 
 /// Perceptual hashing is a platform channel; the Photos tab reaches it.
 class _NoFingerprints implements PerceptualHashRepository {

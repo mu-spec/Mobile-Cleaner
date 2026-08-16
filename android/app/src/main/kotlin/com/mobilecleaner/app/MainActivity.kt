@@ -18,6 +18,7 @@ class MainActivity : FlutterActivity() {
     private var hashBridge: FileHashBridge? = null
     private var perceptualHashBridge: PerceptualHashBridge? = null
     private var photoQualityBridge: PhotoQualityBridge? = null
+    private var installedAppsBridge: InstalledAppsBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -92,6 +93,14 @@ class MainActivity : FlutterActivity() {
             PhotoQualityBridge.CHANNEL,
         ).setMethodCallHandler(quality)
 
+        val installedApps = InstalledAppsBridge(applicationContext)
+        installedApps.activity = this
+        installedAppsBridge = installedApps
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            InstalledAppsBridge.CHANNEL,
+        ).setMethodCallHandler(installedApps)
+
         val loader = ThumbnailLoader(applicationContext)
         thumbnailLoader = loader
         MethodChannel(
@@ -135,6 +144,9 @@ class MainActivity : FlutterActivity() {
         perceptualHashBridge = null
         photoQualityBridge?.dispose()
         photoQualityBridge = null
+        installedAppsBridge?.activity = null
+        installedAppsBridge?.dispose()
+        installedAppsBridge = null
         super.onDestroy()
     }
 }

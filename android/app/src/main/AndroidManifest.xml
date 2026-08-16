@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Android 12 and lower: legacy shared-storage read access. -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -19,6 +20,14 @@
 
     <!-- Android 14+: supports user-selected visual media access. -->
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+
+    <!-- Optional, and never requested with a runtime dialog: Android only
+         grants Usage Access from system Settings. Without it the Apps screen
+         still works and reports APK size; with it, it can also report data and
+         cache via StorageStatsManager. -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:label="Mobile Cleaner"
@@ -61,6 +70,15 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Phase 23: reveals apps that have a launcher icon, which is what a
+             person means by "my apps". Deliberately NOT QUERY_ALL_PACKAGES:
+             that is a Play-restricted permission needing case-by-case
+             approval, and this app does not need to see packages the user
+             cannot see themselves. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN"/>
+            <category android:name="android.intent.category.LAUNCHER"/>
         </intent>
     </queries>
 </manifest>
