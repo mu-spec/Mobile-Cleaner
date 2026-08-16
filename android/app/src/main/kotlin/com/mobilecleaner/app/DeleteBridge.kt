@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.provider.DocumentsContract
 import android.provider.MediaStore
+import android.util.Log
 import androidx.annotation.RequiresApi
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -41,6 +42,9 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
 
         private const val SCHEME_CONTENT = "content"
         private const val SCHEME_FILE = "file"
+
+        /** Diagnostics tag. Temporary; see docs/delete-debug-logging.md. */
+        private const val DEBUG_TAG = "DELETE_DEBUG"
     }
 
     var activity: Activity? = null
@@ -55,6 +59,84 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
     private var deletedBeforePrompt: MutableList<String> = mutableListOf()
 
     private var failedBeforePrompt: MutableList<Map<String, Any?>> = mutableListOf()
+
+    /**
+     * Per-URI metadata supplied by Dart purely so the logs are readable.
+     *
+     * Deletion never consults this; routing still depends only on the URI.
+     */
+    private var debugItems: Map<String, Map<*, *>> = emptyMap()
+
+    private fun log(message: String) {
+        Log.i(DEBUG_TAG, "[$DEBUG_TAG] $message")
+    }
+
+    private fun logError(message: String, error: Throwable) {
+        // Log the class, message and full stack trace separately, so a
+        // truncated logcat line still shows which exception was thrown.
+        Log.e(
+            DEBUG_TAG,
+            "[$DEBUG_TAG] $message | exceptionClass=${error.javaClass.name} " +
+                "| exceptionMessage=${error.message}",
+            error,
+        )
+    }
+
+    /** Everything known about one URI before a strategy is chosen. */
+    private fun describe(uri: Uri): String {
+        val item = debugItems[uri.toString()]
+        val scheme = uri.scheme ?: "none"
+        val rawScheme = when (scheme) {
+            SCHEME_CONTENT -> "content://"
+            SCHEME_FILE -> "file://"
+            else -> "raw/$scheme"
+        }
+        return buildString {
+            append("category=").append(item?.get("category") ?: "unknown")
+            append(" | name=").append(item?.get("name") ?: "unknown")
+            append(" | originalPath=").append(item?.get("path") ?: "unknown")
+            append(" | mimeType=").append(item?.get("mimeType") ?: "unknown")
+            append(" | sizeBytes=").append(item?.get("sizeBytes") ?: "unknown")
+            append(" | uri=").append(uri)
+            append(" | scheme=").append(rawScheme)
+            append(" | authority=").append(uri.authority ?: "none")
+        }
+    }
+
+    /** Whether a persisted SAF grant covers this URI, and with what access. */
+    private fun describeSafPermission(uri: Uri): String {
+        return try {
+            val target = uri.toString()
+            val match = context.contentResolver.persistedUriPermissions
+                .firstOrNull { target.startsWith(it.uri.toString()) }
+            if (match == null) {
+                "safPermission=none"
+            } else {
+                "safPermission=yes | safRead=${match.isReadPermission} " +
+                    "| safWrite=${match.isWritePermission} " +
+                    "| safTree=${match.uri}"
+            }
+        } catch (error: Exception) {
+            "safPermission=error(${error.javaClass.simpleName})"
+        }
+    }
+
+    /** Whether MediaStore can still see the row. */
+    private fun describeMediaStoreLookup(uri: Uri): String {
+        return try {
+            context.contentResolver.query(
+                uri,
+                arrayOf(MediaStore.MediaColumns._ID),
+                null,
+                null,
+                null,
+            )?.use { cursor ->
+                "mediaStoreLookup=ok | rows=${cursor.count}"
+            } ?: "mediaStoreLookup=nullCursor"
+        } catch (error: Exception) {
+            "mediaStoreLookup=failed(${error.javaClass.simpleName}: ${error.message})"
+        }
+    }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         if (call.method != "deleteFiles") {
@@ -83,10 +165,44 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         deletedBeforePrompt = mutableListOf()
         failedBeforePrompt = mutableListOf()
 
+        debugItems = call.argument<List<Map<*, *>>>("debugItems")
+            .orEmpty()
+            .mapNotNull { item ->
+                (item["uri"] as? String)?.let { uri -> uri to item }
+            }
+            .toMap()
+
+        log(
+            "===== delete request ===== sdkInt=${Build.VERSION.SDK_INT} " +
+                "(${Build.VERSION.RELEASE}) | device=${Build.MANUFACTURER} " +
+                "${Build.MODEL} | requested=${uris.size}",
+        )
+
         // Route each URI to the API that can actually delete it.
         val safUris = uris.filter { isSafDocument(it) }
         val fileUris = uris.filter { isDirectFile(it) }
         val mediaUris = uris.filter { !isSafDocument(it) && !isDirectFile(it) }
+
+        for (uri in uris) {
+            val branch = when {
+                isSafDocument(uri) -> "SAF/DocumentsContract.deleteDocument"
+                isDirectFile(uri) -> "DIRECT/File.delete"
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+                    "MEDIASTORE/createDeleteRequest (API 30+)"
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
+                    "MEDIASTORE/delete + RecoverableSecurityException (API 29)"
+                else -> "MEDIASTORE/delete (API 28-)"
+            }
+            log(
+                "plan | ${describe(uri)} | strategy=$branch | " +
+                    "${describeSafPermission(uri)} | " +
+                    describeMediaStoreLookup(uri),
+            )
+        }
+        log(
+            "routing | saf=${safUris.size} direct=${fileUris.size} " +
+                "mediaStore=${mediaUris.size}",
+        )
 
         for (uri in safUris) {
             deleteSafDocument(uri)
@@ -162,16 +278,20 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
     private fun isDirectFile(uri: Uri): Boolean = uri.scheme == SCHEME_FILE
 
     private fun deleteSafDocument(uri: Uri) {
+        log("SAF attempt | ${describe(uri)} | ${describeSafPermission(uri)}")
         try {
             val removed = DocumentsContract.deleteDocument(context.contentResolver, uri)
+            log("SAF result | deleteDocument returned=$removed | uri=$uri")
             if (removed) {
                 deletedBeforePrompt += uri.toString()
             } else {
                 failedBeforePrompt += failure(uri, "Could not delete this file.")
             }
         } catch (error: SecurityException) {
+            logError("SAF SecurityException | uri=$uri", error)
             failedBeforePrompt += failure(uri, "Access to this file was denied.")
         } catch (error: Exception) {
+            logError("SAF Exception | uri=$uri", error)
             failedBeforePrompt += failure(uri, error.message ?: "Delete failed.")
         }
     }
@@ -184,15 +304,22 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
      * would let the app report a success that never happened.
      */
     private fun deleteDirectFile(uri: Uri) {
+        log("DIRECT attempt | ${describe(uri)}")
         val path = uri.path
         if (path.isNullOrEmpty()) {
+            log("DIRECT abort | uri has no path | uri=$uri")
             failedBeforePrompt += failure(uri, "This file has no readable path.")
             return
         }
 
         val file = File(path)
+        log(
+            "DIRECT probe | path=$path | exists=${file.exists()} " +
+                "| canRead=${file.canRead()} | canWrite=${file.canWrite()}",
+        )
         if (!file.exists()) {
             // Already gone; treat as done rather than a failure.
+            log("DIRECT result | already absent | path=$path")
             deletedBeforePrompt += uri.toString()
             return
         }
@@ -200,8 +327,10 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         val removed = try {
             file.delete()
         } catch (error: SecurityException) {
+            logError("DIRECT SecurityException | path=$path", error)
             false
         }
+        log("DIRECT result | File.delete returned=$removed | path=$path")
 
         if (removed) {
             deletedBeforePrompt += uri.toString()
@@ -217,8 +346,13 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
 
     /** Returns an [IntentSender] when the system needs the user to confirm. */
     private fun deleteMediaDirect(uri: Uri): IntentSender? {
+        log(
+            "MEDIASTORE attempt | ${describe(uri)} | " +
+                describeMediaStoreLookup(uri),
+        )
         return try {
             val rows = context.contentResolver.delete(uri, null, null)
+            log("MEDIASTORE result | resolver.delete rows=$rows | uri=$uri")
             if (rows > 0) {
                 deletedBeforePrompt += uri.toString()
             } else {
@@ -229,12 +363,22 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
                 error is RecoverableSecurityException
             ) {
+                logError(
+                    "MEDIASTORE RecoverableSecurityException, will prompt | " +
+                        "uri=$uri",
+                    error,
+                )
                 error.userAction.actionIntent.intentSender
             } else {
+                logError(
+                    "MEDIASTORE SecurityException, not recoverable | uri=$uri",
+                    error,
+                )
                 failedBeforePrompt += failure(uri, "Access to this file was denied.")
                 null
             }
         } catch (error: Exception) {
+            logError("MEDIASTORE Exception | uri=$uri", error)
             failedBeforePrompt += failure(uri, error.message ?: "Delete failed.")
             null
         }
@@ -248,6 +392,10 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             return
         }
 
+        log("MEDIASTORE bulk | createDeleteRequest for ${uris.size} uri(s)")
+        for (uri in uris) {
+            log("MEDIASTORE bulk item | ${describe(uri)}")
+        }
         try {
             val pendingIntent = MediaStore.createDeleteRequest(
                 context.contentResolver,
@@ -256,11 +404,15 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             pendingResult = result
             pendingUris = uris
             if (!launchIntentSender(pendingIntent.intentSender)) {
+                log("MEDIASTORE bulk | launchIntentSender failed")
                 pendingResult = null
                 pendingUris = emptyList()
                 result.error("DELETE_FAILED", "Could not show the delete dialog.", null)
+            } else {
+                log("MEDIASTORE bulk | system dialog shown, awaiting result")
             }
         } catch (error: Exception) {
+            logError("MEDIASTORE bulk | createDeleteRequest threw", error)
             result.error("DELETE_FAILED", "Could not request deletion.", error.message)
         }
     }
@@ -289,9 +441,17 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         pendingResult = null
         pendingUris = emptyList()
 
+        log(
+            "system dialog result | resultCode=$resultCode " +
+                "(RESULT_OK=${Activity.RESULT_OK}, " +
+                "RESULT_CANCELED=${Activity.RESULT_CANCELED}) " +
+                "| pendingUris=${uris.size}",
+        )
+
         if (resultCode != Activity.RESULT_OK) {
             // The user declined the system dialog. Report honestly rather than
             // claiming success.
+            log("system dialog | declined or cancelled, nothing deleted")
             result?.success(buildResponse(userCancelled = true))
             return true
         }
@@ -299,7 +459,12 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         // The system reports OK for the batch. Verify each row really went, so
         // the result screen never overstates what was removed.
         for (uri in uris) {
-            if (stillExists(uri)) {
+            val survived = stillExists(uri)
+            log(
+                "post-dialog verify | uri=$uri | stillExists=$survived | " +
+                    describeMediaStoreLookup(uri),
+            )
+            if (survived) {
                 failedBeforePrompt += failure(uri, "File could not be removed.")
             } else {
                 deletedBeforePrompt += uri.toString()
@@ -323,11 +488,21 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
     private fun failure(uri: Uri, reason: String): Map<String, Any?> =
         mapOf("uri" to uri.toString(), "reason" to reason)
 
-    private fun buildResponse(userCancelled: Boolean): Map<String, Any?> = mapOf(
-        "deletedUris" to deletedBeforePrompt.distinct(),
-        "failed" to failedBeforePrompt,
-        "userCancelled" to userCancelled,
-    )
+    private fun buildResponse(userCancelled: Boolean): Map<String, Any?> {
+        log(
+            "===== delete summary ===== " +
+                "deleted=${deletedBeforePrompt.distinct().size} " +
+                "| failed=${failedBeforePrompt.size} | cancelled=$userCancelled",
+        )
+        for (entry in failedBeforePrompt) {
+            log("failure | uri=${entry["uri"]} | reason=${entry["reason"]}")
+        }
+        return mapOf(
+            "deletedUris" to deletedBeforePrompt.distinct(),
+            "failed" to failedBeforePrompt,
+            "userCancelled" to userCancelled,
+        )
+    }
 
     private fun emptyResponse(): Map<String, Any?> = mapOf(
         "deletedUris" to emptyList<String>(),

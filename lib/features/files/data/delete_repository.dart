@@ -37,6 +37,20 @@ class PlatformDeleteRepository implements DeleteRepository {
             'uris': files
                 .map((ScannedFile file) => file.uri)
                 .toList(growable: false),
+            // Diagnostics only. The native side logs these under
+            // [DELETE_DEBUG]; deletion still routes purely on the URI.
+            'debugItems': files
+                .map(
+                  (ScannedFile file) => <String, Object?>{
+                    'uri': file.uri,
+                    'category': file.category.key,
+                    'path': file.path,
+                    'name': file.name,
+                    'sizeBytes': file.sizeBytes,
+                    'mimeType': file.mimeType,
+                  },
+                )
+                .toList(growable: false),
           });
 
       if (payload == null) {
