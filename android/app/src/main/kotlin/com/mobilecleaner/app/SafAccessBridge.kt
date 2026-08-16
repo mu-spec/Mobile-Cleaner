@@ -72,6 +72,8 @@ class SafAccessBridge(private val context: Context) : MethodChannel.MethodCallHa
                 mapOf(
                     "uri" to permission.uri.toString(),
                     "label" to treeLabel(permission.uri),
+                    // Older grants may be read-only; the UI can re-prompt.
+                    "canWrite" to permission.isWritePermission,
                 )
             }
     }
@@ -120,8 +122,12 @@ class SafAccessBridge(private val context: Context) : MethodChannel.MethodCallHa
             Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         }
 
+        // Write access is required for deletion. `DocumentsContract
+        // .deleteDocument` throws SecurityException on a read-only grant,
+        // which surfaced to users as "Access to this file was denied".
         intent.addFlags(
             Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
                 Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION,
         )
 
@@ -167,7 +173,8 @@ class SafAccessBridge(private val context: Context) : MethodChannel.MethodCallHa
         try {
             context.contentResolver.takePersistableUriPermission(
                 treeUri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
             )
         } catch (error: SecurityException) {
             result?.error("GRANT_FAILED", "Could not keep access to that folder.", error.message)
@@ -183,7 +190,8 @@ class SafAccessBridge(private val context: Context) : MethodChannel.MethodCallHa
         try {
             context.contentResolver.releasePersistableUriPermission(
                 uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
             )
         } catch (error: SecurityException) {
             // Already gone; nothing to release.

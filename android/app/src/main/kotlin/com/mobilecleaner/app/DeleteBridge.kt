@@ -12,6 +12,7 @@ import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 
 /**
  * Deletes user-selected files.
@@ -39,6 +40,7 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         const val REQUEST_CODE_DELETE = 4712
 
         private const val SCHEME_CONTENT = "content"
+        private const val SCHEME_FILE = "file"
     }
 
     var activity: Activity? = null
@@ -81,12 +83,16 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         deletedBeforePrompt = mutableListOf()
         failedBeforePrompt = mutableListOf()
 
-        // SAF documents never need the MediaStore dialog.
+        // Route each URI to the API that can actually delete it.
         val safUris = uris.filter { isSafDocument(it) }
-        val mediaUris = uris.filter { !isSafDocument(it) }
+        val fileUris = uris.filter { isDirectFile(it) }
+        val mediaUris = uris.filter { !isSafDocument(it) && !isDirectFile(it) }
 
         for (uri in safUris) {
             deleteSafDocument(uri)
+        }
+        for (uri in fileUris) {
+            deleteDirectFile(uri)
         }
 
         if (mediaUris.isEmpty()) {
@@ -126,9 +132,34 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
 
     // ------------------------------------------------------------- deletion
 
+    /**
+     * True only for a genuine SAF document URI.
+     *
+     * `DocumentsContract.isDocumentUri` also answers true for MediaStore's
+     * documents provider, so checking it alone routed ordinary MediaStore
+     * rows down the SAF branch. `DocumentsContract.deleteDocument` then failed
+     * on them, which the user saw as "Access to this file was denied" for
+     * every media type.
+     *
+     * MediaStore URIs are excluded explicitly so they take the MediaStore
+     * path, which is the one that can raise the system delete dialog.
+     */
     private fun isSafDocument(uri: Uri): Boolean {
-        return uri.scheme == SCHEME_CONTENT && DocumentsContract.isDocumentUri(context, uri)
+        if (uri.scheme != SCHEME_CONTENT) {
+            return false
+        }
+        if (uri.authority == MediaStore.AUTHORITY) {
+            return false
+        }
+        return try {
+            DocumentsContract.isDocumentUri(context, uri)
+        } catch (error: Exception) {
+            false
+        }
     }
+
+    /** True for a `file://` path this app may still delete directly. */
+    private fun isDirectFile(uri: Uri): Boolean = uri.scheme == SCHEME_FILE
 
     private fun deleteSafDocument(uri: Uri) {
         try {
@@ -142,6 +173,45 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             failedBeforePrompt += failure(uri, "Access to this file was denied.")
         } catch (error: Exception) {
             failedBeforePrompt += failure(uri, error.message ?: "Delete failed.")
+        }
+    }
+
+    /**
+     * Deletes a `file://` path directly.
+     *
+     * Only meaningful before scoped storage, or for files this app owns. It is
+     * never used on a content URI: `File.delete()` on one silently fails and
+     * would let the app report a success that never happened.
+     */
+    private fun deleteDirectFile(uri: Uri) {
+        val path = uri.path
+        if (path.isNullOrEmpty()) {
+            failedBeforePrompt += failure(uri, "This file has no readable path.")
+            return
+        }
+
+        val file = File(path)
+        if (!file.exists()) {
+            // Already gone; treat as done rather than a failure.
+            deletedBeforePrompt += uri.toString()
+            return
+        }
+
+        val removed = try {
+            file.delete()
+        } catch (error: SecurityException) {
+            false
+        }
+
+        if (removed) {
+            deletedBeforePrompt += uri.toString()
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            failedBeforePrompt += failure(
+                uri,
+                "Android does not allow this app to delete this file.",
+            )
+        } else {
+            failedBeforePrompt += failure(uri, "Could not delete this file.")
         }
     }
 

@@ -45,13 +45,15 @@ class ScannedFile {
   /// Bucket-relative path, e.g. `DCIM/Camera/`.
   final String? relativePath;
 
-  /// True when Android will let this app delete the file.
+  /// True when the delete backend has a route for this file.
   ///
-  /// Deletion goes through either MediaStore or the Storage Access Framework,
-  /// and both need a `content://` URI. A `file://` URI comes from the legacy
-  /// pre-scoped-storage directory walk, and `ContentResolver.delete` cannot
-  /// act on it, so offering Delete for one would fail at the platform.
-  bool get isDeletable => uri.startsWith('content://');
+  /// `content://` covers both MediaStore rows and SAF documents. `file://`
+  /// comes from the legacy pre-scoped-storage scan and is deleted directly,
+  /// which the platform still permits on Android 9 and below and for files
+  /// this app owns. Anything else has no deletion API, so Delete stays off
+  /// rather than starting a flow that must fail.
+  bool get isDeletable =>
+      uri.startsWith('content://') || uri.startsWith('file://');
 
   /// True when the platform can render a visual preview of this file.
   ///

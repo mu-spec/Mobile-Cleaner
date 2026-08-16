@@ -226,8 +226,10 @@ List<ScannedFile> _filesFor(_Case testCase, bool undeletable, bool manyFiles) {
     ];
   }
   if (undeletable) {
+    // A scheme the backend has no deletion route for. `file://` is now
+    // handled by the direct-path branch, so it no longer qualifies.
     files = files
-        .map((ScannedFile f) => f.copyWith(uri: 'file://${f.path}'))
+        .map((ScannedFile f) => f.copyWith(uri: 'http://example.com/${f.name}'))
         .toList();
   }
   return files;
@@ -392,7 +394,7 @@ void main() {
               .widget<FilledButton>(find.byKey(Key(testCase.deleteKey)))
               .onPressed,
           isNull,
-          reason: 'Android cannot delete a file:// row, so Delete must be off',
+          reason: 'no deletion route for this URI, so Delete must be off',
         );
       });
 
