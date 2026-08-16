@@ -4,11 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/date_formatter.dart';
+import 'package:mobile_cleaner/features/files/domain/best_photo_scorer.dart';
 import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:mobile_cleaner/features/files/domain/duplicate_keep_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/domain/similar_photo_group.dart';
+import 'package:mobile_cleaner/features/files/presentation/providers/best_photo_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/similar_photos_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_thumbnail.dart';
@@ -105,6 +107,12 @@ class _SimilarPhotosScreenState extends ConsumerState<SimilarPhotosScreen> {
     final AsyncValue<SimilarPhotoScanResult> similar = ref.watch(
       similarPhotosProvider(_strength),
     );
+    // Recommendations arrive after the groups. The list renders immediately
+    // and the Suggested Keep badges appear when measuring finishes, so a slow
+    // analysis never blocks review.
+    final Map<String, BestPhotoRecommendation> best =
+        ref.watch(bestPhotoProvider(_strength)).valueOrNull ??
+        const <String, BestPhotoRecommendation>{};
     final bool selecting = _selection.isNotEmpty;
 
     return Scaffold(
@@ -155,6 +163,7 @@ class _SimilarPhotosScreenState extends ConsumerState<SimilarPhotosScreen> {
                           result: result,
                           selection: _selection,
                           keep: _keep,
+                          best: best,
                           onToggle: _toggle,
                           onKeep: _setKeeper,
                           onToggleGroup: _toggleGroup,
@@ -222,6 +231,7 @@ class _SimilarGroupList extends StatelessWidget {
     required this.result,
     required this.selection,
     required this.keep,
+    required this.best,
     required this.onToggle,
     required this.onKeep,
     required this.onToggleGroup,
@@ -230,6 +240,7 @@ class _SimilarGroupList extends StatelessWidget {
   final SimilarPhotoScanResult result;
   final FileSelection selection;
   final DuplicateKeepSelection keep;
+  final Map<String, BestPhotoRecommendation> best;
   final void Function(SimilarPhotoGroup, ScannedFile) onToggle;
   final void Function(SimilarPhotoGroup, ScannedFile) onKeep;
   final ValueChanged<SimilarPhotoGroup> onToggleGroup;
@@ -254,6 +265,7 @@ class _SimilarGroupList extends StatelessWidget {
           group: group,
           selection: selection,
           keep: keep,
+          recommendation: best[group.key],
           onToggle: onToggle,
           onKeep: onKeep,
           onToggleGroup: () => onToggleGroup(group),
@@ -272,17 +284,24 @@ class _SimilarGroupCard extends StatelessWidget {
     required this.onToggle,
     required this.onKeep,
     required this.onToggleGroup,
+    this.recommendation,
   });
 
   final SimilarPhotoGroup group;
   final FileSelection selection;
   final DuplicateKeepSelection keep;
+
+  /// Advice for this group, or null while measuring or when nothing could be
+  /// measured. Absent advice simply means no badge.
+  final BestPhotoRecommendation? recommendation;
   final void Function(SimilarPhotoGroup, ScannedFile) onToggle;
   final void Function(SimilarPhotoGroup, ScannedFile) onKeep;
   final VoidCallback onToggleGroup;
 
   static const double _cellWidth = 132;
-  static const double _stripHeight = 232;
+  // Taller than the duplicate strip: each cell carries a resolution line and
+  // may carry a Suggested Keep badge.
+  static const double _stripHeight = 272;
 
   @override
   Widget build(BuildContext context) {
@@ -332,6 +351,13 @@ class _SimilarGroupCard extends StatelessWidget {
                 context,
               ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
             ),
+            if (recommendation != null) ...<Widget>[
+              const SizedBox(height: 6),
+              _SuggestionNote(
+                groupKey: group.key,
+                recommendation: recommendation!,
+              ),
+            ],
             const SizedBox(height: 10),
             SizedBox(
               height: _stripHeight,
@@ -349,6 +375,9 @@ class _SimilarGroupCard extends StatelessWidget {
                         file: file,
                         kept: keep.isKept(group, file),
                         selected: selection.contains(file),
+                        suggested:
+                            recommendation?.isSuggested(file) ?? false,
+                        score: recommendation?.scoreFor(file),
                         onTap: () => onToggle(group, file),
                         onKeep: () => onKeep(group, file),
                         onDetails: () => showFileDetails(context, file),
@@ -393,11 +422,20 @@ class _ShotCell extends StatelessWidget {
     required this.onTap,
     required this.onKeep,
     required this.onDetails,
+    this.suggested = false,
+    this.score,
   });
 
   final ScannedFile file;
   final bool kept;
   final bool selected;
+
+  /// True when this is the group's suggested keeper. Advice only: it does not
+  /// protect the photo, select anything, or change what Delete would remove.
+  final bool suggested;
+
+  /// This photo's standing in the group, when it could be measured.
+  final PhotoScore? score;
   final VoidCallback onTap;
   final VoidCallback onKeep;
   final VoidCallback onDetails;
@@ -407,11 +445,15 @@ class _ShotCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
+    // Kept and selected are states the user set, so they outrank advice.
     final Color border = kept
         ? colors.primary
         : selected
         ? colors.error
+        : suggested
+        ? colors.tertiary
         : colors.outlineVariant;
+    final bool emphasised = kept || selected || suggested;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -427,10 +469,7 @@ class _ShotCell extends StatelessWidget {
             height: _thumbSize,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: border,
-                width: kept || selected ? 3 : 1,
-              ),
+              border: Border.all(color: border, width: emphasised ? 3 : 1),
             ),
             child: Stack(
               children: <Widget>[
@@ -469,13 +508,29 @@ class _ShotCell extends StatelessWidget {
           ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
         ),
         Text(
-          DateFormatter.relative(file.dateModified),
+          score == null
+              ? DateFormatter.relative(file.dateModified)
+              : '${score!.quality.width} x ${score!.quality.height}',
+          key: Key('similar_shot_detail_${file.id}'),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
         ),
+        if (suggested)
+          _SuggestedBadge(fileId: file.id)
+        else if (score != null && score!.looksBlurred)
+          // Relative to the group's best, never an absolute judgement.
+          Text(
+            'Softer than the best shot',
+            key: Key('similar_shot_soft_${file.id}'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          ),
         const SizedBox(height: 2),
         if (kept)
           Row(
@@ -508,6 +563,88 @@ class _ShotCell extends StatelessWidget {
               child: const Text('Keep this'),
             ),
           ),
+      ],
+    );
+  }
+}
+
+/// The group's one-line verdict, naming the factor that decided it.
+///
+/// When the shots are too close to separate, this says so rather than
+/// inventing a winner.
+class _SuggestionNote extends StatelessWidget {
+  const _SuggestionNote({
+    required this.groupKey,
+    required this.recommendation,
+  });
+
+  final String groupKey;
+  final BestPhotoRecommendation recommendation;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final bool decided = recommendation.hasSuggestion;
+
+    return Row(
+      children: <Widget>[
+        Icon(
+          decided
+              ? Icons.auto_awesome_rounded
+              : Icons.balance_rounded,
+          size: 14,
+          color: decided ? colors.tertiary : colors.onSurfaceVariant,
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            decided
+                ? '${recommendation.reason.label} suggested. '
+                      'Nothing is selected for you.'
+                : 'These shots are too close to call. Your choice.',
+            key: Key('similar_group_reason_$groupKey'),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: decided ? colors.tertiary : colors.onSurfaceVariant,
+              fontWeight: decided ? FontWeight.w700 : FontWeight.w400,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The Suggested Keep marker under a cell.
+///
+/// A label, nothing more. It does not protect the photo from deletion and does
+/// not change the selection.
+class _SuggestedBadge extends StatelessWidget {
+  const _SuggestedBadge({required this.fileId});
+
+  final String fileId;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
+    return Row(
+      children: <Widget>[
+        Icon(Icons.auto_awesome_rounded, size: 14, color: colors.tertiary),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            'Suggested Keep',
+            key: Key('similar_shot_suggested_$fileId'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colors.tertiary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
       ],
     );
   }

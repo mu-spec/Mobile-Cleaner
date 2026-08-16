@@ -5,12 +5,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/features/files/data/delete_repository.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:mobile_cleaner/features/files/data/perceptual_hash_repository.dart';
+import 'package:mobile_cleaner/features/files/data/photo_quality_repository.dart';
 import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
 import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:mobile_cleaner/features/files/domain/duplicate_keep_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/perceptual_hash.dart';
+import 'package:mobile_cleaner/features/files/domain/photo_quality.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/domain/similar_photo_detector.dart';
 import 'package:mobile_cleaner/features/files/domain/similar_photo_group.dart';
@@ -136,6 +138,17 @@ class _StubFingerprinter implements PerceptualHashRepository {
   }
 }
 
+/// Phase 21 measures grouped photos over a channel. Stubbed to nothing here,
+/// so these tests keep asserting grouping alone.
+class _NoQuality implements PhotoQualityRepository {
+  const _NoQuality();
+
+  @override
+  Future<Map<String, PhotoQuality>> analyzePhotos(
+    List<ScannedFile> files,
+  ) async => const <String, PhotoQuality>{};
+}
+
 class _NoThumbnails implements ThumbnailRepository {
   const _NoThumbnails();
 
@@ -167,6 +180,7 @@ Future<_StubFingerprinter> _pumpSimilar(
           _StubScanner(files ?? _fixture()),
         ),
         perceptualHashRepositoryProvider.overrideWithValue(hasher),
+        photoQualityRepositoryProvider.overrideWithValue(const _NoQuality()),
         thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
         deleteRepositoryProvider.overrideWithValue(_NoopDelete()),
       ],
