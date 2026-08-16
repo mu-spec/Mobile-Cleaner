@@ -5,8 +5,9 @@ import 'package:mobile_cleaner/features/cleaner/presentation/screens/clean_scree
 import 'package:mobile_cleaner/features/files/presentation/screens/apk_cleaner_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/downloads_cleaner_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/files_screen.dart';
-import 'package:mobile_cleaner/features/files/presentation/screens/screenshot_cleaner_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/large_files_screen.dart';
+import 'package:mobile_cleaner/features/files/presentation/screens/large_photos_screen.dart';
+import 'package:mobile_cleaner/features/files/presentation/screens/screenshot_cleaner_screen.dart';
 import 'package:mobile_cleaner/features/home/presentation/screens/home_screen.dart';
 import 'package:mobile_cleaner/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:mobile_cleaner/features/permissions/presentation/screens/permission_education_screen.dart';
@@ -26,6 +27,7 @@ abstract final class AppRoutes {
   static const String downloadsCleaner = '/downloads-cleaner';
   static const String apkCleaner = '/apk-cleaner';
   static const String screenshotCleaner = '/screenshot-cleaner';
+  static const String largePhotos = '/large-photos';
   static const String apps = '/apps';
   static const String settings = '/settings';
 }
@@ -60,6 +62,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.screenshotCleaner,
       builder: (context, state) => const ScreenshotCleanerScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.largePhotos,
+      builder: (context, state) => const LargePhotosScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {

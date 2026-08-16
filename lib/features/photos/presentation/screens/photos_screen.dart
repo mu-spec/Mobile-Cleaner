@@ -57,6 +57,22 @@ class PhotosScreen extends StatelessWidget {
                 onTap: () => context.push(AppRoutes.screenshotCleaner),
               ),
             ),
+            const SizedBox(height: 10),
+            Card(
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                key: const Key('open_large_photos'),
+                leading: CircleAvatar(
+                  backgroundColor: colors.primaryContainer,
+                  child: Icon(Icons.photo_size_select_large_rounded,
+                      color: colors.primary),
+                ),
+                title: const Text('Large photos'),
+                subtitle: const Text('Find your biggest images'),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => context.push(AppRoutes.largePhotos),
+              ),
+            ),
             const SizedBox(height: 20),
             Text(
               'Coming soon',
