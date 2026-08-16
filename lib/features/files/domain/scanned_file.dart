@@ -15,6 +15,7 @@ class ScannedFile {
     required this.dateModified,
     this.mimeType,
     this.relativePath,
+    this.durationMillis,
   }) : assert(sizeBytes >= 0, 'sizeBytes cannot be negative');
 
   /// Stable identifier. MediaStore row id when available, otherwise the path.
@@ -44,6 +45,26 @@ class ScannedFile {
 
   /// Bucket-relative path, e.g. `DCIM/Camera/`.
   final String? relativePath;
+
+  /// Playback length for videos, when MediaStore knows it.
+  ///
+  /// Null, never zero, when unknown. A video whose length was never resolved
+  /// must not be displayed as `0:00`, and must not sort as the shortest.
+  final int? durationMillis;
+
+  /// Playback length as a [Duration], or null when unknown.
+  Duration? get duration =>
+      durationMillis == null || durationMillis! <= 0
+      ? null
+      : Duration(milliseconds: durationMillis!);
+
+  /// True when the file is a video.
+  ///
+  /// The MIME type is trusted over the category bucket, so a clip surfaced
+  /// under Downloads is still recognised as a video.
+  bool get isVideo =>
+      (mimeType?.toLowerCase().startsWith('video/') ?? false) ||
+      category == FileCategory.videos;
 
   /// True when the delete backend has a route for this file.
   ///
@@ -107,6 +128,7 @@ class ScannedFile {
     DateTime? dateModified,
     String? mimeType,
     String? relativePath,
+    int? durationMillis,
   }) {
     return ScannedFile(
       id: id ?? this.id,
@@ -118,6 +140,7 @@ class ScannedFile {
       dateModified: dateModified ?? this.dateModified,
       mimeType: mimeType ?? this.mimeType,
       relativePath: relativePath ?? this.relativePath,
+      durationMillis: durationMillis ?? this.durationMillis,
     );
   }
 
@@ -160,7 +183,17 @@ class ScannedFile {
       ),
       mimeType: _readString(map['mimeType']),
       relativePath: _readString(map['relativePath']),
+      durationMillis: _readPositiveInt(map['videoDurationMillis']),
     );
+  }
+
+  /// Reads a duration, treating zero and negatives as "unknown".
+  static int? _readPositiveInt(Object? value) {
+    final int? parsed = _readInt(value);
+    if (parsed == null || parsed <= 0) {
+      return null;
+    }
+    return parsed;
   }
 
   static String? _readString(Object? value) {

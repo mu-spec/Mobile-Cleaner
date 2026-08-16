@@ -102,6 +102,7 @@ class FileScannerBridge(
                     CATEGORY_VIDEOS -> queryMedia(
                         MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                         CATEGORY_VIDEOS, limit, minSizeBytes, sortOrder, null, null,
+                        includeDuration = true,
                     )
                     CATEGORY_AUDIO -> queryMedia(
                         MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -173,6 +174,7 @@ class FileScannerBridge(
         sortOrder: String,
         extraSelection: String?,
         extraArgs: Array<String>?,
+        includeDuration: Boolean = false,
     ): List<Map<String, Any?>> {
         val selectionParts = mutableListOf<String>()
         val selectionArgs = mutableListOf<String>()
@@ -195,6 +197,7 @@ class FileScannerBridge(
             selectionArgs = selectionArgs.toTypedArray(),
             limit = limit,
             sortOrder = sortOrder,
+            includeDuration = includeDuration,
         )
     }
 
@@ -334,6 +337,7 @@ class FileScannerBridge(
         selectionArgs: Array<String>,
         limit: Int,
         sortOrder: String,
+        includeDuration: Boolean = false,
     ): List<Map<String, Any?>> {
         val projection = mutableListOf(
             MediaStore.MediaColumns._ID,
@@ -345,6 +349,11 @@ class FileScannerBridge(
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             projection += MediaStore.MediaColumns.RELATIVE_PATH
+        }
+        // Only the video collection is guaranteed to expose DURATION on every
+        // API level, so it is requested per-query rather than always.
+        if (includeDuration) {
+            projection += MediaStore.Video.Media.DURATION
         }
 
         val order = "${sortColumn(sortOrder)} LIMIT $limit"
@@ -368,6 +377,11 @@ class FileScannerBridge(
             val dataColumn = rows.getColumnIndex(MediaStore.MediaColumns.DATA)
             val relativeColumn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 rows.getColumnIndex(MediaStore.MediaColumns.RELATIVE_PATH)
+            } else {
+                -1
+            }
+            val durationColumn = if (includeDuration) {
+                rows.getColumnIndex(MediaStore.Video.Media.DURATION)
             } else {
                 -1
             }
@@ -398,6 +412,17 @@ class FileScannerBridge(
                         path.substringBeforeLast('/', "")
                     },
                     "category" to category,
+                    // Deliberately not "durationMillis": the scan payload
+                    // already uses that key for how long the scan took.
+                    // Null rather than zero when unknown, so a video whose
+                    // length MediaStore never resolved is not shown as 0:00.
+                    "videoDurationMillis" to if (durationColumn >= 0 &&
+                        !rows.isNull(durationColumn)
+                    ) {
+                        rows.getLong(durationColumn).takeIf { it > 0L }
+                    } else {
+                        null
+                    },
                 )
             }
         }

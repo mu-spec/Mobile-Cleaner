@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/date_formatter.dart';
+import 'package:mobile_cleaner/core/utils/duration_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_thumbnail.dart';
 
@@ -127,6 +128,11 @@ void showFileDetails(BuildContext context, ScannedFile file) {
                 label: 'Size',
                 value: ByteFormatter.format(file.sizeBytes),
               ),
+              if (file.isVideo)
+                _DetailRow(
+                  label: 'Length',
+                  value: DurationFormatter.format(file.duration),
+                ),
               _DetailRow(
                 label: 'Modified',
                 value: DateFormatter.format(file.dateModified),

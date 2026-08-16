@@ -61,6 +61,10 @@ class _CategoryGrid extends StatelessWidget {
   final FileScanResult result;
 
   void _openCategory(BuildContext context, FileCategory category) {
+    // The Videos category card deliberately still opens the generic category
+    // list. The dedicated Videos section is reached from its own shortcut
+    // above: rerouting the card would change behaviour this phase was not
+    // asked to change, and the grid is a consistent set of category lists.
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => CategoryFilesScreen(category: category),
@@ -163,6 +167,21 @@ class _CategoryGrid extends StatelessWidget {
             subtitle: const Text('Remove leftover installers'),
             trailing: const Icon(Icons.chevron_right_rounded),
             onTap: () => context.push(AppRoutes.apkCleaner),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            key: const Key('open_videos'),
+            leading: CircleAvatar(
+              backgroundColor: colors.primaryContainer,
+              child: Icon(Icons.movie_rounded, color: colors.primary),
+            ),
+            title: const Text('Videos'),
+            subtitle: const Text('Review by size, length, or date'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push(AppRoutes.videos),
           ),
         ),
         const SizedBox(height: 10),
