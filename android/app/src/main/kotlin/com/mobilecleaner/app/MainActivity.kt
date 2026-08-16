@@ -76,6 +76,18 @@ class MainActivity : FlutterActivity() {
         ).setMethodCallHandler(loader)
     }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
+        // The API 28 write-permission request that gates legacy deletion.
+        if (deleteBridge?.handlePermissionResult(requestCode, grantResults) == true) {
+            return
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (safAccess?.handleActivityResult(requestCode, resultCode, data) == true) {
             return

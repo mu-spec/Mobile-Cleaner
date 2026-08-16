@@ -1,16 +1,19 @@
 package com.mobilecleaner.app
 
+import android.Manifest
 import android.app.Activity
 import android.app.RecoverableSecurityException
 import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
@@ -39,6 +42,7 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
     companion object {
         const val CHANNEL = "com.mobilecleaner.app/delete"
         const val REQUEST_CODE_DELETE = 4712
+        const val REQUEST_CODE_WRITE_PERMISSION = 4713
 
         private const val SCHEME_CONTENT = "content"
         private const val SCHEME_FILE = "file"
@@ -54,6 +58,9 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
 
     /** URIs awaiting the outcome of the current system dialog. */
     private var pendingUris: List<Uri> = emptyList()
+
+    /** Set while the API 28 write-permission dialog is showing. */
+    private var pendingPermissionUris: List<Uri> = emptyList()
 
     /** Files already removed before the dialog was raised. */
     private var deletedBeforePrompt: MutableList<String> = mutableListOf()
@@ -221,7 +228,31 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             return
         }
 
-        // Android 10 and below: try each, collecting anything recoverable.
+        // Android 9 and below: ContentResolver.delete on shared media needs
+        // WRITE_EXTERNAL_STORAGE, which is a runtime permission from API 23.
+        // Without it the resolver throws
+        //   SecurityException: requires android.permission.WRITE_EXTERNAL_STORAGE
+        // Android 10+ never reaches here; it uses the delete request or SAF.
+        if (needsLegacyWritePermission()) {
+            log("legacy write permission missing, requesting before delete")
+            requestLegacyWritePermission(mediaUris, result)
+            return
+        }
+
+        runLegacyMediaDelete(mediaUris, result)
+    }
+
+    /**
+     * The Android 10 and below deletion path, unchanged.
+     *
+     * Extracted so the API 28 permission-granted retry resumes through exactly
+     * this code rather than a parallel copy.
+     */
+    private fun runLegacyMediaDelete(
+        mediaUris: List<Uri>,
+        result: MethodChannel.Result?,
+    ) {
+        // Try each, collecting anything recoverable.
         val recoverable = mutableListOf<IntentSender>()
         for (uri in mediaUris) {
             val sender = deleteMediaDirect(uri)
@@ -231,7 +262,7 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         }
 
         if (recoverable.isEmpty()) {
-            result.success(buildResponse(userCancelled = false))
+            result?.success(buildResponse(userCancelled = false))
             return
         }
 
@@ -242,7 +273,7 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         if (!launchIntentSender(recoverable.first())) {
             pendingResult = null
             pendingUris = emptyList()
-            result.success(buildResponse(userCancelled = false))
+            result?.success(buildResponse(userCancelled = false))
         }
     }
 
@@ -272,6 +303,89 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         } catch (error: Exception) {
             false
         }
+    }
+
+    /**
+     * True when this device needs a runtime `WRITE_EXTERNAL_STORAGE` grant
+     * before shared media can be deleted, and does not yet have one.
+     *
+     * Only Android 9 (API 28) and below. The permission is capped at
+     * `maxSdkVersion="28"` in the manifest and is meaningless on Android 10+,
+     * where deletion goes through MediaStore delete requests or SAF.
+     */
+    private fun needsLegacyWritePermission(): Boolean {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+            return false
+        }
+        val granted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        ) == PackageManager.PERMISSION_GRANTED
+        log(
+            "legacy write permission | sdkInt=${Build.VERSION.SDK_INT} " +
+                "| granted=$granted",
+        )
+        return !granted
+    }
+
+    /** Asks for the legacy write permission, resuming the delete on the result. */
+    private fun requestLegacyWritePermission(
+        uris: List<Uri>,
+        result: MethodChannel.Result,
+    ) {
+        val current = activity
+        if (current == null) {
+            log("legacy write permission | no activity, cannot request")
+            for (uri in uris) {
+                failedBeforePrompt += failure(uri, "Access to this file was denied.")
+            }
+            result.success(buildResponse(userCancelled = false))
+            return
+        }
+
+        pendingResult = result
+        pendingPermissionUris = uris
+        current.requestPermissions(
+            arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+            REQUEST_CODE_WRITE_PERMISSION,
+        )
+    }
+
+    /**
+     * Called from `MainActivity.onRequestPermissionsResult`.
+     *
+     * On grant, the delete resumes down the same legacy path. On denial the
+     * items are kept and reported with the existing access-denied message.
+     */
+    fun handlePermissionResult(
+        requestCode: Int,
+        grantResults: IntArray,
+    ): Boolean {
+        if (requestCode != REQUEST_CODE_WRITE_PERMISSION) {
+            return false
+        }
+
+        val result = pendingResult
+        val uris = pendingPermissionUris
+        pendingResult = null
+        pendingPermissionUris = emptyList()
+
+        val granted = grantResults.isNotEmpty() &&
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        log("legacy write permission result | granted=$granted")
+
+        if (!granted) {
+            // Denied: keep every file and report the existing failure.
+            for (uri in uris) {
+                failedBeforePrompt += failure(uri, "Access to this file was denied.")
+            }
+            result?.success(buildResponse(userCancelled = false))
+            return true
+        }
+
+        // Granted: retry through the unchanged legacy path.
+        runLegacyMediaDelete(uris, result)
+        return true
     }
 
     /** True for a `file://` path this app may still delete directly. */

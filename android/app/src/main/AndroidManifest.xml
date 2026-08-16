@@ -4,6 +4,14 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
+    <!-- Android 9 and lower only. Before scoped storage, deleting shared
+         media through ContentResolver requires this. Android 10+ uses
+         MediaStore delete requests or SAF instead, so the permission is
+         capped and never requested there. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
     <!-- Android 13+: granular, least-privilege media access. -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
