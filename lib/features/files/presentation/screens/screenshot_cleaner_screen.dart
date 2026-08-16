@@ -216,43 +216,61 @@ class _ScreenshotList extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool allSelected = selection.containsAll(summary.files);
 
-    return ListView(
+    // Lazily built. A plain `ListView(children: ...)` constructs every row up
+    // front, so a single tap rebuilt up to 1000 rows, each re-establishing a
+    // thumbnail provider and its platform-channel decode. That blocked the UI
+    // thread long enough to look like a freeze: the tap registered and the
+    // header updated, then nothing else responded.
+    //
+    // `ListView.builder` only builds what is on screen, so a rebuild costs a
+    // handful of rows regardless of library size.
+    const int headerCount = 2;
+
+    return ListView.builder(
       key: const Key('screenshot_list'),
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
-      children: <Widget>[
-        _TotalCard(summary: summary),
-        const SizedBox(height: 12),
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                'Newest first',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+      itemCount: summary.files.length + headerCount,
+      itemBuilder: (BuildContext context, int index) {
+        if (index == 0) {
+          return _TotalCard(summary: summary);
+        }
+        if (index == 1) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    'Newest first',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                TextButton.icon(
+                  key: const Key('screenshot_select_all'),
+                  onPressed: onToggleAll,
+                  icon: Icon(
+                    allSelected
+                        ? Icons.remove_done_rounded
+                        : Icons.done_all_rounded,
+                    size: 18,
+                  ),
+                  label: Text(allSelected ? 'Clear all' : 'Select all'),
+                ),
+              ],
             ),
-            TextButton.icon(
-              key: const Key('screenshot_select_all'),
-              onPressed: onToggleAll,
-              icon: Icon(
-                allSelected
-                    ? Icons.remove_done_rounded
-                    : Icons.done_all_rounded,
-                size: 18,
-              ),
-              label: Text(allSelected ? 'Clear all' : 'Select all'),
-            ),
-          ],
-        ),
-        for (final ScannedFile file in summary.files)
-          ScannedFileTile(
-            file: file,
-            selectionMode: true,
-            selected: selection.contains(file),
-            onTap: () => onToggle(file),
-            onLongPress: () => showFileDetails(context, file),
-          ),
-      ],
+          );
+        }
+
+        final ScannedFile file = summary.files[index - headerCount];
+        return ScannedFileTile(
+          file: file,
+          selectionMode: true,
+          selected: selection.contains(file),
+          onTap: () => onToggle(file),
+          onLongPress: () => showFileDetails(context, file),
+        );
+      },
     );
   }
 }

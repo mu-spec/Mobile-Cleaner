@@ -193,45 +193,57 @@ class _ApkList extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool allSelected = selection.containsAll(summary.files);
 
-    return ListView(
+    // Lazily built: a plain `ListView(children: ...)` constructs every row up
+    // front, so one tap rebuilt the whole library and blocked the UI thread.
+    const int headerCount = 2;
+
+    return ListView.builder(
       key: const Key('apk_list'),
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
-      children: <Widget>[
-        _TotalCard(summary: summary),
-        const SizedBox(height: 12),
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                summary.sort.label,
-                key: const Key('apk_sort_label'),
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+      itemCount: summary.files.length + headerCount,
+      itemBuilder: (BuildContext context, int index) {
+        if (index == 0) {
+          return _TotalCard(summary: summary);
+        }
+        if (index == 1) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    summary.sort.label,
+                    key: const Key('apk_sort_label'),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                TextButton.icon(
+                  key: const Key('apk_select_all'),
+                  onPressed: onToggleAll,
+                  icon: Icon(
+                    allSelected
+                        ? Icons.remove_done_rounded
+                        : Icons.done_all_rounded,
+                    size: 18,
+                  ),
+                  label: Text(allSelected ? 'Clear all' : 'Select all'),
+                ),
+              ],
             ),
-            TextButton.icon(
-              key: const Key('apk_select_all'),
-              onPressed: onToggleAll,
-              icon: Icon(
-                allSelected
-                    ? Icons.remove_done_rounded
-                    : Icons.done_all_rounded,
-                size: 18,
-              ),
-              label: Text(allSelected ? 'Clear all' : 'Select all'),
-            ),
-          ],
-        ),
+          );
+        }
+
         // Each row shows the installer's name, size, and date.
-        for (final ScannedFile file in summary.files)
-          ScannedFileTile(
-            file: file,
-            selectionMode: true,
-            selected: selection.contains(file),
-            onTap: () => onToggle(file),
-            onLongPress: () => showFileDetails(context, file),
-          ),
-      ],
+        final ScannedFile file = summary.files[index - headerCount];
+        return ScannedFileTile(
+          file: file,
+          selectionMode: true,
+          selected: selection.contains(file),
+          onTap: () => onToggle(file),
+          onLongPress: () => showFileDetails(context, file),
+        );
+      },
     );
   }
 }
