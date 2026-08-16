@@ -11,15 +11,20 @@ import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 /// ## Placement
 ///
 /// This belongs in the screen's body `Column`, directly below the `Expanded`
-/// scrollable list — **not** in `Scaffold.bottomNavigationBar`. Using the
-/// Scaffold slot made the bar fight the body for the bottom inset, which left
-/// it drawn under the system navigation bar while the body stopped receiving
-/// pointer events, so the list could not be scrolled.
+/// scrollable list — **not** in `Scaffold.bottomNavigationBar`.
 ///
-/// Sitting in the Column means it simply takes the height it needs, the list
-/// keeps the rest, and neither overlaps the other. The screens already wrap
-/// their body in a `SafeArea`, so that ancestor handles the system inset and
-/// this widget must not pad for it again.
+/// ## Why the width is bounded explicitly
+///
+/// A `Column` gives its children **unbounded width** on the cross axis. With a
+/// bare `Row` inside, the row laid out at infinite width: `Flexible` cannot
+/// divide infinity, and the buttons were handed
+/// `BoxConstraints(w=Infinity, 56.0<=h<=Infinity)` — the 56 being the
+/// Material 3 minimum button height — which throws *BoxConstraints forces an
+/// infinite width* and takes the whole screen down with it.
+///
+/// `LayoutBuilder` reports the real width the parent offers, and the row is
+/// tightened to it. Note that `SizedBox(width: double.infinity)` would **not**
+/// fix this: it sets exactly the infinite width that caused the crash.
 class SelectionActionBar extends StatelessWidget {
   const SelectionActionBar({
     required this.selection,
@@ -51,6 +56,10 @@ class SelectionActionBar extends StatelessWidget {
   /// letting the user start a flow the platform will certainly refuse.
   final int? deletableCount;
 
+  /// Material 3's minimum button height. Applied as a *height* only — never a
+  /// width — so a button can never request infinite horizontal space.
+  static const double _minButtonHeight = 48;
+
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
@@ -62,60 +71,82 @@ class SelectionActionBar extends StatelessWidget {
       key: barKey,
       color: colors.surfaceContainerHighest,
       elevation: 8,
-      child: Padding(
-        // The body's SafeArea already clears the system navigation bar.
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-        child: Row(
-          children: <Widget>[
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          // Fall back to the screen width if an ancestor really is unbounded,
+          // rather than propagating infinity down to the buttons.
+          final double barWidth = constraints.maxWidth.isFinite
+              ? constraints.maxWidth
+              : MediaQuery.sizeOf(context).width;
+
+          return SizedBox(
+            width: barWidth,
+            child: Padding(
+              // The body's SafeArea already clears the navigation bar.
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
                 children: <Widget>[
-                  Text(
-                    '${selection.count} selected',
-                    key: countKey,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+                  // Takes the leftover space and ellipsises, so the buttons
+                  // keep their intrinsic width on narrow phones.
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          '${selection.count} selected',
+                          key: countKey,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          canDelete && deletable < selection.count
+                              // Be explicit when Android protects some.
+                              ? '${ByteFormatter.format(selection.totalBytes)}'
+                                    ' · $deletable can be deleted'
+                              : ByteFormatter.format(selection.totalBytes),
+                          key: bytesKey,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colors.onSurfaceVariant),
+                        ),
+                      ],
                     ),
                   ),
-                  Text(
-                    canDelete && deletable < selection.count
-                        // Be explicit when Android protects some of them.
-                        ? '${ByteFormatter.format(selection.totalBytes)} · '
-                              '$deletable can be deleted'
-                        : ByteFormatter.format(selection.totalBytes),
-                    key: bytesKey,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colors.onSurfaceVariant,
+                  const SizedBox(width: 8),
+                  TextButton(
+                    key: clearKey,
+                    style: TextButton.styleFrom(
+                      // Height only. A minimumSize with an infinite or very
+                      // large width would reintroduce the crash.
+                      minimumSize: const Size(0, _minButtonHeight),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
+                    onPressed: onClear,
+                    child: const Text('Clear'),
+                  ),
+                  const SizedBox(width: 4),
+                  FilledButton.icon(
+                    key: deleteKey,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: colors.error,
+                      foregroundColor: colors.onError,
+                      minimumSize: const Size(0, _minButtonHeight),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    onPressed: canDelete ? onDelete : null,
+                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                    label: const Text('Delete'),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            TextButton(
-              key: clearKey,
-              onPressed: onClear,
-              child: const Text('Clear'),
-            ),
-            const SizedBox(width: 4),
-            FilledButton.icon(
-              key: deleteKey,
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.error,
-                foregroundColor: colors.onError,
-              ),
-              onPressed: canDelete ? onDelete : null,
-              icon: const Icon(Icons.delete_outline_rounded, size: 18),
-              label: const Text('Delete'),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
