@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_cleaner/app/theme/app_theme.dart';
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
@@ -218,4 +219,96 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  group('Global FilledButton theme', () {
+    testWidgets('does not force an infinite minimum width', (
+      WidgetTester tester,
+    ) async {
+      // The root cause: `Size.fromHeight(56)` is `Size(infinity, 56)`, so
+      // every FilledButton in the app demanded unbounded horizontal space and
+      // threw as soon as one was placed in a Row.
+      for (final Brightness brightness in Brightness.values) {
+        final ThemeData theme = brightness == Brightness.light
+            ? AppTheme.light
+            : AppTheme.dark;
+        final ButtonStyle? style = theme.filledButtonTheme.style;
+        final Size? minimumSize = style?.minimumSize?.resolve(
+          <WidgetState>{},
+        );
+
+        expect(minimumSize, isNotNull, reason: '$brightness has no min size');
+        expect(
+          minimumSize!.width.isFinite,
+          isTrue,
+          reason: '$brightness FilledButton minimum width is infinite',
+        );
+        // The 56dp tap target is preserved.
+        expect(minimumSize.height, 56);
+      }
+    });
+
+    testWidgets('a themed FilledButton lays out inside a Row', (
+      WidgetTester tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(320, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: Row(
+              children: <Widget>[
+                const Expanded(child: Text('label')),
+                FilledButton(
+                  key: const Key('themed'),
+                  onPressed: () {},
+                  child: const Text('Delete'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final Rect rect = tester.getRect(find.byKey(const Key('themed')));
+      expect(rect.width.isFinite, isTrue);
+      expect(rect.height, greaterThanOrEqualTo(56));
+    });
+
+    testWidgets('a full-width button still spans its parent', (
+      WidgetTester tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(360, 640));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light,
+          home: Scaffold(
+            body: Column(
+              children: <Widget>[
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    key: const Key('full'),
+                    onPressed: () {},
+                    child: const Text('Smart Scan'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Local SizedBox still gives the full-width look the theme used to.
+      expect(tester.getRect(find.byKey(const Key('full'))).width, 360);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
 }

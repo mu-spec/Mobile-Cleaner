@@ -59,11 +59,14 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 22),
               const StorageOverviewCard(),
               const SizedBox(height: 18),
-              FilledButton.icon(
-                key: const Key('smart_scan_button'),
-                onPressed: () => context.go(AppRoutes.clean),
-                icon: const Icon(Icons.auto_fix_high_rounded),
-                label: const Text('Smart Scan'),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  key: const Key('smart_scan_button'),
+                  onPressed: () => context.go(AppRoutes.clean),
+                  icon: const Icon(Icons.auto_fix_high_rounded),
+                  label: const Text('Smart Scan'),
+                ),
               ),
               const SizedBox(height: 30),
               QuickToolsSection(

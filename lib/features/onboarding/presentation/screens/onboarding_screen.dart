@@ -116,15 +116,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-                child: FilledButton(
-                  key: const Key('onboarding_next'),
-                  onPressed: _isFinishing ? null : _next,
-                  child: _isFinishing
-                      ? const SizedBox.square(
-                          dimension: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(_isLastPage ? 'Get started' : 'Next'),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    key: const Key('onboarding_next'),
+                    onPressed: _isFinishing ? null : _next,
+                    child: _isFinishing
+                        ? const SizedBox.square(
+                            dimension: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(_isLastPage ? 'Get started' : 'Next'),
+                  ),
                 ),
               ),
             ],

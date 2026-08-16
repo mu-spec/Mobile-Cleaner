@@ -219,10 +219,13 @@ class _PermissionMessage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            FilledButton(
-              key: const Key('permission_primary_action'),
-              onPressed: onPrimary,
-              child: Text(primaryLabel),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                key: const Key('permission_primary_action'),
+                onPressed: onPrimary,
+                child: Text(primaryLabel),
+              ),
             ),
             if (secondaryLabel != null) ...<Widget>[
               const SizedBox(height: 8),

@@ -33,7 +33,15 @@ abstract final class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(56),
+          // Height only. `Size.fromHeight(56)` is `Size(infinity, 56)`, which
+          // gave every FilledButton an infinite *minimum width*. Inside a Row
+          // that throws "BoxConstraints forces an infinite width", because a
+          // Row cannot satisfy a child demanding unbounded horizontal space.
+          //
+          // A button that should span the screen wraps itself in
+          // `SizedBox(width: double.infinity)` at the call site, rather than
+          // every button in the app being forced to stretch.
+          minimumSize: const Size(0, 56),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),

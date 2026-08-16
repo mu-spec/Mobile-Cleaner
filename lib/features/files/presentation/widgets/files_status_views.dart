@@ -67,11 +67,14 @@ class FilesErrorView extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         if (permissionIssue)
-          FilledButton.icon(
-            key: const Key('files_permission_button'),
-            onPressed: onPermissions,
-            icon: const Icon(Icons.shield_outlined),
-            label: const Text('Review permissions'),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              key: const Key('files_permission_button'),
+              onPressed: onPermissions,
+              icon: const Icon(Icons.shield_outlined),
+              label: const Text('Review permissions'),
+            ),
           ),
         const SizedBox(height: 10),
         TextButton.icon(
