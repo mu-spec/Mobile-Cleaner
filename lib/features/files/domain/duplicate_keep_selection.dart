@@ -1,11 +1,15 @@
-import 'package:mobile_cleaner/features/files/domain/duplicate_group.dart';
+import 'package:mobile_cleaner/features/files/domain/photo_copy_group.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 
 /// Which copy of each duplicate set the user wants to keep.
 ///
-/// Keyed by group hash, valued by the URI of the kept copy. A group with no
-/// entry falls back to [DuplicateGroup.original] — the oldest copy, which is
-/// usually the one the camera wrote rather than a share-sheet duplicate.
+/// Keyed by [PhotoCopyGroup.groupKey], valued by the URI of the kept copy. A
+/// group with no entry falls back to [PhotoCopyGroup.original] — the oldest
+/// copy, which is usually the one the camera wrote rather than a share-sheet
+/// duplicate.
+///
+/// Shared by exact duplicates and visually similar photos, so the "one copy is
+/// always kept" rule has a single implementation rather than one per feature.
 ///
 /// The kept copy is the safety rail of the whole feature: every screen derives
 /// its removable set from here, so no code path can ever offer to delete all
@@ -21,8 +25,8 @@ class DuplicateKeepSelection {
   int get overrideCount => _kept.length;
 
   /// URI of the copy kept for [group]. Null only for an empty group.
-  String? keptUri(DuplicateGroup group) {
-    final String? chosen = _kept[group.hash];
+  String? keptUri(PhotoCopyGroup group) {
+    final String? chosen = _kept[group.groupKey];
     if (chosen != null) {
       for (final ScannedFile file in group.files) {
         if (file.uri == chosen) {
@@ -35,7 +39,7 @@ class DuplicateKeepSelection {
   }
 
   /// The copy kept for [group], resolved to a file.
-  ScannedFile? kept(DuplicateGroup group) {
+  ScannedFile? kept(PhotoCopyGroup group) {
     final String? uri = keptUri(group);
     if (uri == null) {
       return null;
@@ -48,14 +52,14 @@ class DuplicateKeepSelection {
     return null;
   }
 
-  bool isKept(DuplicateGroup group, ScannedFile file) =>
+  bool isKept(PhotoCopyGroup group, ScannedFile file) =>
       keptUri(group) == file.uri;
 
   /// Records [file] as the copy to keep for [group].
   ///
   /// A file that is not part of the group is ignored rather than recorded, so
   /// a stale callback can never mark an unrelated photo as protected.
-  DuplicateKeepSelection keep(DuplicateGroup group, ScannedFile file) {
+  DuplicateKeepSelection keep(PhotoCopyGroup group, ScannedFile file) {
     bool belongs = false;
     for (final ScannedFile candidate in group.files) {
       if (candidate.uri == file.uri) {
@@ -67,12 +71,12 @@ class DuplicateKeepSelection {
       return this;
     }
     final Map<String, String> next = Map<String, String>.of(_kept);
-    next[group.hash] = file.uri;
+    next[group.groupKey] = file.uri;
     return DuplicateKeepSelection(next);
   }
 
   /// Every copy of [group] except the kept one.
-  List<ScannedFile> removable(DuplicateGroup group) {
+  List<ScannedFile> removable(PhotoCopyGroup group) {
     final String? keep = keptUri(group);
     return <ScannedFile>[
       for (final ScannedFile file in group.files)
@@ -81,25 +85,30 @@ class DuplicateKeepSelection {
   }
 
   /// Every removable copy across [groups], for a select-all action.
-  List<ScannedFile> removableAcross(Iterable<DuplicateGroup> groups) =>
+  List<ScannedFile> removableAcross(Iterable<PhotoCopyGroup> groups) =>
       <ScannedFile>[
-        for (final DuplicateGroup group in groups) ...removable(group),
+        for (final PhotoCopyGroup group in groups) ...removable(group),
       ];
 
   /// Bytes freed by deleting every removable copy in [groups].
-  int reclaimableBytes(Iterable<DuplicateGroup> groups) {
+  ///
+  /// Summed per file rather than as `size x count`, because similar photos —
+  /// unlike exact duplicates — are not all the same size.
+  int reclaimableBytes(Iterable<PhotoCopyGroup> groups) {
     int total = 0;
-    for (final DuplicateGroup group in groups) {
-      total += group.fileBytes * removable(group).length;
+    for (final PhotoCopyGroup group in groups) {
+      for (final ScannedFile file in removable(group)) {
+        total += file.sizeBytes;
+      }
     }
     return total;
   }
 
   /// Drops choices for groups that no longer exist, so the map cannot grow
   /// without bound across rescans.
-  DuplicateKeepSelection prune(Iterable<DuplicateGroup> groups) {
+  DuplicateKeepSelection prune(Iterable<PhotoCopyGroup> groups) {
     final Set<String> live = <String>{
-      for (final DuplicateGroup group in groups) group.hash,
+      for (final PhotoCopyGroup group in groups) group.groupKey,
     };
     final Map<String, String> next = <String, String>{
       for (final MapEntry<String, String> entry in _kept.entries)

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:mobile_cleaner/features/files/data/perceptual_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
 import 'package:mobile_cleaner/features/files/domain/duplicate_detector.dart';
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
@@ -14,6 +15,7 @@ import 'package:mobile_cleaner/features/files/domain/photo_cleanup_summary.dart'
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/domain/screenshot_filter.dart';
 import 'package:mobile_cleaner/features/files/domain/screenshot_summary.dart';
+import 'package:mobile_cleaner/features/files/domain/similar_photo_detector.dart';
 import 'package:mobile_cleaner/features/photos/presentation/screens/photos_screen.dart';
 
 const int _mib = 1024 * 1024;
@@ -109,6 +111,16 @@ class _StubHasher implements FileHashRepository {
       };
 }
 
+/// No two photos in the dashboard fixture look alike, so Similar Photos
+/// reports nothing and the other rows stay isolated from it.
+class _NoFingerprints implements PerceptualHashRepository {
+  const _NoFingerprints();
+
+  @override
+  Future<Map<String, String>> hashImages(List<ScannedFile> files) async =>
+      const <String, String>{};
+}
+
 class _NoThumbnails implements ThumbnailRepository {
   const _NoThumbnails();
 
@@ -130,6 +142,9 @@ Future<void> _pumpPhotos(
           _StubScanner(files ?? _fixture()),
         ),
         fileHashRepositoryProvider.overrideWithValue(_StubHasher(_hashes())),
+        perceptualHashRepositoryProvider.overrideWithValue(
+          const _NoFingerprints(),
+        ),
         thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
       ],
       child: const MaterialApp(home: PhotosScreen()),
@@ -139,12 +154,19 @@ Future<void> _pumpPhotos(
 }
 
 /// Builds the summary directly, without widgets.
-PhotoCleanupSummary _summary({List<ScannedFile>? files}) {
+PhotoCleanupSummary _summary({
+  List<ScannedFile>? files,
+  Map<String, String>? similar,
+}) {
   final List<ScannedFile> source = files ?? _fixture();
   return PhotoCleanupSummary.from(
     duplicates: DuplicateDetector.group(source, _hashes()),
     screenshots: ScreenshotSummary.from(source, ScreenshotGroup.all),
     largePhotos: LargePhotoSummary.from(source, LargePhotoFilter.over5mb),
+    similarPhotos: SimilarPhotoDetector.group(
+      source,
+      similar ?? const <String, String>{},
+    ),
   );
 }
 
@@ -178,14 +200,35 @@ void main() {
       expect(summary.entryFor(PhotoCleanupTool.largePhotos).bytes, 42 * _mib);
     });
 
-    test('Similar Photos is listed but never carries a figure', () {
-      final PhotoCleanupEntry entry = _summary().entryFor(
+    test('Similar Photos now carries a real figure, marked as an estimate', () {
+      // trip.jpg and trip (1).jpg given near-identical fingerprints.
+      final PhotoCleanupSummary summary = _summary(
+        similar: <String, String>{
+          _uri('1'): 'f0f0f0f0f0f0f0f0aaaaaaaaaaaaaaaa',
+          _uri('2'): 'f0f0f0f0f0f0f0f1aaaaaaaaaaaaaaab',
+        },
+      );
+      final PhotoCleanupEntry entry = summary.entryFor(
         PhotoCleanupTool.similarPhotos,
       );
-      expect(entry.hasFigure, isFalse);
-      expect(entry.bytes, 0);
-      expect(PhotoCleanupTool.similarPhotos.isAvailable, isFalse);
-      expect(PhotoCleanupTool.duplicatePhotos.isAvailable, isTrue);
+
+      expect(entry.hasFigure, isTrue);
+      expect(entry.isEstimate, isTrue);
+      // Same size, so keeping the larger leaves one 6 MB shot removable.
+      expect(entry.bytes, 6 * _mib);
+      expect(PhotoCleanupTool.similarPhotos.isAvailable, isTrue);
+    });
+
+    test('similar photos never inflate the headline total', () {
+      final PhotoCleanupSummary withSimilar = _summary(
+        similar: <String, String>{
+          _uri('1'): 'f0f0f0f0f0f0f0f0aaaaaaaaaaaaaaaa',
+          _uri('2'): 'f0f0f0f0f0f0f0f1aaaaaaaaaaaaaaab',
+        },
+      );
+      // The headline is unchanged: similar shots are not interchangeable, so
+      // their space is not promised as recoverable.
+      expect(withSimilar.totalBytes, _summary().totalBytes);
     });
 
     test('the headline counts an overlapping photo once', () {
@@ -261,13 +304,11 @@ void main() {
       expect(value('duplicatePhotos'), '6.0 MB');
       expect(value('screenshots'), '5.0 MB');
       expect(value('largePhotos'), '42.0 MB');
-      // Not a size it has never measured.
-      expect(value('similarPhotos'), 'Analyze');
+      // Nothing looks alike in this fixture.
+      expect(value('similarPhotos'), 'None');
     });
 
-    testWidgets('Similar Photos is marked as coming next', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('all four tools are named', (WidgetTester tester) async {
       await _pumpPhotos(tester);
 
       expect(
@@ -276,27 +317,12 @@ void main() {
               find.byKey(const Key('photo_tool_note_similarPhotos')),
             )
             .data,
-        'Coming next',
+        'Near-identical shots of the same scene',
       );
       expect(find.text('Duplicate Photos'), findsOneWidget);
       expect(find.text('Screenshots'), findsOneWidget);
       expect(find.text('Large Photos'), findsOneWidget);
       expect(find.text('Similar Photos'), findsOneWidget);
-    });
-
-    testWidgets('tapping Similar Photos explains itself rather than routing', (
-      WidgetTester tester,
-    ) async {
-      await _pumpPhotos(tester);
-
-      await tester.tap(find.byKey(const Key('photo_tool_similarPhotos')));
-      await tester.pump();
-
-      expect(
-        find.byKey(const Key('similar_photos_coming_soon')),
-        findsOneWidget,
-      );
-      expect(tester.takeException(), isNull);
     });
 
     testWidgets('overlap is disclosed rather than hidden', (
@@ -310,7 +336,7 @@ void main() {
       );
     });
 
-    testWidgets('every built tool row is tappable', (
+    testWidgets('every tool row is tappable', (
       WidgetTester tester,
     ) async {
       await _pumpPhotos(tester);
@@ -319,6 +345,7 @@ void main() {
         'duplicatePhotos',
         'screenshots',
         'largePhotos',
+        'similarPhotos',
       ]) {
         final InkWell row = tester.widget<InkWell>(
           find.byKey(Key('photo_tool_$tool')),
@@ -377,6 +404,9 @@ void main() {
             fileHashRepositoryProvider.overrideWithValue(
               _StubHasher(_hashes()),
             ),
+            perceptualHashRepositoryProvider.overrideWithValue(
+              const _NoFingerprints(),
+            ),
             thumbnailRepositoryProvider.overrideWithValue(
               const _NoThumbnails(),
             ),
@@ -386,8 +416,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Exactly the three tool scans: duplicates, screenshots, large photos.
-      expect(scanner.requests, hasLength(3));
+      // Exactly the four tool scans: duplicates, screenshots, large photos,
+      // similar photos. Never a fifth scan of its own.
+      expect(scanner.requests, hasLength(4));
     });
   });
 }

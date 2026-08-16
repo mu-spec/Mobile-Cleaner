@@ -2,6 +2,7 @@ import 'package:mobile_cleaner/features/files/domain/duplicate_group.dart';
 import 'package:mobile_cleaner/features/files/domain/large_photo_summary.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/domain/screenshot_summary.dart';
+import 'package:mobile_cleaner/features/files/domain/similar_photo_group.dart';
 
 /// The photo tools listed on the Photos tab, in display order.
 enum PhotoCleanupTool {
@@ -17,10 +18,9 @@ enum PhotoCleanupTool {
 
   /// True when the tool is built and can be opened.
   ///
-  /// Similar Photos needs comparison beyond an exact hash, which no phase has
-  /// specified yet. It is listed rather than hidden so the tab is honest about
-  /// what is coming, and it reports `Analyze` instead of a size it cannot know.
-  bool get isAvailable => this != PhotoCleanupTool.similarPhotos;
+  /// Every photo tool is now built. Kept as a concept so a future tool can be
+  /// listed as upcoming without reworking the dashboard.
+  bool get isAvailable => true;
 }
 
 /// One row of the Photo Cleanup dashboard.
@@ -57,6 +57,12 @@ class PhotoCleanupEntry {
 
   /// True when there is a real figure to show rather than an action label.
   bool get hasFigure => tool.isAvailable;
+
+  /// True when the figure is an upper bound rather than a firm total.
+  ///
+  /// Similar shots differ, so what is actually freed depends on which the user
+  /// keeps. The UI prefixes this with "up to".
+  bool get isEstimate => tool == PhotoCleanupTool.similarPhotos;
 }
 
 /// Everything the Photos tab needs to draw itself.
@@ -71,6 +77,7 @@ class PhotoCleanupSummary {
     required DuplicateScanResult duplicates,
     required ScreenshotSummary screenshots,
     required LargePhotoSummary largePhotos,
+    SimilarPhotoScanResult similarPhotos = SimilarPhotoScanResult.empty,
   }) {
     return PhotoCleanupSummary(
       entries: <PhotoCleanupEntry>[
@@ -94,7 +101,17 @@ class PhotoCleanupSummary {
           itemCount: largePhotos.fileCount,
           files: largePhotos.files,
         ),
-        const PhotoCleanupEntry.pending(PhotoCleanupTool.similarPhotos),
+        PhotoCleanupEntry(
+          tool: PhotoCleanupTool.similarPhotos,
+          // An upper bound: keeping the best shot of each set. Phrased as
+          // "up to" in the UI, because which shot the user keeps changes it.
+          bytes: similarPhotos.reclaimableBytes,
+          itemCount: similarPhotos.extraPhotoCount,
+          // Deliberately not contributed to the headline. Similar photos are
+          // not interchangeable, so counting them as recoverable would promise
+          // space the user may well decide not to free.
+          files: const <ScannedFile>[],
+        ),
       ],
     );
   }

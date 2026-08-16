@@ -16,6 +16,7 @@ class MainActivity : FlutterActivity() {
     private var safAccess: SafAccessBridge? = null
     private var deleteBridge: DeleteBridge? = null
     private var hashBridge: FileHashBridge? = null
+    private var perceptualHashBridge: PerceptualHashBridge? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -76,6 +77,13 @@ class MainActivity : FlutterActivity() {
             FileHashBridge.CHANNEL,
         ).setMethodCallHandler(hasher)
 
+        val perceptual = PerceptualHashBridge(applicationContext)
+        perceptualHashBridge = perceptual
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            PerceptualHashBridge.CHANNEL,
+        ).setMethodCallHandler(perceptual)
+
         val loader = ThumbnailLoader(applicationContext)
         thumbnailLoader = loader
         MethodChannel(
@@ -115,6 +123,8 @@ class MainActivity : FlutterActivity() {
         deleteBridge = null
         hashBridge?.dispose()
         hashBridge = null
+        perceptualHashBridge?.dispose()
+        perceptualHashBridge = null
         super.onDestroy()
     }
 }

@@ -7,6 +7,7 @@ import 'package:mobile_cleaner/app/app.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:mobile_cleaner/features/files/data/perceptual_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
@@ -286,7 +287,18 @@ final _offlineDataOverrides = [
   thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
   // The Photos tab composes the duplicate scan, which hashes over a channel.
   fileHashRepositoryProvider.overrideWithValue(const _NoHashes()),
+  // Similar photos decode over a channel that does not exist in tests.
+  perceptualHashRepositoryProvider.overrideWithValue(const _NoFingerprints()),
 ];
+
+/// Perceptual hashing is a platform channel; the Photos tab reaches it.
+class _NoFingerprints implements PerceptualHashRepository {
+  const _NoFingerprints();
+
+  @override
+  Future<Map<String, String>> hashImages(List<ScannedFile> files) async =>
+      const <String, String>{};
+}
 
 /// Hashing is a platform channel too, and the Photos dashboard reaches it.
 class _NoHashes implements FileHashRepository {

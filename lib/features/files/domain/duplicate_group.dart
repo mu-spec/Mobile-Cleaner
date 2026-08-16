@@ -1,14 +1,20 @@
+import 'package:mobile_cleaner/features/files/domain/photo_copy_group.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 
 /// A set of files proven byte-identical by content hash.
-class DuplicateGroup {
+class DuplicateGroup implements PhotoCopyGroup {
   const DuplicateGroup({required this.hash, required this.files});
 
   /// The shared content hash.
   final String hash;
 
   /// Every copy, oldest first, so [original] is the one most likely kept.
+  @override
   final List<ScannedFile> files;
+
+  /// Identity used to remember which copy the user chose to keep.
+  @override
+  String get groupKey => hash;
 
   int get copyCount => files.length;
 
@@ -26,6 +32,7 @@ class DuplicateGroup {
 
   /// The copy suggested for keeping: the oldest, which is usually the
   /// original rather than a re-download or a share-sheet copy.
+  @override
   ScannedFile? get original => files.isEmpty ? null : files.first;
 
   /// The copies safe to remove once [original] is kept.

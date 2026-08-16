@@ -64,37 +64,20 @@ class _PhotoCleanupView extends StatelessWidget {
 
   final PhotoCleanupSummary summary;
 
-  /// Where each row leads. Similar Photos has no screen yet.
+  /// Where each row leads.
   static String? _routeFor(PhotoCleanupTool tool) => switch (tool) {
     PhotoCleanupTool.duplicatePhotos => AppRoutes.photoDuplicates,
     PhotoCleanupTool.screenshots => AppRoutes.screenshotCleaner,
     PhotoCleanupTool.largePhotos => AppRoutes.largePhotos,
-    PhotoCleanupTool.similarPhotos => null,
+    PhotoCleanupTool.similarPhotos => AppRoutes.similarPhotos,
   };
 
   void _open(BuildContext context, PhotoCleanupTool tool) {
     final String? route = _routeFor(tool);
     if (route == null) {
-      _explainSimilarPhotos(context);
       return;
     }
     context.push(route);
-  }
-
-  /// Similar Photos is listed but not built. Say so plainly rather than
-  /// opening an empty screen or silently doing nothing.
-  static void _explainSimilarPhotos(BuildContext context) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(
-          key: Key('similar_photos_coming_soon'),
-          content: Text(
-            'Similar photo detection is coming next. Duplicates today are '
-            'matched byte for byte.',
-          ),
-        ),
-      );
   }
 
   @override
@@ -228,6 +211,9 @@ class _CleanupRow extends StatelessWidget {
         ? 'Analyze'
         : entry.isEmpty
         ? 'None'
+        // "up to", because which shot the user keeps changes the figure.
+        : entry.isEstimate
+        ? 'up to ${ByteFormatter.format(entry.bytes)}'
         : ByteFormatter.format(entry.bytes);
 
     return InkWell(
