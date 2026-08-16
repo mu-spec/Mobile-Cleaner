@@ -110,8 +110,11 @@ class _SimilarPhotosScreenState extends ConsumerState<SimilarPhotosScreen> {
     // Recommendations arrive after the groups. The list renders immediately
     // and the Suggested Keep badges appear when measuring finishes, so a slow
     // analysis never blocks review.
+    // `.value`, not `.valueOrNull`: Riverpod 3 removed the latter and made
+    // `.value` return null while loading or on error, which is exactly the
+    // null-tolerant read wanted here.
     final Map<String, BestPhotoRecommendation> best =
-        ref.watch(bestPhotoProvider(_strength)).valueOrNull ??
+        ref.watch(bestPhotoProvider(_strength)).value ??
         const <String, BestPhotoRecommendation>{};
     final bool selecting = _selection.isNotEmpty;
 
