@@ -16,8 +16,19 @@ class PlatformStorageRepository implements StorageRepository {
 
   @override
   Future<StorageInfo> getStorageInfo() async {
-    final Map<Object?, Object?>? result = await _channel
-        .invokeMapMethod<Object?, Object?>('getStorageInfo');
+    final Map<Object?, Object?>? result;
+    try {
+      result = await _channel.invokeMapMethod<Object?, Object?>(
+        'getStorageInfo',
+      );
+    } on MissingPluginException {
+      // An older build without the native side. Reported as unavailable
+      // rather than crashing the Home screen on launch.
+      throw PlatformException(
+        code: 'STORAGE_UNAVAILABLE',
+        message: 'Storage information is not available on this device.',
+      );
+    }
     if (result == null) {
       throw PlatformException(
         code: 'STORAGE_UNAVAILABLE',

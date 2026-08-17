@@ -467,11 +467,13 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         return try {
             val rows = context.contentResolver.delete(uri, null, null)
             log("MEDIASTORE result | resolver.delete rows=$rows | uri=$uri")
-            if (rows > 0) {
-                deletedBeforePrompt += uri.toString()
-            } else {
-                failedBeforePrompt += failure(uri, "File was already gone.")
-            }
+            // Zero rows means the row is no longer there — the file was moved
+            // or removed after the scan listed it. The user's goal was "this
+            // should not be on my phone", and it is not, so this counts as
+            // done. Reporting it as a failure sent people back to a file that
+            // no longer existed. The direct-file path already treated an
+            // absent file as success; this makes both agree.
+            deletedBeforePrompt += uri.toString()
             null
         } catch (error: SecurityException) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:mobile_cleaner/core/errors/app_failure.dart';
 
 /// Shown while a scan is in flight.
 class FilesScanningView extends StatelessWidget {
@@ -44,28 +44,11 @@ class FilesErrorView extends StatelessWidget {
   final VoidCallback onRetry;
   final VoidCallback onPermissions;
 
-  /// A short, reportable description of what actually went wrong.
-  ///
-  /// `PlatformException.toString()` is long and starts with noise, so the
-  /// message and details are preferred when present.
-  static String _describe(Object error) {
-    if (error is PlatformException) {
-      final String detail = error.details is String
-          ? error.details as String
-          : '';
-      final String message = error.message ?? '';
-      final String body = <String>[
-        message,
-        detail,
-      ].where((String part) => part.isNotEmpty).join(' — ');
-      return body.isEmpty ? error.code : '${error.code}: $body';
-    }
-    return error.toString();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final bool permissionIssue = error.toString().contains('PERMISSION');
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final AppFailure failure = AppFailure.from(error);
+
     return ListView(
       key: const Key('files_error'),
       physics: const AlwaysScrollableScrollPhysics(),
@@ -73,31 +56,41 @@ class FilesErrorView extends StatelessWidget {
       children: <Widget>[
         const SizedBox(height: 60),
         Icon(
-          permissionIssue ? Icons.lock_outline_rounded : Icons.error_outline,
+          _iconFor(failure.kind),
           size: 52,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: colors.onSurfaceVariant,
         ),
         const SizedBox(height: 16),
         Text(
-          permissionIssue
-              ? 'Storage access is required'
-              : 'We could not scan your files',
+          _headlineFor(failure.kind),
+          key: const Key('files_error_headline'),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleLarge,
         ),
-        const SizedBox(height: 10),
-        // The underlying reason, so a user can report something actionable
-        // instead of just a screenshot of the headline.
+        const SizedBox(height: 8),
         Text(
-          _describe(error),
-          key: const Key('files_error_detail'),
+          failure.message,
+          key: const Key('files_error_message'),
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
         ),
+        if (failure.technicalDetail != null) ...<Widget>[
+          const SizedBox(height: 10),
+          // Small print, but present: a screenshot of this screen should be
+          // enough to diagnose the problem without asking for logcat.
+          Text(
+            failure.technicalDetail!,
+            key: const Key('files_error_detail'),
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          ),
+        ],
         const SizedBox(height: 20),
-        if (permissionIssue)
+        if (failure.needsPermission)
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
@@ -107,14 +100,38 @@ class FilesErrorView extends StatelessWidget {
               label: const Text('Review permissions'),
             ),
           ),
-        const SizedBox(height: 10),
-        TextButton.icon(
-          key: const Key('files_retry_button'),
-          onPressed: onRetry,
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text('Try again'),
-        ),
+        // Retrying a permission problem or an unsupported feature would fail
+        // identically, so the action is not offered.
+        if (failure.isRetryable) ...<Widget>[
+          const SizedBox(height: 10),
+          TextButton.icon(
+            key: const Key('files_retry_button'),
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Try again'),
+          ),
+        ],
       ],
     );
   }
+
+  static IconData _iconFor(FailureKind kind) => switch (kind) {
+    FailureKind.permissionDenied => Icons.lock_outline_rounded,
+    FailureKind.missingFile => Icons.search_off_rounded,
+    FailureKind.deleteFailed => Icons.delete_forever_outlined,
+    FailureKind.storageUnavailable => Icons.sd_card_alert_outlined,
+    FailureKind.cancelled => Icons.cancel_outlined,
+    FailureKind.unsupported => Icons.block_outlined,
+    FailureKind.unknown => Icons.error_outline,
+  };
+
+  static String _headlineFor(FailureKind kind) => switch (kind) {
+    FailureKind.permissionDenied => 'Storage access is required',
+    FailureKind.missingFile => 'Those files have moved',
+    FailureKind.deleteFailed => 'Nothing was removed',
+    FailureKind.storageUnavailable => 'Storage unavailable',
+    FailureKind.cancelled => 'Cancelled',
+    FailureKind.unsupported => 'Not available here',
+    FailureKind.unknown => 'We could not scan your files',
+  };
 }

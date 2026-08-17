@@ -33,15 +33,26 @@ class MethodChannelFileScanner implements FileScannerChannel {
     required int minSizeBytes,
     required FileSortOrder sortOrder,
   }) async {
-    final Map<Object?, Object?>? result = await _channel
-        .invokeMapMethod<Object?, Object?>('scanFiles', <String, Object>{
-          'categories': categories
-              .map((FileCategory category) => category.key)
-              .toList(growable: false),
-          'limitPerCategory': limitPerCategory,
-          'minSizeBytes': minSizeBytes,
-          'sortOrder': sortOrder.key,
-        });
+    final Map<Object?, Object?>? result;
+    try {
+      result = await _channel
+          .invokeMapMethod<Object?, Object?>('scanFiles', <String, Object>{
+            'categories': categories
+                .map((FileCategory category) => category.key)
+                .toList(growable: false),
+            'limitPerCategory': limitPerCategory,
+            'minSizeBytes': minSizeBytes,
+            'sortOrder': sortOrder.key,
+          });
+    } on MissingPluginException {
+      // The scanner is the app's core capability, so this is surfaced rather
+      // than silently returning an empty library that looks like a clean
+      // device.
+      throw PlatformException(
+        code: 'SCAN_UNAVAILABLE',
+        message: 'File scanning is not available on this device.',
+      );
+    }
 
     if (result == null) {
       throw PlatformException(
