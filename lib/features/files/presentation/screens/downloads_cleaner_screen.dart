@@ -3,16 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
+import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';
 import 'package:mobile_cleaner/features/files/domain/downloads_summary.dart';
 import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/downloads_provider.dart';
-import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
+import 'package:mobile_cleaner/features/settings/presentation/providers/settings_provider.dart';
 
 /// Downloads cleaner: find stale downloads by age and remove them in bulk.
 ///
@@ -28,7 +29,9 @@ class DownloadsCleanerScreen extends ConsumerStatefulWidget {
 
 class _DownloadsCleanerScreenState
     extends ConsumerState<DownloadsCleanerScreen> {
-  DownloadAgeFilter _filter = DownloadAgeFilter.defaultFilter;
+  /// Null until the saved default is applied, so a settings rebuild can never
+  /// overwrite the threshold the user picked during this visit.
+  DownloadAgeFilter? _filter;
   FileSelection _selection = const FileSelection.empty();
 
   /// Switches threshold, then prunes selections that fall outside the new
@@ -85,8 +88,12 @@ class _DownloadsCleanerScreenState
 
   @override
   Widget build(BuildContext context) {
+    final DownloadAgeFilter filter =
+        _filter ??
+        ref.watch(settingsProvider).value?.downloadAgeFilter ??
+        DownloadAgeFilter.defaultFilter;
     final AsyncValue<DownloadsSummary> summary = ref.watch(
-      downloadsSummaryProvider(_filter),
+      downloadsSummaryProvider(filter),
     );
     final bool selecting = _selection.isNotEmpty;
 
@@ -127,7 +134,7 @@ class _DownloadsCleanerScreenState
             return Column(
               children: <Widget>[
                 _AgeFilterBar(
-                  selected: _filter,
+                  selected: filter,
                   onSelected: (DownloadAgeFilter value) => _selectFilter(value),
                 ),
                 Expanded(
@@ -137,7 +144,7 @@ class _DownloadsCleanerScreenState
                       await ref.read(downloadsScanProvider.future);
                     },
                     child: data.isEmpty
-                        ? _EmptyDownloads(filter: _filter)
+                        ? _EmptyDownloads(filter: filter)
                         : _DownloadsList(
                             summary: data,
                             selection: _selection,

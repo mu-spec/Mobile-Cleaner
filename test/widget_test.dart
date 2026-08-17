@@ -81,6 +81,9 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_settings')));
     await tester.pumpAndSettle();
+    // Settings gained theme, threshold, privacy and about entries, so the
+    // lower rows now sit below the fold on a phone-sized surface.
+    await scrollSettingsTo(tester, const Key('replay_onboarding'));
     await tester.tap(find.byKey(const Key('replay_onboarding')));
     await tester.pumpAndSettle();
     expect(find.text('Understand Your Storage'), findsOneWidget);
@@ -266,9 +269,28 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_settings')));
     await tester.pumpAndSettle();
+    await scrollSettingsTo(tester, const Key('setting_app_version'));
     expect(find.text('App version'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+}
+
+/// Scrolls the Settings list until [key] is visible.
+///
+/// Settings is longer than a phone screen since Phase 26, so rows near the
+/// bottom must be scrolled to before they can be tapped.
+Future<void> scrollSettingsTo(WidgetTester tester, Key key) async {
+  await tester.scrollUntilVisible(
+    find.byKey(key),
+    200,
+    scrollable: find
+        .descendant(
+          of: find.byKey(const Key('settings_list')),
+          matching: find.byType(Scrollable),
+        )
+        .first,
+  );
+  await tester.pumpAndSettle();
 }
 
 /// Platform channels are unavailable in widget tests, so stub every data

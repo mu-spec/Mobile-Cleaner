@@ -11,6 +11,7 @@ import 'package:mobile_cleaner/features/files/presentation/providers/large_files
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
+import 'package:mobile_cleaner/features/settings/presentation/providers/settings_provider.dart';
 
 /// Large Files: find the biggest space users above a size threshold.
 ///
@@ -23,12 +24,18 @@ class LargeFilesScreen extends ConsumerStatefulWidget {
 }
 
 class _LargeFilesScreenState extends ConsumerState<LargeFilesScreen> {
-  LargeFileFilter _filter = LargeFileFilter.defaultFilter;
+  /// Null until the saved default is applied, so the user's own chip choice
+  /// during this visit is never overwritten by a later settings rebuild.
+  LargeFileFilter? _filter;
 
   @override
   Widget build(BuildContext context) {
+    final LargeFileFilter filter =
+        _filter ??
+        ref.watch(settingsProvider).value?.largeFileFilter ??
+        LargeFileFilter.defaultFilter;
     final AsyncValue<LargeFileSummary> summary = ref.watch(
-      largeFileSummaryProvider(_filter),
+      largeFileSummaryProvider(filter),
     );
 
     return Scaffold(
@@ -48,7 +55,7 @@ class _LargeFilesScreenState extends ConsumerState<LargeFilesScreen> {
         child: Column(
           children: <Widget>[
             _FilterBar(
-              selected: _filter,
+              selected: filter,
               onSelected: (LargeFileFilter value) =>
                   setState(() => _filter = value),
             ),
@@ -66,7 +73,7 @@ class _LargeFilesScreenState extends ConsumerState<LargeFilesScreen> {
                     await ref.read(largeFileScanProvider.future);
                   },
                   child: data.isEmpty
-                      ? _EmptyLargeFiles(filter: _filter)
+                      ? _EmptyLargeFiles(filter: filter)
                       : _LargeFileList(summary: data),
                 ),
               ),

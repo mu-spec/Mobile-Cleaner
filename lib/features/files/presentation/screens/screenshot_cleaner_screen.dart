@@ -13,6 +13,7 @@ import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.d
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
+import 'package:mobile_cleaner/features/settings/presentation/providers/settings_provider.dart';
 
 /// Screenshot cleaner: find screenshots and remove the ones no longer needed.
 ///
@@ -28,7 +29,9 @@ class ScreenshotCleanerScreen extends ConsumerStatefulWidget {
 
 class _ScreenshotCleanerScreenState
     extends ConsumerState<ScreenshotCleanerScreen> {
-  ScreenshotGroup _group = ScreenshotGroup.defaultGroup;
+  /// Null until the saved default is applied, so a settings rebuild can never
+  /// overwrite the group the user picked during this visit.
+  ScreenshotGroup? _group;
   FileSelection _selection = const FileSelection.empty();
 
   /// Switches group, then prunes selections that fall outside the new list so
@@ -83,8 +86,12 @@ class _ScreenshotCleanerScreenState
 
   @override
   Widget build(BuildContext context) {
+    final ScreenshotGroup group =
+        _group ??
+        ref.watch(settingsProvider).value?.screenshotGroup ??
+        ScreenshotGroup.defaultGroup;
     final AsyncValue<ScreenshotSummary> summary = ref.watch(
-      screenshotSummaryProvider(_group),
+      screenshotSummaryProvider(group),
     );
     final bool selecting = _selection.isNotEmpty;
 
@@ -124,7 +131,7 @@ class _ScreenshotCleanerScreenState
           data: (ScreenshotSummary data) => Column(
             children: <Widget>[
               _GroupBar(
-                selected: _group,
+                selected: group,
                 onSelected: (ScreenshotGroup value) => _selectGroup(value),
               ),
               Expanded(
@@ -134,7 +141,7 @@ class _ScreenshotCleanerScreenState
                     await ref.read(screenshotScanProvider.future);
                   },
                   child: data.isEmpty
-                      ? _EmptyScreenshots(group: _group)
+                      ? _EmptyScreenshots(group: group)
                       : _ScreenshotList(
                           summary: data,
                           selection: _selection,
