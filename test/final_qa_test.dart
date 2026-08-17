@@ -81,6 +81,35 @@ void main() {
     });
   });
 
+  group('Fresh install regressions (device-reported)', () {
+    test('a truly empty preference store shows onboarding', () async {
+      // Reported from a real fresh install: onboarding was skipped. The Dart
+      // logic was correct — Android auto-backup had restored the flags from a
+      // previous install, so the store was not actually empty. The manifest
+      // now sets allowBackup=false; this pins the Dart side of the contract.
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final SharedPreferences preferences =
+          await SharedPreferences.getInstance();
+
+      expect(preferences.getBool('onboarding_completed'), isNull);
+      expect(preferences.getBool('permission_education_seen'), isNull);
+    });
+
+    test('a restored backup is what made onboarding disappear', () async {
+      // Exactly what auto-backup put back on reinstall.
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        'onboarding_completed': true,
+        'permission_education_seen': true,
+      });
+      final SharedPreferences preferences =
+          await SharedPreferences.getInstance();
+
+      // With these present the splash routes straight to Home, which is the
+      // bug the user saw. Backup is now disabled so they cannot reappear.
+      expect(preferences.getBool('onboarding_completed'), isTrue);
+    });
+  });
+
   group('Permission denial', () {
     test('a denial is classified and offers the settings route', () {
       final AppFailure failure = AppFailure.from(

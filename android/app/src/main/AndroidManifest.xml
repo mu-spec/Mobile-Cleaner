@@ -29,10 +29,19 @@
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
+    <!-- Required since Android 9 (API 28) for ACTION_DELETE to show the
+         uninstall dialog. Without it the intent silently does nothing, which
+         is exactly how the Uninstall button appeared to be dead. It is a
+         normal permission, granted at install with no runtime prompt. -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+
     <application
         android:label="Mobile Cleaner"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        tools:ignore="DataExtractionRules">
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -18,6 +18,7 @@ import android.os.Looper
 import android.os.Process
 import android.os.storage.StorageManager
 import android.provider.Settings
+import android.util.Log
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
@@ -70,6 +71,8 @@ class InstalledAppsBridge(private val context: Context) :
         private const val ICON_SIZE = 96
 
         private const val ICON_QUALITY = 90
+
+        private const val TAG = "InstalledAppsBridge"
     }
 
     /** Set by [MainActivity]; null once the activity goes away. */
@@ -438,7 +441,11 @@ class InstalledAppsBridge(private val context: Context) :
             }
             true
         } catch (error: Exception) {
-            // No handling activity, or the user's device blocks it.
+            // No handling activity, or the device blocks it. Logged rather
+            // than swallowed silently: a dead-looking button with no trace in
+            // logcat is exactly what made the missing REQUEST_DELETE_PACKAGES
+            // permission so hard to spot.
+            Log.w(TAG, "Could not start ${intent.action}: ${error.message}")
             false
         }
     }
