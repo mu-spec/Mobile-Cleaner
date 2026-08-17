@@ -48,6 +48,12 @@ abstract final class AppTheme {
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
+      // Page transitions are deliberately left at the platform default.
+      //
+      // Modern Flutter defaults Android to the predictive-back transition,
+      // which gives the system back-gesture preview and falls back to the
+      // fade-forwards animation otherwise. Naming a builder explicitly here
+      // would *disable* predictive back — a downgrade, not polish.
       textTheme: ThemeData(brightness: brightness).textTheme.copyWith(
         headlineSmall: const TextStyle(
           fontSize: 26,

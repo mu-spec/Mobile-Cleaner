@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/core/ui/haptics.dart';
+import 'package:mobile_cleaner/core/ui/responsive.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/date_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
@@ -326,7 +328,9 @@ class _PhotoGroupCard extends StatelessWidget {
             const SizedBox(height: 10),
             // Copies sit side by side so they can be compared at a glance.
             SizedBox(
-              height: _stripHeight,
+              // Cells carry several caption lines, so this is the layout most
+              // sensitive to a larger system font.
+              height: Responsive.photoStripHeight(context, _stripHeight),
               child: ListView.builder(
                 key: Key('photo_group_strip_${group.hash}'),
                 scrollDirection: Axis.horizontal,
@@ -409,13 +413,23 @@ class _CopyCell extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        GestureDetector(
+        Semantics(
+          // An image-only control is meaningless to a screen reader without
+          // this: it announces the file, whether it is kept, and whether it
+          // is currently marked for removal.
+          label: file.name,
+          selected: selected,
+          button: true,
+          child: GestureDetector(
           key: Key('photo_copy_${file.id}'),
           // Always hit-testable. A tap on the kept copy is ignored upstream
           // rather than being dropped here, so the cell never becomes a dead
           // region the user cannot even long-press for details.
           behavior: HitTestBehavior.opaque,
-          onTap: onTap,
+          onTap: () {
+            Haptics.selection();
+            onTap();
+          },
           onLongPress: onDetails,
           child: Container(
             width: _thumbSize,
@@ -440,6 +454,7 @@ class _CopyCell extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         ),
         const SizedBox(height: 4),
@@ -486,7 +501,7 @@ class _CopyCell extends StatelessWidget {
           )
         else
           SizedBox(
-            height: 30,
+            height: Responsive.compactButtonHeight(context),
             child: TextButton(
               key: Key('photo_copy_keep_${file.id}'),
               onPressed: onKeep,

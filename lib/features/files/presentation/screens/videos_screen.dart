@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/core/ui/responsive.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/duration_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
@@ -164,7 +165,8 @@ class _SortBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Horizontally scrollable: four chips overflow a narrow phone.
     return SizedBox(
-      height: 52,
+      // Grows with the user's text scale so chip labels are never clipped.
+      height: Responsive.chipBarHeight(context),
       child: ListView(
         key: const Key('videos_sort_bar'),
         scrollDirection: Axis.horizontal,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/core/ui/haptics.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/data/delete_repository.dart';
 import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
@@ -90,6 +91,7 @@ Future<DeleteResult?> runDeleteFlow({
   // Nothing is awaited, so the caller refreshes its list as soon as the delete
   // lands rather than waiting for the user to dismiss anything.
   if (result.deletedCount > 0) {
+    Haptics.success();
     ref.invalidate(storageOverviewProvider);
     // Record the cleanup here, in the one shared flow, so every tool's
     // deletions are logged and no tool can forget to. Not awaited: history is
@@ -252,7 +254,12 @@ class _ReviewSheet extends StatelessWidget {
                       backgroundColor: colors.error,
                       foregroundColor: colors.onError,
                     ),
-                    onPressed: () => Navigator.of(context).pop(true),
+                    onPressed: () {
+                      // Heavier than a selection tap: this is the moment an
+                      // irreversible action is committed.
+                      Haptics.warning();
+                      Navigator.of(context).pop(true);
+                    },
                     icon: const Icon(Icons.delete_outline_rounded, size: 18),
                     label: Text('Delete ${files.length}'),
                   ),

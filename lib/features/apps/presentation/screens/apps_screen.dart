@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/core/ui/responsive.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/date_formatter.dart';
 import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
@@ -220,7 +221,8 @@ class _FilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Horizontally scrollable: six chips overflow any phone.
     return SizedBox(
-      height: 52,
+      // Grows with the user's text scale so chip labels are never clipped.
+      height: Responsive.chipBarHeight(context),
       child: ListView(
         key: const Key('apps_filter_bar'),
         scrollDirection: Axis.horizontal,

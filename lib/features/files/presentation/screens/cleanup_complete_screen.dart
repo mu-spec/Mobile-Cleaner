@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/core/ui/success_check.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
@@ -31,21 +32,7 @@ class CleanupCompleteScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
                 children: <Widget>[
-                  Center(
-                    child: Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        color: colors.primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.check_rounded,
-                        size: 52,
-                        color: colors.primary,
-                      ),
-                    ),
-                  ),
+                  const Center(child: SuccessCheck()),
                   const SizedBox(height: 24),
                   Text(
                     'Cleanup Complete',

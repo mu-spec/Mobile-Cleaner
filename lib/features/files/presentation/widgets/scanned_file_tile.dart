@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_cleaner/core/ui/haptics.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/date_formatter.dart';
 import 'package:mobile_cleaner/core/utils/duration_formatter.dart';
@@ -77,8 +78,16 @@ class ScannedFileTile extends StatelessWidget {
       trailing: selectionMode
           ? Checkbox(
               key: Key('file_checkbox_${file.id}'),
+              // Names the row, so a screen reader announces "beach.jpg,
+              // checkbox" rather than an unlabelled control in a long list.
+              semanticLabel: file.name,
               value: selected ?? false,
-              onChanged: onTap == null ? null : (_) => onTap!(),
+              onChanged: onTap == null
+                  ? null
+                  : (_) {
+                      Haptics.selection();
+                      onTap!();
+                    },
             )
           : Icon(
               Icons.info_outline_rounded,

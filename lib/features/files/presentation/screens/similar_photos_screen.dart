@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/core/ui/haptics.dart';
+import 'package:mobile_cleaner/core/ui/responsive.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/date_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/best_photo_scorer.dart';
@@ -206,7 +208,8 @@ class _StrengthBar extends StatelessWidget {
   Widget build(BuildContext context) {
     // Horizontally scrollable: three chips can overflow a narrow phone.
     return SizedBox(
-      height: 52,
+      // Grows with the user's text scale so chip labels are never clipped.
+      height: Responsive.chipBarHeight(context),
       child: ListView(
         key: const Key('similar_photos_strength_bar'),
         scrollDirection: Axis.horizontal,
@@ -363,7 +366,9 @@ class _SimilarGroupCard extends StatelessWidget {
             ],
             const SizedBox(height: 10),
             SizedBox(
-              height: _stripHeight,
+              // Cells carry several caption lines, so this is the layout most
+              // sensitive to a larger system font.
+              height: Responsive.photoStripHeight(context, _stripHeight),
               child: ListView.builder(
                 key: Key('similar_group_strip_${group.key}'),
                 scrollDirection: Axis.horizontal,
@@ -462,10 +467,20 @@ class _ShotCell extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        GestureDetector(
+        Semantics(
+          // An image-only control is meaningless to a screen reader without
+          // this: it announces the file, whether it is kept, and whether it
+          // is currently marked for removal.
+          label: file.name,
+          selected: selected,
+          button: true,
+          child: GestureDetector(
           key: Key('similar_shot_${file.id}'),
           behavior: HitTestBehavior.opaque,
-          onTap: onTap,
+          onTap: () {
+            Haptics.selection();
+            onTap();
+          },
           onLongPress: onDetails,
           child: Container(
             width: _thumbSize,
@@ -487,6 +502,7 @@ class _ShotCell extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         ),
         const SizedBox(height: 4),
@@ -552,7 +568,7 @@ class _ShotCell extends StatelessWidget {
           )
         else
           SizedBox(
-            height: 30,
+            height: Responsive.compactButtonHeight(context),
             child: TextButton(
               key: Key('similar_shot_keep_${file.id}'),
               onPressed: onKeep,
