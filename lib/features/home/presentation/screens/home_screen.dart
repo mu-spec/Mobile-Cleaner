@@ -5,11 +5,30 @@ import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/recommendations_card.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 
+/// Home.
+///
+/// ## Order, and why
+///
+/// 1. **Storage** — the question the user opened the app to answer.
+/// 2. **Smart Scan** — the single primary action, with the privacy note.
+/// 3. **Recommended for you** — real findings from real scans, so it earns
+///    its place above the generic tools.
+/// 4. **Quick tools** — secondary, compact, always available.
+/// 5. **Cleanup history** — context, and only once something has happened.
+///
+/// The page-level heading and its blurb were removed. They restated the app
+/// name and took the whole top of the screen to say nothing the storage card
+/// does not say better with real numbers.
+///
+/// This screen only reports and routes. No storage calculation, scan, or
+/// destination changed.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -31,7 +50,6 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: const Row(
@@ -64,44 +82,41 @@ class HomeScreen extends ConsumerWidget {
           child: ListView(
             key: const Key('home_dashboard'),
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
             children: <Widget>[
-              Text(
-                'Your storage at a glance',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Understand what is using space, then choose what to review.',
-                style: Theme.of(context).textTheme.bodyLarge
-                    ?.copyWith(color: colors.onSurfaceVariant),
-              ),
-              const SizedBox(height: 22),
               const StorageOverviewCard(),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  key: const Key('smart_scan_button'),
-                  onPressed: () => context.go(AppRoutes.clean),
-                  icon: const Icon(Icons.auto_fix_high_rounded),
-                  label: const Text('Smart Scan'),
-                ),
+              const SizedBox(height: 20),
+
+              // The one primary action, given the most visual weight.
+              //
+              // The heading names the feature ("Smart Scan") while the button
+              // states the action ("Scan now") — clearer than a button that
+              // repeats a product name, and it keeps the feature discoverable
+              // by name on the Home screen.
+              const HomeSectionHeader(
+                title: 'Smart Scan',
+                caption: 'Check the whole device for recoverable space.',
               ),
-              const SizedBox(height: 30),
+              SmartScanCta(onScan: () => context.go(AppRoutes.clean)),
+              const SizedBox(height: HomeMetrics.sectionGap),
+
+              // Real findings first: this section is empty-by-default and
+              // only appears with something concrete to say.
+              RecommendationsCard(
+                onScan: () => context.go(AppRoutes.clean),
+                onOpen: (RecommendationKind kind) =>
+                    _openRecommendation(context, kind),
+              ),
+              const SizedBox(height: HomeMetrics.sectionGap),
+
               QuickToolsSection(
                 onPhotos: () => context.go(AppRoutes.photos),
                 onFiles: () => context.push(AppRoutes.largeFiles),
                 onApps: () => context.go(AppRoutes.apps),
                 onPermissions: () => context.push(AppRoutes.permissions),
               ),
-              const SizedBox(height: 30),
-              RecommendationsCard(
-                onScan: () => context.go(AppRoutes.clean),
-                onOpen: (RecommendationKind kind) =>
-                    _openRecommendation(context, kind),
-              ),
-              const SizedBox(height: 18),
+              const SizedBox(height: HomeMetrics.sectionGap),
+
               // Renders nothing until a cleanup has actually happened.
               CleanupHistoryCard(
                 onOpen: () => context.push(AppRoutes.history),

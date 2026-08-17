@@ -1,19 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 import 'package:mobile_cleaner/features/storage/presentation/widgets/storage_indicator.dart';
 
+/// Storage status: the first and most important thing on Home.
+///
+/// ## Wording
+///
+/// "Internal storage" rather than "Total storage". What Android reports is the
+/// usable internal partition, which is always smaller than the number printed
+/// on the box — a 128 GB phone reports about 118 GB. Calling that "Total"
+/// invites the user to think the app is miscounting.
+///
+/// Used and available are the two figures a person actually acts on, so they
+/// are given equal visual weight and sit side by side. Internal storage is
+/// reported underneath as context, not as a headline.
+///
+/// No calculation changed: every figure still comes straight from
+/// [StorageInfo].
 class StorageOverviewCard extends ConsumerWidget {
   const StorageOverviewCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<StorageInfo> storage = ref.watch(storageOverviewProvider);
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(22),
+        padding: HomeMetrics.cardPadding,
         child: storage.when(
           loading: () => const _LoadingStorage(),
           error: (Object error, StackTrace stackTrace) => _StorageError(
@@ -33,73 +50,132 @@ class _StorageDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          'Storage overview',
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 24),
         Center(
           child: StorageIndicator(
             usedFraction: info.usedFraction,
             usedPercentage: info.usedPercentage,
           ),
         ),
-        const SizedBox(height: 26),
-        _StorageRow(
+        const SizedBox(height: 22),
+        // The two figures people act on, side by side and equally weighted.
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              child: _StorageFigure(
+                figureKey: const Key('used_storage'),
+                label: 'Used',
+                value: ByteFormatter.format(info.usedBytes),
+                color: colors.tertiary,
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 42,
+              color: colors.outlineVariant,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            Expanded(
+              child: _StorageFigure(
+                figureKey: const Key('free_storage'),
+                label: 'Available',
+                value: ByteFormatter.format(info.freeBytes),
+                color: colors.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const Divider(height: 1),
+        const SizedBox(height: 12),
+        Row(
           key: const Key('total_storage'),
-          label: 'Total storage',
-          value: ByteFormatter.format(info.totalBytes),
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        const SizedBox(height: 14),
-        _StorageRow(
-          key: const Key('used_storage'),
-          label: 'Used storage',
-          value: ByteFormatter.format(info.usedBytes),
-          color: Theme.of(context).colorScheme.tertiary,
-        ),
-        const SizedBox(height: 14),
-        _StorageRow(
-          key: const Key('free_storage'),
-          label: 'Free storage',
-          value: ByteFormatter.format(info.freeBytes),
-          // Theme colour, so it adapts in dark mode instead of staying a
-          // fixed light-mode green.
-          color: Theme.of(context).colorScheme.primary,
+          children: <Widget>[
+            Icon(
+              Icons.smartphone_rounded,
+              size: 15,
+              color: colors.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Internal storage',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Text(
+              ByteFormatter.format(info.totalBytes),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colors.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
-
 }
 
-class _StorageRow extends StatelessWidget {
-  const _StorageRow({
+/// One headline figure: a coloured label above a large value.
+class _StorageFigure extends StatelessWidget {
+  const _StorageFigure({
+    required this.figureKey,
     required this.label,
     required this.value,
     required this.color,
-    super.key,
   });
 
+  final Key figureKey;
   final String label;
   final String value;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
+    return Column(
+      key: figureKey,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        Row(
+          children: <Widget>[
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 7),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(child: Text(label)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ],
     );
   }

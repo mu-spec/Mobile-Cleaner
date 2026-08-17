@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 
 /// Home's recommendations: fixed rules over the real scan results.
 ///
@@ -67,59 +68,93 @@ class _AdviceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
 
-    return Card(
+    return Column(
       key: const Key('recommendations_section'),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Icon(Icons.lightbulb_rounded, color: colors.primary, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Recommendations',
-                    key: const Key('recommendations_title'),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.only(
+            left: 4,
+            bottom: HomeMetrics.headingGap,
+          ),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Semantics(
+                      header: true,
+                      child: Text(
+                        'Recommended for you',
+                        key: const Key('recommendations_title'),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Based on what is actually on your device.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
+              ),
+              const SizedBox(width: 10),
+              // A real count of real findings, never a badge for its own sake.
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
                   '${recommendations.length}',
                   key: const Key('recommendations_count'),
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: colors.primary,
+                    color: colors.onPrimaryContainer,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Based on what is actually on your device.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-            ),
-            const SizedBox(height: 6),
-            for (final Recommendation item in recommendations)
-              _AdviceRow(item: item, onOpen: () => onOpen(item.kind)),
-          ],
+              ),
+            ],
+          ),
         ),
-      ),
+        Card(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: <Widget>[
+              for (int i = 0; i < recommendations.length; i++)
+                _AdviceRow(
+                  item: recommendations[i],
+                  onOpen: () => onOpen(recommendations[i].kind),
+                  showDivider: i < recommendations.length - 1,
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
 /// One suggestion: what, why, and where to go.
 class _AdviceRow extends StatelessWidget {
-  const _AdviceRow({required this.item, required this.onOpen});
+  const _AdviceRow({
+    required this.item,
+    required this.onOpen,
+    this.showDivider = true,
+  });
 
   final Recommendation item;
   final VoidCallback onOpen;
+  final bool showDivider;
 
   IconData get _icon => switch (item.kind) {
     RecommendationKind.screenshotReview => Icons.screenshot_rounded,
@@ -132,33 +167,24 @@ class _AdviceRow extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final bool high = item.priority == RecommendationPriority.high;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: InkWell(
+    return Column(
+      children: <Widget>[
+        InkWell(
         key: Key('recommendation_${item.kind.name}'),
         onTap: onOpen,
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: high
-                      ? colors.primaryContainer
-                      : colors.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Icon(
-                  _icon,
-                  size: 19,
-                  color: high ? colors.primary : colors.onSurfaceVariant,
-                ),
+              HomeIconTile(
+                icon: _icon,
+                background: high
+                    ? colors.primaryContainer
+                    : colors.surfaceContainerHighest,
+                foreground: high ? colors.primary : colors.onSurfaceVariant,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,13 +215,16 @@ class _AdviceRow extends StatelessWidget {
               const SizedBox(width: 8),
               Icon(
                 Icons.chevron_right_rounded,
-                size: 20,
+                size: HomeMetrics.rowIconSize,
                 color: colors.onSurfaceVariant,
               ),
             ],
           ),
         ),
-      ),
+        ),
+        if (showDivider)
+          Divider(height: 1, indent: 70, color: colors.outlineVariant),
+      ],
     );
   }
 }
