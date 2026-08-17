@@ -23,8 +23,16 @@ class PlatformPerceptualHashRepository implements PerceptualHashRepository {
 
   static const String _channelName = 'com.mobilecleaner.app/perceptual_hash';
 
+  /// Must not exceed `PerceptualHashBridge.MAX_FILES_PER_CALL`, which
+  /// silently drops anything beyond its cap.
+  static const int maxUrisPerCall = 600;
+
   /// Decoding is the expensive part, so never decode the same image twice in
   /// a session. Hashes are stable for a URI.
+  ///
+  /// Bounded so a very large library cannot grow this without limit.
+  static const int maxCacheEntries = 5000;
+
   final Map<String, String> _cache = <String, String>{};
 
   final MethodChannel _channel;
@@ -51,24 +59,41 @@ class PlatformPerceptualHashRepository implements PerceptualHashRepository {
       return results;
     }
 
-    try {
-      final Map<Object?, Object?>? payload = await _channel
-          .invokeMapMethod<Object?, Object?>('hashImages', <String, Object>{
-            'uris': missing,
-          });
-      final Map<String, String> fresh = parseHashes(payload);
-      results.addAll(fresh);
-      _cache.addAll(fresh);
-    } on PlatformException {
-      // Hashing failed wholesale; report what is known rather than throwing.
-      return results;
-    } on MissingPluginException {
-      // Older build without the native bridge. Similar photos are simply
-      // unavailable, which the screen reports as "nothing found".
-      return results;
+    // Chunked so the native cap cannot silently drop images. Sending more
+    // than the cap in one call hashed only the first N, so similar photos
+    // beyond that were never grouped.
+    for (int start = 0; start < missing.length; start += maxUrisPerCall) {
+      final int end = (start + maxUrisPerCall) > missing.length
+          ? missing.length
+          : start + maxUrisPerCall;
+
+      try {
+        final Map<Object?, Object?>? payload = await _channel
+            .invokeMapMethod<Object?, Object?>('hashImages', <String, Object>{
+              'uris': missing.sublist(start, end),
+            });
+        final Map<String, String> fresh = parseHashes(payload);
+        results.addAll(fresh);
+        _cache.addAll(fresh);
+        _trimCache();
+      } on PlatformException {
+        // Keep earlier batches rather than losing everything.
+        return results;
+      } on MissingPluginException {
+        // Older build without the native bridge. Similar photos are simply
+        // unavailable, which the screen reports as "nothing found".
+        return results;
+      }
     }
 
     return results;
+  }
+
+  /// Drops the oldest entries once the cap is passed.
+  void _trimCache() {
+    while (_cache.length > maxCacheEntries) {
+      _cache.remove(_cache.keys.first);
+    }
   }
 
   /// Parses the platform payload, dropping malformed rows.

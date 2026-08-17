@@ -20,9 +20,19 @@ class PlatformFileHashRepository implements FileHashRepository {
 
   static const String _channelName = 'com.mobilecleaner.app/hash';
 
+  /// Must not exceed `FileHashBridge.MAX_FILES_PER_CALL` on the native side,
+  /// which silently drops anything beyond its cap.
+  static const int maxUrisPerCall = 400;
+
   final MethodChannel _channel;
 
   /// Hashes are stable for a URI within a session, so never recompute one.
+  ///
+  /// Bounded: on a library with tens of thousands of size-matched candidates
+  /// an unbounded map would grow for the life of the process. Hex hashes are
+  /// small, so the cap is generous.
+  static const int maxCacheEntries = 5000;
+
   final Map<String, String> _cache = <String, String>{};
 
   @override
@@ -47,21 +57,44 @@ class PlatformFileHashRepository implements FileHashRepository {
       return results;
     }
 
-    try {
-      final Map<Object?, Object?>? payload = await _channel
-          .invokeMapMethod<Object?, Object?>('hashFiles', <String, Object>{
-            'uris': missing,
-          });
-      results.addAll(parseHashes(payload));
-      _cache.addAll(results);
-    } on PlatformException {
-      // Hashing failed wholesale; report what is known rather than throwing.
-      return results;
-    } on MissingPluginException {
-      return results;
+    // Sent in chunks that the native side will not truncate.
+    //
+    // FileHashBridge caps one call at 400 URIs. Sending 900 in a single call
+    // silently hashed the first 400 and dropped the rest, so duplicates past
+    // that point were never found — a correctness bug that only appears on a
+    // large library. Chunking also keeps each channel payload small and lets
+    // partial results survive a mid-way failure.
+    for (int start = 0; start < missing.length; start += maxUrisPerCall) {
+      final int end = (start + maxUrisPerCall) > missing.length
+          ? missing.length
+          : start + maxUrisPerCall;
+      final List<String> batch = missing.sublist(start, end);
+
+      try {
+        final Map<Object?, Object?>? payload = await _channel
+            .invokeMapMethod<Object?, Object?>('hashFiles', <String, Object>{
+              'uris': batch,
+            });
+        final Map<String, String> fresh = parseHashes(payload);
+        results.addAll(fresh);
+        _cache.addAll(fresh);
+        _trimCache();
+      } on PlatformException {
+        // Keep what earlier batches produced rather than losing everything.
+        return results;
+      } on MissingPluginException {
+        return results;
+      }
     }
 
     return results;
+  }
+
+  /// Drops the oldest entries once the cap is passed.
+  void _trimCache() {
+    while (_cache.length > maxCacheEntries) {
+      _cache.remove(_cache.keys.first);
+    }
   }
 
   /// Parses the platform payload, dropping malformed rows.

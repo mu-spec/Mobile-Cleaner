@@ -17,12 +17,26 @@ class FileThumbnail extends ConsumerWidget {
   final ScannedFile file;
   final double size;
 
+  /// Target decode size in physical pixels.
+  ///
+  /// Scaled by the device pixel ratio so the image is not soft on a
+  /// high-density screen, and clamped so a very large logical size cannot ask
+  /// for an enormous bitmap.
+  int _decodeExtent(BuildContext context) {
+    final double ratio = MediaQuery.devicePixelRatioOf(context);
+    final double physical = size * (ratio <= 0 ? 1 : ratio);
+    return physical.clamp(32, 512).round();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!file.supportsThumbnail) {
       return _CategoryIcon(file: file, size: size);
     }
 
+    // One shared request size for every tile, so a 44px row and a 118px cell
+    // reuse the same cached bytes instead of decoding the file twice. 128 is
+    // large enough for the biggest tile the app draws.
     final AsyncValue<Uint8List?> thumbnail = ref.watch(thumbnailProvider(file));
 
     return ClipRRect(
@@ -46,6 +60,12 @@ class FileThumbnail extends ConsumerWidget {
                   key: Key('thumbnail_image_${file.id}'),
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
+                  // Decode to the size actually drawn. Without this, Flutter
+                  // decodes at full resolution and stores that in the image
+                  // cache — a 44px tile could hold a multi-megabyte bitmap,
+                  // and a long list would evict everything useful.
+                  cacheWidth: _decodeExtent(context),
+                  cacheHeight: _decodeExtent(context),
                   // A corrupt thumbnail must not take down the list.
                   errorBuilder:
                       (

@@ -14,6 +14,13 @@ class AppIcon extends StatelessWidget {
   final InstalledApp app;
   final double size;
 
+  /// Target decode size in physical pixels, clamped to the source icon size.
+  int _decodeExtent(BuildContext context) {
+    final double ratio = MediaQuery.devicePixelRatioOf(context);
+    final double physical = size * (ratio <= 0 ? 1 : ratio);
+    return physical.clamp(32, 96).round();
+  }
+
   @override
   Widget build(BuildContext context) {
     final Uint8List? bytes = app.icon;
@@ -32,6 +39,10 @@ class AppIcon extends StatelessWidget {
           key: Key('app_icon_${app.packageName}'),
           fit: BoxFit.contain,
           gaplessPlayback: true,
+          // Icons arrive as 96px PNGs; decode to the drawn size so a list of
+          // 100 apps does not hold 100 full-size bitmaps in the image cache.
+          cacheWidth: _decodeExtent(context),
+          cacheHeight: _decodeExtent(context),
           // A corrupt icon must not take down the list.
           errorBuilder:
               (BuildContext context, Object error, StackTrace? stackTrace) =>

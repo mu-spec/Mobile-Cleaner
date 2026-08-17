@@ -25,8 +25,16 @@ class PlatformPhotoQualityRepository implements PhotoQualityRepository {
 
   static const String _channelName = 'com.mobilecleaner.app/photo_quality';
 
+  /// Must not exceed `PhotoQualityBridge.MAX_FILES_PER_CALL`, which silently
+  /// drops anything beyond its cap.
+  static const int maxUrisPerCall = 300;
+
   /// Decoding is the expensive part, so never measure the same photo twice in
   /// a session. Measurements are stable for a URI.
+  ///
+  /// Bounded so a very large library cannot grow this without limit.
+  static const int maxCacheEntries = 5000;
+
   final Map<String, PhotoQuality> _cache = <String, PhotoQuality>{};
 
   final MethodChannel _channel;
@@ -55,24 +63,41 @@ class PlatformPhotoQualityRepository implements PhotoQualityRepository {
       return results;
     }
 
-    try {
-      final Map<Object?, Object?>? payload = await _channel
-          .invokeMapMethod<Object?, Object?>('analyzePhotos', <String, Object>{
-            'uris': missing,
-          });
-      final Map<String, PhotoQuality> fresh = parseQualities(payload);
-      results.addAll(fresh);
-      _cache.addAll(fresh);
-    } on PlatformException {
-      // Measurement failed wholesale; report what is known rather than throw.
-      return results;
-    } on MissingPluginException {
-      // Older build without the native bridge. No recommendations are shown,
-      // which the screen handles as "too close to call".
-      return results;
+    // Chunked so the native cap cannot silently drop photos, which would
+    // leave large groups partly unmeasured and skew the best-shot ranking.
+    for (int start = 0; start < missing.length; start += maxUrisPerCall) {
+      final int end = (start + maxUrisPerCall) > missing.length
+          ? missing.length
+          : start + maxUrisPerCall;
+
+      try {
+        final Map<Object?, Object?>? payload = await _channel
+            .invokeMapMethod<Object?, Object?>(
+              'analyzePhotos',
+              <String, Object>{'uris': missing.sublist(start, end)},
+            );
+        final Map<String, PhotoQuality> fresh = parseQualities(payload);
+        results.addAll(fresh);
+        _cache.addAll(fresh);
+        _trimCache();
+      } on PlatformException {
+        // Keep earlier batches rather than losing everything.
+        return results;
+      } on MissingPluginException {
+        // Older build without the native bridge. No recommendations are
+        // shown, which the screen handles as "too close to call".
+        return results;
+      }
     }
 
     return results;
+  }
+
+  /// Drops the oldest entries once the cap is passed.
+  void _trimCache() {
+    while (_cache.length > maxCacheEntries) {
+      _cache.remove(_cache.keys.first);
+    }
   }
 
   /// Parses the platform payload, dropping malformed rows.
