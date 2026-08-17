@@ -11,7 +11,6 @@ import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_his
 import 'package:shared_preferences/shared_preferences.dart';
 
 const int _mib = 1024 * 1024;
-const int _gib = 1024 * 1024 * 1024;
 
 CleanupEntry _entry({
   required DateTime at,

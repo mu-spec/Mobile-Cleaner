@@ -25,10 +25,6 @@ class CleanupDay {
 class CleanupHistory {
   const CleanupHistory({required this.entries});
 
-  static const CleanupHistory empty = CleanupHistory(
-    entries: <CleanupEntry>[],
-  );
-
   /// Builds a history, ordering newest first.
   factory CleanupHistory.from(Iterable<CleanupEntry> source) {
     final List<CleanupEntry> sorted = List<CleanupEntry>.of(source)
@@ -38,6 +34,10 @@ class CleanupHistory {
       );
     return CleanupHistory(entries: List<CleanupEntry>.unmodifiable(sorted));
   }
+
+  static const CleanupHistory empty = CleanupHistory(
+    entries: <CleanupEntry>[],
+  );
 
   /// Individual cleanups, newest first.
   final List<CleanupEntry> entries;

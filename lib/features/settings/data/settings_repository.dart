@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';
 import 'package:mobile_cleaner/features/files/domain/large_file_filter.dart';

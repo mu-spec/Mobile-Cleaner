@@ -260,8 +260,8 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
   final Key tileKey;
 
   /// Key on the trailing value text, passed explicitly rather than derived
-  /// from [tileKey] — casting a Key back to a ValueKey<String> would throw if
-  /// a caller ever passed a different Key subtype.
+  /// from [tileKey] — casting a Key back to a `ValueKey<String>` would throw
+  /// if a caller ever passed a different Key subtype.
   final Key valueKey;
   final IconData icon;
   final String title;

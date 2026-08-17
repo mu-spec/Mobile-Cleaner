@@ -16,7 +16,6 @@ import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/domain/smart_scan_result.dart';
 
 const int _mib = 1024 * 1024;
-const int _gib = 1024 * 1024 * 1024;
 const String _apkMime = 'application/vnd.android.package-archive';
 
 /// Midday so a daylight-saving shift cannot move a fixture across a day.
