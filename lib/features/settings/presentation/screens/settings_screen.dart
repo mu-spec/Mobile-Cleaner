@@ -30,6 +30,15 @@ class SettingsScreen extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
+            key: const Key('open_cleanup_history'),
+            leading: const Icon(Icons.history_rounded),
+            title: const Text('Cleanup history'),
+            subtitle: const Text('What you have removed, and when'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => context.push(AppRoutes.history),
+          ),
+          const Divider(),
+          ListTile(
             key: const Key('replay_onboarding'),
             leading: const Icon(Icons.slideshow_rounded),
             title: const Text('Replay onboarding'),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
@@ -99,6 +100,11 @@ class HomeScreen extends ConsumerWidget {
                 onScan: () => context.go(AppRoutes.clean),
                 onOpen: (RecommendationKind kind) =>
                     _openRecommendation(context, kind),
+              ),
+              const SizedBox(height: 18),
+              // Renders nothing until a cleanup has actually happened.
+              CleanupHistoryCard(
+                onOpen: () => context.push(AppRoutes.history),
               ),
             ],
           ),

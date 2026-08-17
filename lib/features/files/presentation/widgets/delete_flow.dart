@@ -8,6 +8,7 @@ import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/cleanup_complete_screen.dart';
+import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 
 /// Runs the shared delete flow: Review, Confirm, Delete, Result.
@@ -90,6 +91,16 @@ Future<DeleteResult?> runDeleteFlow({
   // lands rather than waiting for the user to dismiss anything.
   if (result.deletedCount > 0) {
     ref.invalidate(storageOverviewProvider);
+    // Record the cleanup here, in the one shared flow, so every tool's
+    // deletions are logged and no tool can forget to. Not awaited: history is
+    // a convenience and must not delay the result screen.
+    unawaited(
+      recordCleanup(
+        ref,
+        filesRemoved: result.deletedCount,
+        bytesRecovered: result.freedBytes,
+      ),
+    );
     unawaited(
       Navigator.of(context).push(
         MaterialPageRoute<void>(

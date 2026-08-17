@@ -12,6 +12,7 @@ import 'package:mobile_cleaner/features/files/presentation/screens/photo_duplica
 import 'package:mobile_cleaner/features/files/presentation/screens/screenshot_cleaner_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/similar_photos_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/videos_screen.dart';
+import 'package:mobile_cleaner/features/history/presentation/screens/cleanup_history_screen.dart';
 import 'package:mobile_cleaner/features/home/presentation/screens/home_screen.dart';
 import 'package:mobile_cleaner/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:mobile_cleaner/features/permissions/presentation/screens/permission_education_screen.dart';
@@ -36,6 +37,7 @@ abstract final class AppRoutes {
   static const String photoDuplicates = '/photo-duplicates';
   static const String similarPhotos = '/similar-photos';
   static const String videos = '/videos';
+  static const String history = '/history';
   static const String apps = '/apps';
   static const String settings = '/settings';
 }
@@ -90,6 +92,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.videos,
       builder: (context, state) => const VideosScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.history,
+      builder: (context, state) => const CleanupHistoryScreen(),
     ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
