@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
+import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/recommendations_card.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
@@ -9,6 +11,22 @@ import 'package:mobile_cleaner/features/storage/presentation/providers/storage_o
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
+
+  /// Sends each recommendation to the tool that owns it.
+  ///
+  /// Home only routes: the destination screen does the reviewing and, if the
+  /// user confirms there, the deleting.
+  static void _openRecommendation(
+    BuildContext context,
+    RecommendationKind kind,
+  ) {
+    final String route = switch (kind) {
+      RecommendationKind.screenshotReview => AppRoutes.screenshotCleaner,
+      RecommendationKind.duplicateCleanup => AppRoutes.duplicates,
+      RecommendationKind.largeVideoReview => AppRoutes.videos,
+    };
+    context.push(route);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,6 +57,7 @@ class HomeScreen extends ConsumerWidget {
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(storageOverviewProvider);
+            refreshRecommendations(ref);
             await ref.read(storageOverviewProvider.future);
           },
           child: ListView(
@@ -76,7 +95,11 @@ class HomeScreen extends ConsumerWidget {
                 onPermissions: () => context.push(AppRoutes.permissions),
               ),
               const SizedBox(height: 30),
-              RecommendationsCard(onScan: () => context.go(AppRoutes.clean)),
+              RecommendationsCard(
+                onScan: () => context.go(AppRoutes.clean),
+                onOpen: (RecommendationKind kind) =>
+                    _openRecommendation(context, kind),
+              ),
             ],
           ),
         ),
