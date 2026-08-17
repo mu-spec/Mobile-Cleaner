@@ -593,8 +593,13 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
 
     private fun stillExists(uri: Uri): Boolean {
         return try {
-            context.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns._ID), null, null, null)
-                ?.use { cursor -> cursor.count > 0 }
+            context.contentResolver.query(
+                uri,
+                arrayOf(MediaStore.MediaColumns._ID),
+                null,
+                null,
+                null,
+            )?.use { cursor -> cursor.count > 0 }
                 ?: false
         } catch (error: Exception) {
             false

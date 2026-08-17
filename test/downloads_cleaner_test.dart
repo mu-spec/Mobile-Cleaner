@@ -1,10 +1,9 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:mobile_cleaner/features/files/data/delete_repository.dart';
+import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
 import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';

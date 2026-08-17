@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 import 'package:mobile_cleaner/features/storage/presentation/widgets/storage_indicator.dart';
@@ -50,44 +51,29 @@ class _StorageDetails extends StatelessWidget {
         _StorageRow(
           key: const Key('total_storage'),
           label: 'Total storage',
-          value: _formatBytes(info.totalBytes),
+          value: ByteFormatter.format(info.totalBytes),
           color: Theme.of(context).colorScheme.primary,
         ),
         const SizedBox(height: 14),
         _StorageRow(
           key: const Key('used_storage'),
           label: 'Used storage',
-          value: _formatBytes(info.usedBytes),
+          value: ByteFormatter.format(info.usedBytes),
           color: Theme.of(context).colorScheme.tertiary,
         ),
         const SizedBox(height: 14),
         _StorageRow(
           key: const Key('free_storage'),
           label: 'Free storage',
-          value: _formatBytes(info.freeBytes),
-          color: const Color(0xFF22C55E),
+          value: ByteFormatter.format(info.freeBytes),
+          // Theme colour, so it adapts in dark mode instead of staying a
+          // fixed light-mode green.
+          color: Theme.of(context).colorScheme.primary,
         ),
       ],
     );
   }
 
-  String _formatBytes(int bytes) {
-    const double kib = 1024;
-    const double mib = kib * 1024;
-    const double gib = mib * 1024;
-    const double tib = gib * 1024;
-
-    if (bytes >= tib) {
-      return '${(bytes / tib).toStringAsFixed(1)} TB';
-    }
-    if (bytes >= gib) {
-      return '${(bytes / gib).toStringAsFixed(1)} GB';
-    }
-    if (bytes >= mib) {
-      return '${(bytes / mib).toStringAsFixed(1)} MB';
-    }
-    return '${(bytes / kib).toStringAsFixed(1)} KB';
-  }
 }
 
 class _StorageRow extends StatelessWidget {
