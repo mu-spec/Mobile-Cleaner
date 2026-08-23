@@ -1,41 +1,66 @@
 import 'package:flutter/material.dart';
 
-/// The app's colour vocabulary (UI V2.1).
+/// Mobile Cleaner's controlled premium colour vocabulary.
 ///
-/// One blue identity with a single orange accent. Green is reserved for
-/// genuine success, red for genuinely destructive actions — neither is ever
-/// decorative. The previous teal identity is gone from the visual language.
+/// Deep blue owns major brand moments; bright blue is interactive; orange is
+/// reserved for cleanup/recoverable-space emphasis. Green means success and
+/// red means a genuinely destructive action. Neutral surfaces and navy text
+/// keep the interface from becoming uniformly blue.
 abstract final class AppColors {
-  /// Primary brand blue — the one colour that means "this app".
-  static const Color primary = Color(0xFF1857D8);
+  /// Major brand surfaces and signature moments.
+  static const Color brandBlue = Color(0xFF1246B8);
 
-  /// Deep blue used for rich surfaces such as the Smart Scan hero card.
-  static const Color primaryDeep = Color(0xFF073EA7);
+  /// Links, selected navigation, interactive icons, and compact actions.
+  static const Color actionBlue = Color(0xFF1F63E9);
 
-  /// Cleanup accent orange. An accent only — never a second brand colour.
-  static const Color accentOrange = Color(0xFFFF8500);
+  /// Strong headings and high-emphasis text on light surfaces.
+  static const Color navy = Color(0xFF172033);
 
-  /// Main light-mode page background: very light cool gray.
-  static const Color lightBackground = Color(0xFFF7F9FC);
+  /// Cleanup and recoverable-space emphasis.
+  static const Color cleanupOrange = Color(0xFFFF850A);
 
-  /// Dark-mode page background: cool near-black, no teal cast.
+  /// Warm low-emphasis cleanup surface.
+  static const Color softOrange = Color(0xFFFFF1DF);
+
+  /// Low-emphasis interactive/info surface.
+  static const Color softBlue = Color(0xFFEEF3FF);
+
+  /// Photos' warm surface and icon accent.
+  static const Color softPhoto = Color(0xFFFFEEE8);
+  static const Color photoAccent = Color(0xFFE76845);
+
+  /// Apps' restrained indigo surface and icon accent.
+  static const Color softIndigo = Color(0xFFF0F0FF);
+  static const Color indigoAccent = Color(0xFF5B5FD6);
+
+  /// Main light-mode page background.
+  static const Color lightBackground = Color(0xFFF7F8FC);
+
+  /// Light-mode card surface.
+  static const Color card = Color(0xFFFFFFFF);
+
+  /// Dark-mode page background: cool near-black, never teal.
   static const Color darkBackground = Color(0xFF0D1218);
 
-  /// Primary text on light surfaces.
-  static const Color textPrimary = Color(0xFF151A20);
+  /// Primary and supporting text on light surfaces.
+  static const Color textPrimary = Color(0xFF171B22);
+  static const Color textSecondary = Color(0xFF6F7680);
 
-  /// Secondary/supporting text on light surfaces.
-  static const Color textSecondary = Color(0xFF68717A);
+  /// Hairline borders around light cards and dividers.
+  static const Color border = Color(0xFFE5E8F0);
 
-  /// Hairline borders around light-mode cards and dividers.
-  static const Color border = Color(0xFFE7EAF0);
+  /// Genuine success only.
+  static const Color success = Color(0xFF22B573);
 
-  /// Success green — only for genuine success states.
-  static const Color success = Color(0xFF16A34A);
-
-  /// Warning amber for cautionary states.
+  /// Caution that is not destructive.
   static const Color warning = Color(0xFFF59E0B);
 
-  /// Danger red — only for destructive actions.
-  static const Color danger = Color(0xFFDC2626);
+  /// Destructive/delete/uninstall actions only.
+  static const Color danger = Color(0xFFE53935);
+
+  // Compatibility names used by the existing app while later screens adopt
+  // the more explicit semantic names above.
+  static const Color primary = actionBlue;
+  static const Color primaryDeep = brandBlue;
+  static const Color accentOrange = cleanupOrange;
 }

@@ -51,6 +51,7 @@ class _HistorySummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
     final CleanupEntry? latest = history.mostRecent;
     final String latestLabel = latest == null
         ? 'View your cleanup history'
@@ -59,15 +60,16 @@ class _HistorySummaryCard extends StatelessWidget {
     return AppCard(
       cardKey: const Key('home_history_card'),
       onTap: onOpen,
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: <Widget>[
           const AppIconContainer(
             icon: Icons.history_rounded,
-            accent: AppColors.success,
-            size: 44,
-            iconSize: 22,
+            accent: AppColors.actionBlue,
+            size: 40,
+            iconSize: 20,
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,6 +81,7 @@ class _HistorySummaryCard extends StatelessWidget {
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.2,
+                    color: isDark ? colors.onSurface : AppColors.navy,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xxs),
@@ -117,18 +120,20 @@ class _EmptyHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
 
     return AppCard(
       cardKey: const Key('home_history_empty'),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: <Widget>[
-          AppIconContainer(
+          const AppIconContainer(
             icon: Icons.history_rounded,
-            accent: colors.onSurfaceVariant,
-            size: 44,
-            iconSize: 22,
+            accent: AppColors.actionBlue,
+            size: 40,
+            iconSize: 20,
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,6 +143,7 @@ class _EmptyHistoryCard extends StatelessWidget {
                   'No cleanups yet',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
+                    color: isDark ? colors.onSurface : AppColors.navy,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xxs),
@@ -163,6 +169,7 @@ class _LoadingHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return const AppCard(
       cardKey: Key('home_history_loading'),
+      padding: EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: <Widget>[
           SizedBox.square(
@@ -184,16 +191,17 @@ class _HistoryErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
     return AppCard(
       cardKey: const Key('home_history_error'),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          AppIconContainer(
+          const AppIconContainer(
             icon: Icons.history_toggle_off_rounded,
-            accent: colors.onSurfaceVariant,
+            accent: AppColors.actionBlue,
+            size: 40,
+            iconSize: 20,
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(

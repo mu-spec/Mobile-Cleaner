@@ -117,6 +117,7 @@ class _HomeHeaderTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,6 +129,7 @@ class _HomeHeaderTitle extends StatelessWidget {
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
             letterSpacing: -0.2,
+            color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
           ),
         ),
         const SizedBox(height: 2),
@@ -136,7 +138,9 @@ class _HomeHeaderTitle extends StatelessWidget {
           maxLines: 2,
           style: theme.textTheme.bodySmall?.copyWith(
             fontSize: 11,
-            color: theme.colorScheme.onSurfaceVariant,
+            color: isDark
+                ? theme.colorScheme.onSurfaceVariant
+                : AppColors.textSecondary,
           ),
         ),
       ],
@@ -182,7 +186,7 @@ class _HeaderIconButton extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isDark
                         ? theme.colorScheme.surfaceContainerHigh
-                        : Colors.white,
+                        : AppColors.card,
                     borderRadius: BorderRadius.circular(AppRadius.tile),
                     border: Border.all(
                       color: isDark
@@ -193,7 +197,9 @@ class _HeaderIconButton extends StatelessWidget {
                   child: Icon(
                     icon,
                     size: 19,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: isDark
+                        ? theme.colorScheme.onSurfaceVariant
+                        : AppColors.actionBlue,
                   ),
                 ),
               ),

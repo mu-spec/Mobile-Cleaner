@@ -9,14 +9,19 @@ Teal is gone as the Home identity. The new family:
 
 | Token | Value | Role |
 | --- | --- | --- |
-| `AppColors.primary` | `#1857D8` | Primary blue, selection, key metrics |
-| `AppColors.primaryDeep` | `#073EA7` | Smart Scan hero surface |
-| `AppColors.accentOrange` | `#FF8500` | Cleanup accent only, never a brand |
-| `AppColors.lightBackground` | `#F7F9FC` | Page background |
-| `AppColors.textPrimary` | `#151A20` | Primary text |
-| `AppColors.textSecondary` | `#68717A` | Supporting text |
-| `AppColors.border` | `#E7EAF0` | Card hairlines, dividers |
-| `AppColors.success` / `danger` | green / red | Genuine success / destructive only |
+| `AppColors.brandBlue` | `#1246B8` | Major brand moments and hero surfaces |
+| `AppColors.actionBlue` | `#1F63E9` | Navigation, links, icons, compact actions |
+| `AppColors.navy` | `#172033` | Strong light-theme headings |
+| `AppColors.cleanupOrange` | `#FF850A` | Recoverable-space/cleanup emphasis only |
+| `AppColors.softOrange` | `#FFF1DF` | Warm low-emphasis cleanup surface |
+| `AppColors.softBlue` | `#EEF3FF` | Low-emphasis interactive/info surface |
+| `AppColors.lightBackground` | `#F7F8FC` | Page background |
+| `AppColors.card` | `#FFFFFF` | Card and navigation surface |
+| `AppColors.textPrimary` | `#171B22` | Primary text |
+| `AppColors.textSecondary` | `#6F7680` | Supporting text |
+| `AppColors.border` | `#E5E8F0` | Card hairlines and dividers |
+| `AppColors.success` | `#22B573` | Genuine success only |
+| `AppColors.danger` | `#E53935` | Destructive actions only |
 
 Cards are white, radius 18, hairline border, no shadow, no glassmorphism.
 Dark mode keeps seed-derived tones — cards use the dark surface, not white.
@@ -38,13 +43,13 @@ Dark mode keeps seed-derived tones — cards use the dark surface, not white.
   real available space at its centre, and a real `used / total` summary row.
   All figures still come straight from `StorageInfo`; the orange tip restyles
   the head of the real used arc, it never adds to it.
-- Smart Scan hero: deep-blue gradient card, one-line supporting copy, compact
-  white "Scan Now" CTA, static scanner motif painted from plain shapes.
+- Smart Scan hero: deep-blue gradient card, two-line supporting copy, compact
+  white "Scan Now" CTA, static cyan/blue radar motif with an orange accent.
   Card and CTA both call the existing navigation. No fake progress.
   Privacy cue ("Files stay on your device.") kept directly beneath.
-- Quick Tools: 2×2 compact tinted tiles (Photos / Large Files / Apps /
-  Storage Access), same four callbacks, same destinations. Narrow layouts and
-  large text switch to compact rows rather than clipping labels.
+- Quick Tools: four compact category-tinted tiles in one row when space
+  allows, with the same callbacks and destinations. Narrow layouts move to
+  two columns; large text moves to compact rows rather than clipping.
 - Cleanup summary: real lifetime total and last-cleanup date when history
   exists; an honest "No cleanups yet" empty state before that, plus explicit
   loading/error states. Nothing is invented.

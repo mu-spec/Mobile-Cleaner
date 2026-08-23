@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/core/ui/app_visuals.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
@@ -79,7 +80,9 @@ class _AdviceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colors = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,8 +104,10 @@ class _AdviceCard extends StatelessWidget {
                       child: Text(
                         'Recommended for you',
                         key: const Key('recommendations_title'),
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? colors.onSurface : AppColors.navy,
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xxs),
@@ -123,15 +128,17 @@ class _AdviceCard extends StatelessWidget {
                   vertical: AppSpacing.xxs,
                 ),
                 decoration: BoxDecoration(
-                  color: colors.primaryContainer,
+                  color: isDark ? colors.primaryContainer : AppColors.softBlue,
                   borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Text(
                   '${recommendations.length}',
                   key: const Key('recommendations_count'),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  style: theme.textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: colors.onPrimaryContainer,
+                    color: isDark
+                        ? colors.onPrimaryContainer
+                        : AppColors.actionBlue,
                   ),
                 ),
               ),
@@ -264,22 +271,34 @@ class _IdleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colors = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
+    final bool positive = icon == Icons.check_circle_outline_rounded;
+    final Color accent = positive ? AppColors.success : AppColors.actionBlue;
+    final Color iconBackground;
+    if (isDark) {
+      iconBackground = accent.withValues(alpha: 0.20);
+    } else if (positive) {
+      iconBackground = AppColors.success.withValues(alpha: 0.10);
+    } else {
+      iconBackground = AppColors.softBlue;
+    }
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             AppIconContainer(
               icon: icon,
-              backgroundColor: colors.secondaryContainer,
-              foregroundColor: colors.onSecondaryContainer,
-              size: 48,
-              iconSize: 24,
+              accent: accent,
+              backgroundColor: iconBackground,
+              size: 42,
+              iconSize: 21,
             ),
-            const SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,8 +306,9 @@ class _IdleCard extends StatelessWidget {
                   Text(
                     'Recommended for you',
                     key: const Key('recommendations_title'),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
+                      color: isDark ? colors.onSurface : AppColors.navy,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxs),

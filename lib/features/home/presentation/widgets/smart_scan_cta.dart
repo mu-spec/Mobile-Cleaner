@@ -40,7 +40,10 @@ class SmartScanCta extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: <Color>[AppColors.primary, AppColors.primaryDeep],
+                  colors: <Color>[
+                    AppColors.brandBlue,
+                    Color(0xFF173F9E),
+                  ],
                 ),
               ),
               child: InkWell(
@@ -130,7 +133,7 @@ class _HeroCopy extends StatelessWidget {
             const Icon(
               Icons.auto_awesome_rounded,
               size: 16,
-              color: Colors.white,
+              color: Color(0xFFFFD39D),
             ),
             const SizedBox(width: AppSpacing.xs),
             Flexible(
@@ -161,7 +164,7 @@ class _HeroCopy extends StatelessWidget {
           onPressed: onScan,
           style: FilledButton.styleFrom(
             backgroundColor: Colors.white,
-            foregroundColor: AppColors.primaryDeep,
+            foregroundColor: AppColors.brandBlue,
             minimumSize: const Size(0, 40),
             padding: const EdgeInsets.symmetric(horizontal: 14),
             textStyle: const TextStyle(
@@ -221,7 +224,7 @@ class _ScannerMotifPainter extends CustomPainter {
       math.pi * 0.34,
       false,
       Paint()
-        ..color = AppColors.accentOrange.withValues(alpha: 0.92)
+        ..color = AppColors.cleanupOrange.withValues(alpha: 0.92)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.2
         ..strokeCap = StrokeCap.round,

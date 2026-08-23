@@ -34,6 +34,7 @@ class StorageOverviewCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<StorageInfo> storage = ref.watch(storageOverviewProvider);
     final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
 
     return AppCard(
       cardKey: const Key('storage_overview_card'),
@@ -46,6 +47,7 @@ class StorageOverviewCard extends ConsumerWidget {
             key: const Key('storage_overview_title'),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
+              color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -71,6 +73,7 @@ class _StorageDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +99,7 @@ class _StorageDetails extends StatelessWidget {
                           fontSize: 40,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -1,
-                          color: colors.primary,
+                          color: isDark ? colors.primary : AppColors.actionBlue,
                           height: 1.05,
                         ),
                       ),
@@ -213,8 +216,8 @@ class _StorageRing extends StatelessWidget {
         child: CustomPaint(
           painter: _StorageRingPainter(
             usedFraction: info.usedFraction,
-            usedColor: colors.primary,
-            accentColor: AppColors.accentOrange,
+            usedColor: isDark ? colors.primary : AppColors.brandBlue,
+            accentColor: AppColors.cleanupOrange,
             trackColor: isDark
                 ? Colors.white.withValues(alpha: 0.10)
                 : AppColors.border,

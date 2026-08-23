@@ -20,7 +20,7 @@ abstract final class AppTheme {
       colors = colors.copyWith(
         primary: AppColors.primary,
         onPrimary: Colors.white,
-        surface: Colors.white,
+        surface: AppColors.card,
         onSurface: AppColors.textPrimary,
         onSurfaceVariant: AppColors.textSecondary,
         outlineVariant: AppColors.border,
@@ -46,7 +46,7 @@ abstract final class AppTheme {
       // hairline border, no floating shadow, no glassmorphism.
       cardTheme: CardThemeData(
         elevation: 0,
-        color: isDark ? colors.surfaceContainerHigh : Colors.white,
+        color: isDark ? colors.surfaceContainerHigh : AppColors.card,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.card),
@@ -62,7 +62,9 @@ abstract final class AppTheme {
       ),
       // Bottom navigation: light surface, blue selection, neutral gray rest.
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: isDark ? colors.surfaceContainerHigh : Colors.white,
+        backgroundColor: isDark
+            ? colors.surfaceContainerHigh
+            : AppColors.card,
         selectedItemColor: colors.primary,
         unselectedItemColor: isDark
             ? colors.onSurfaceVariant

@@ -30,7 +30,8 @@ class QuickToolsSection extends StatelessWidget {
       _QuickToolData(
         key: const Key('quick_photos'),
         icon: Icons.photo_library_rounded,
-        tint: const Color(0xFFF0643A),
+        tint: AppColors.photoAccent,
+        surface: AppColors.softPhoto,
         title: 'Photos',
         subtitle: 'Duplicates & screenshots',
         onTap: onPhotos,
@@ -38,7 +39,8 @@ class QuickToolsSection extends StatelessWidget {
       _QuickToolData(
         key: const Key('quick_files'),
         icon: Icons.folder_rounded,
-        tint: AppColors.primary,
+        tint: AppColors.actionBlue,
+        surface: AppColors.softBlue,
         title: 'Large Files',
         subtitle: 'Biggest space users',
         onTap: onFiles,
@@ -46,7 +48,8 @@ class QuickToolsSection extends StatelessWidget {
       _QuickToolData(
         key: const Key('quick_apps'),
         icon: Icons.apps_rounded,
-        tint: const Color(0xFF4F5FD5),
+        tint: AppColors.indigoAccent,
+        surface: AppColors.softIndigo,
         title: 'Apps',
         subtitle: 'Installed app sizes',
         onTap: onApps,
@@ -54,7 +57,8 @@ class QuickToolsSection extends StatelessWidget {
       _QuickToolData(
         key: const Key('quick_permissions'),
         icon: Icons.folder_shared_rounded,
-        tint: AppColors.accentOrange,
+        tint: AppColors.cleanupOrange,
+        surface: AppColors.softOrange,
         title: 'Storage Access',
         subtitle: 'Review permissions',
         onTap: onPermissions,
@@ -113,6 +117,7 @@ class _QuickToolData {
     required this.key,
     required this.icon,
     required this.tint,
+    required this.surface,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -121,6 +126,7 @@ class _QuickToolData {
   final Key key;
   final IconData icon;
   final Color tint;
+  final Color surface;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
@@ -135,6 +141,7 @@ class _QuickToolTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
     final bool fourAcross = layout == _QuickToolLayout.fourAcross;
     final bool fullRow = layout == _QuickToolLayout.row;
 
@@ -152,7 +159,11 @@ class _QuickToolTile extends StatelessWidget {
           style: (fourAcross
                   ? theme.textTheme.labelMedium
                   : theme.textTheme.bodySmall)
-              ?.copyWith(fontWeight: FontWeight.w700, height: 1.15),
+              ?.copyWith(
+                fontWeight: FontWeight.w700,
+                height: 1.15,
+                color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
+              ),
         ),
         if (!fourAcross) ...<Widget>[
           const SizedBox(height: 2),
@@ -187,6 +198,9 @@ class _QuickToolTile extends StatelessWidget {
                       AppIconContainer(
                         icon: data.icon,
                         accent: data.tint,
+                        backgroundColor: isDark
+                            ? data.tint.withValues(alpha: 0.22)
+                            : data.surface,
                         size: 32,
                         iconSize: 17,
                       ),
@@ -199,6 +213,9 @@ class _QuickToolTile extends StatelessWidget {
                       AppIconContainer(
                         icon: data.icon,
                         accent: data.tint,
+                        backgroundColor: isDark
+                            ? data.tint.withValues(alpha: 0.22)
+                            : data.surface,
                         size: 34,
                         iconSize: 18,
                       ),

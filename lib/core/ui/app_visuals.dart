@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 
 /// A consistent section heading for feature screens.
@@ -21,6 +22,7 @@ class AppSectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
     final double textScale = MediaQuery.textScalerOf(context).scale(1);
 
     final Widget heading = Column(
@@ -33,6 +35,7 @@ class AppSectionHeader extends StatelessWidget {
             title,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
+              color: isDark ? colors.onSurface : AppColors.navy,
             ),
           ),
         ),
