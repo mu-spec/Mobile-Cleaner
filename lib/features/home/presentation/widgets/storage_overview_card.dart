@@ -33,14 +33,28 @@ class StorageOverviewCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<StorageInfo> storage = ref.watch(storageOverviewProvider);
+    final ThemeData theme = Theme.of(context);
 
     return AppCard(
-      child: storage.when(
-        loading: () => const _LoadingStorage(),
-        error: (Object error, StackTrace stackTrace) => _StorageError(
-          onRetry: () => ref.invalidate(storageOverviewProvider),
-        ),
-        data: (StorageInfo info) => _StorageDetails(info: info),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Storage Overview',
+            key: const Key('storage_overview_title'),
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          storage.when(
+            loading: () => const _LoadingStorage(),
+            error: (Object error, StackTrace stackTrace) => _StorageError(
+              onRetry: () => ref.invalidate(storageOverviewProvider),
+            ),
+            data: (StorageInfo info) => _StorageDetails(info: info),
+          ),
+        ],
       ),
     );
   }
@@ -59,13 +73,6 @@ class _StorageDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(
-          'Storage Overview',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
         Row(
           children: <Widget>[
             // Left column: the headline percentage.
@@ -92,7 +99,7 @@ class _StorageDetails extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.xxs),
                     Text(
                       'Used',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -113,40 +120,61 @@ class _StorageDetails extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Row(
           key: const Key('total_storage'),
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Icon(Icons.storage_rounded, size: 16, color: colors.onSurfaceVariant),
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xxs),
+              child: Icon(
+                Icons.storage_rounded,
+                size: 16,
+                color: colors.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
-              child: Text(
-                'Internal storage',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            // Separate Text widgets so each real figure stays individually
-            // verifiable in tests.
-            Text(
-              ByteFormatter.format(info.usedBytes),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.onSurface,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            Text(
-              ' / ',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-            Text(
-              ByteFormatter.format(info.totalBytes),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        // Separate widgets keep both real values individually
+                        // verifiable while presenting them as one summary.
+                        Text(
+                          ByteFormatter.format(info.usedBytes),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.onSurface,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          ' / ',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                        Text(
+                          ByteFormatter.format(info.totalBytes),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(
+                    'Internal storage',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -205,7 +233,7 @@ class _StorageRing extends StatelessWidget {
                         letterSpacing: -0.2,
                       ),
                     ),
-                    const SizedBox(height: 1),
+                    const SizedBox(height: AppSpacing.xxs),
                     Text(
                       'Available',
                       style: theme.textTheme.bodySmall?.copyWith(

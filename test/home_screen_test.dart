@@ -185,6 +185,18 @@ Future<void> _scrollTo(WidgetTester tester, Finder target) async {
 }
 
 void main() {
+  group('Compact header', () {
+    testWidgets('shows the app identity and keeps Settings available', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester);
+
+      expect(find.text('Mobile Cleaner'), findsOneWidget);
+      expect(find.text('Clean more. Save more. Do more.'), findsOneWidget);
+      expect(find.byKey(const Key('home_settings_button')), findsOneWidget);
+    });
+  });
+
   group('Storage is the top of the hierarchy', () {
     testWidgets('used and available are both shown clearly', (
       WidgetTester tester,
@@ -386,19 +398,24 @@ void main() {
       expect(row.height, greaterThanOrEqualTo(48));
     });
 
-    testWidgets('tools sit below the recommendations', (
+    testWidgets('required Home sections precede existing recommendations', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
 
-      final double recommendationsY = tester
-          .getTopLeft(find.byKey(const Key('recommendations_section')))
-          .dy;
       final double toolsY = tester
           .getTopLeft(find.byKey(const Key('quick_tools_section')))
           .dy;
+      final double historyY = tester
+          .getTopLeft(find.byKey(const Key('home_history_empty')))
+          .dy;
+      final double recommendationsY = tester
+          .getTopLeft(find.byKey(const Key('recommendations_section')))
+          .dy;
 
-      expect(recommendationsY, lessThan(toolsY));
+      expect(toolsY, lessThan(historyY));
+      expect(historyY, lessThan(recommendationsY));
+      expect(find.text('Cleanup Summary'), findsOneWidget);
     });
   });
 

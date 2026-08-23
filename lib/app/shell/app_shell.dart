@@ -6,60 +6,88 @@ class AppShell extends StatelessWidget {
 
   final StatefulNavigationShell navigationShell;
 
+  static const List<_DestinationData> _destinations = <_DestinationData>[
+    _DestinationData(
+      key: Key('nav_home'),
+      icon: Icons.home_outlined,
+      activeIcon: Icons.home_rounded,
+      label: 'Home',
+    ),
+    _DestinationData(
+      key: Key('nav_clean'),
+      icon: Icons.auto_fix_high_outlined,
+      activeIcon: Icons.auto_fix_high_rounded,
+      label: 'Clean',
+    ),
+    _DestinationData(
+      key: Key('nav_photos'),
+      icon: Icons.photo_library_outlined,
+      activeIcon: Icons.photo_library_rounded,
+      label: 'Photos',
+    ),
+    _DestinationData(
+      key: Key('nav_files'),
+      icon: Icons.folder_outlined,
+      activeIcon: Icons.folder_rounded,
+      label: 'Files',
+    ),
+    _DestinationData(
+      key: Key('nav_apps'),
+      icon: Icons.apps_outlined,
+      activeIcon: Icons.apps_rounded,
+      label: 'Apps',
+    ),
+    _DestinationData(
+      key: Key('nav_settings'),
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings_rounded,
+      label: 'Settings',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final BottomNavigationBarThemeData navigationTheme =
+        theme.bottomNavigationBarTheme;
+    final Color selectedColor =
+        navigationTheme.selectedItemColor ?? theme.colorScheme.primary;
+    final Color unselectedColor =
+        navigationTheme.unselectedItemColor ??
+        theme.colorScheme.onSurfaceVariant;
+    final Color backgroundColor =
+        navigationTheme.backgroundColor ?? theme.colorScheme.surface;
+
     return Scaffold(
       body: navigationShell,
-      // A subtle top divider separates the bar from content; colors (white
-      // surface, blue selection, gray rest) come from the app theme so the
-      // bar stays in step with the design system in both brightnesses.
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
+      bottomNavigationBar: Material(
+        color: backgroundColor,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(color: theme.colorScheme.outlineVariant),
             ),
           ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: navigationShell.currentIndex,
-          onTap: _onDestinationSelected,
-          type: BottomNavigationBarType.fixed,
-          showUnselectedLabels: true,
-          selectedFontSize: 11,
-          unselectedFontSize: 10,
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined, key: Key('nav_home')),
-              activeIcon: Icon(Icons.home_rounded),
-              label: 'Home',
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: 62,
+              child: Row(
+                children: <Widget>[
+                  for (int index = 0; index < _destinations.length; index++)
+                    Expanded(
+                      child: _BottomDestination(
+                        data: _destinations[index],
+                        selected: navigationShell.currentIndex == index,
+                        selectedColor: selectedColor,
+                        unselectedColor: unselectedColor,
+                        onTap: () => _onDestinationSelected(index),
+                      ),
+                    ),
+                ],
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.auto_fix_high_outlined, key: Key('nav_clean')),
-              activeIcon: Icon(Icons.auto_fix_high_rounded),
-              label: 'Clean',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.photo_library_outlined, key: Key('nav_photos')),
-              activeIcon: Icon(Icons.photo_library_rounded),
-              label: 'Photos',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.folder_outlined, key: Key('nav_files')),
-              activeIcon: Icon(Icons.folder_rounded),
-              label: 'Files',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.apps_outlined, key: Key('nav_apps')),
-              activeIcon: Icon(Icons.apps_rounded),
-              label: 'Apps',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined, key: Key('nav_settings')),
-              activeIcon: Icon(Icons.settings_rounded),
-              label: 'Settings',
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -69,6 +97,85 @@ class AppShell extends StatelessWidget {
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
+    );
+  }
+}
+
+class _DestinationData {
+  const _DestinationData({
+    required this.key,
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+  });
+
+  final Key key;
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+}
+
+class _BottomDestination extends StatelessWidget {
+  const _BottomDestination({
+    required this.data,
+    required this.selected,
+    required this.selectedColor,
+    required this.unselectedColor,
+    required this.onTap,
+  });
+
+  final _DestinationData data;
+  final bool selected;
+  final Color selectedColor;
+  final Color unselectedColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color = selected ? selectedColor : unselectedColor;
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: data.label,
+      child: ExcludeSemantics(
+        child: InkWell(
+          key: data.key,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(2, 7, 2, 5),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Icon(
+                  selected ? data.activeIcon : data.icon,
+                  size: selected ? 24 : 23,
+                  color: color,
+                ),
+                const SizedBox(height: 3),
+                Expanded(
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        data.label,
+                        maxLines: 1,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: selected ? 11 : 10,
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

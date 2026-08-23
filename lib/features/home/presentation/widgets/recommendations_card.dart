@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/app/theme/app_tokens.dart';
+import 'package:mobile_cleaner/core/ui/app_visuals.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
@@ -74,7 +76,7 @@ class _AdviceCard extends StatelessWidget {
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.only(
-            left: 4,
+            left: AppSpacing.xxs,
             bottom: HomeMetrics.headingGap,
           ),
           child: Row(
@@ -93,7 +95,7 @@ class _AdviceCard extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.xxs),
                     Text(
                       'Based on what is actually on your device.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -103,16 +105,16 @@ class _AdviceCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: AppSpacing.sm),
               // A real count of real findings, never a badge for its own sake.
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 3,
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xxs,
                 ),
                 decoration: BoxDecoration(
                   color: colors.primaryContainer,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Text(
                   '${recommendations.length}',
@@ -170,57 +172,64 @@ class _AdviceRow extends StatelessWidget {
     return Column(
       children: <Widget>[
         InkWell(
-        key: Key('recommendation_${item.kind.name}'),
-        onTap: onOpen,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              HomeIconTile(
-                icon: _icon,
-                background: high
-                    ? colors.primaryContainer
-                    : colors.surfaceContainerHighest,
-                foreground: high ? colors.primary : colors.onSurfaceVariant,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      item.title,
-                      key: Key('recommendation_title_${item.kind.name}'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 2),
-                    // The numbers the rule fired on, so the advice is
-                    // checkable rather than something to take on trust.
-                    Text(
-                      item.detail,
-                      key: Key('recommendation_detail_${item.kind.name}'),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+          key: Key('recommendation_${item.kind.name}'),
+          onTap: onOpen,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                AppIconContainer(
+                  icon: _icon,
+                  backgroundColor: high
+                      ? colors.primaryContainer
+                      : colors.surfaceContainerHighest,
+                  foregroundColor: high
+                      ? colors.primary
+                      : colors.onSurfaceVariant,
                 ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: HomeMetrics.rowIconSize,
-                color: colors.onSurfaceVariant,
-              ),
-            ],
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        item.title,
+                        key: Key('recommendation_title_${item.kind.name}'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      // The numbers the rule fired on, so the advice is
+                      // checkable rather than something to take on trust.
+                      Text(
+                        item.detail,
+                        key: Key(
+                          'recommendation_detail_${item.kind.name}',
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: HomeMetrics.rowIconSize,
+                  color: colors.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
-        ),
         ),
         if (showDivider)
           Divider(height: 1, indent: 70, color: colors.outlineVariant),
@@ -250,20 +259,18 @@ class _IdleCard extends StatelessWidget {
     return Card(
       key: const Key('recommendations_section'),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: colors.secondaryContainer,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Icon(icon, color: colors.onSecondaryContainer),
+            AppIconContainer(
+              icon: icon,
+              backgroundColor: colors.secondaryContainer,
+              foregroundColor: colors.onSecondaryContainer,
+              size: 48,
+              iconSize: 24,
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +281,7 @@ class _IdleCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: AppSpacing.xxs),
                   Text(
                     message,
                     key: const Key('recommendations_message'),
@@ -283,7 +290,7 @@ class _IdleCard extends StatelessWidget {
                     ),
                   ),
                   if (showAction) ...<Widget>[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: AppSpacing.sm),
                     TextButton(
                       key: const Key('recommendations_scan'),
                       onPressed: onScan,

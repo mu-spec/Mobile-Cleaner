@@ -7,13 +7,13 @@ import 'package:flutter/material.dart';
 /// decorative. The previous teal identity is gone from the visual language.
 abstract final class AppColors {
   /// Primary brand blue — the one colour that means "this app".
-  static const Color primary = Color(0xFF1E5FE0);
+  static const Color primary = Color(0xFF1857D8);
 
   /// Deep blue used for rich surfaces such as the Smart Scan hero card.
   static const Color primaryDeep = Color(0xFF073EA7);
 
   /// Cleanup accent orange. An accent only — never a second brand colour.
-  static const Color accentOrange = Color(0xFFFF8A00);
+  static const Color accentOrange = Color(0xFFFF8500);
 
   /// Main light-mode page background: very light cool gray.
   static const Color lightBackground = Color(0xFFF7F9FC);
@@ -22,10 +22,10 @@ abstract final class AppColors {
   static const Color darkBackground = Color(0xFF0D1218);
 
   /// Primary text on light surfaces.
-  static const Color textPrimary = Color(0xFF14191F);
+  static const Color textPrimary = Color(0xFF151A20);
 
   /// Secondary/supporting text on light surfaces.
-  static const Color textSecondary = Color(0xFF687078);
+  static const Color textSecondary = Color(0xFF68717A);
 
   /// Hairline borders around light-mode cards and dividers.
   static const Color border = Color(0xFFE7EAF0);

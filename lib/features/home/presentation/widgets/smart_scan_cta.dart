@@ -50,9 +50,13 @@ class SmartScanCta extends StatelessWidget {
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   child: LayoutBuilder(
                     builder: (BuildContext context, BoxConstraints constraints) {
-                      // The decorative motif earns its space only when there
-                      // is comfortably room for it.
-                      final bool showMotif = constraints.maxWidth >= 300;
+                      final double textScale = MediaQuery.textScalerOf(
+                        context,
+                      ).scale(1);
+                      // Decoration yields to content on narrow layouts and at
+                      // accessibility text sizes.
+                      final bool showMotif =
+                          constraints.maxWidth >= 340 && textScale <= 1.3;
 
                       return Row(
                         children: <Widget>[
@@ -77,7 +81,7 @@ class SmartScanCta extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.xs + 2),
+        const SizedBox(height: AppSpacing.xs),
         // The subtle trust cue, deliberately not visually dominant.
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -87,7 +91,7 @@ class SmartScanCta extends StatelessWidget {
               size: 14,
               color: colors.onSurfaceVariant,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: AppSpacing.xs),
             Flexible(
               child: Text(
                 'Files stay on your device.',
@@ -141,11 +145,9 @@ class _HeroCopy extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           'Find and clean junk files to free up space.',
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodySmall?.copyWith(
             color: Colors.white.withValues(alpha: 0.85),
             height: 1.35,

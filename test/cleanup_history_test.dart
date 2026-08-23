@@ -60,6 +60,21 @@ class _StubHistory implements CleanupHistoryRepository {
   }
 }
 
+class _FailingHistory implements CleanupHistoryRepository {
+  const _FailingHistory();
+
+  @override
+  Future<CleanupHistory> load() => Future<CleanupHistory>.error(
+    StateError('History unavailable'),
+  );
+
+  @override
+  Future<CleanupHistory> record(CleanupEntry entry) => load();
+
+  @override
+  Future<void> clear() => Future<void>.error(StateError('History unavailable'));
+}
+
 Future<void> _pumpScreen(
   WidgetTester tester, {
   CleanupHistoryRepository? repository,
@@ -416,6 +431,17 @@ void main() {
       expect(find.byKey(const Key('home_history_empty')), findsOneWidget);
       expect(find.text('No cleanups yet'), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('shows an honest error state when history cannot load', (
+      WidgetTester tester,
+    ) async {
+      await pumpCard(tester, const _FailingHistory());
+
+      expect(find.byKey(const Key('home_history_error')), findsOneWidget);
+      expect(find.text('Cleanup summary is unavailable'), findsOneWidget);
+      expect(find.byKey(const Key('home_history_retry')), findsOneWidget);
+      expect(find.byKey(const Key('home_history_card')), findsNothing);
     });
   });
 }

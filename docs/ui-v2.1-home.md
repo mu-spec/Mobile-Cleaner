@@ -9,12 +9,12 @@ Teal is gone as the Home identity. The new family:
 
 | Token | Value | Role |
 | --- | --- | --- |
-| `AppColors.primary` | `#1E5FE0` | Primary blue, selection, key metrics |
+| `AppColors.primary` | `#1857D8` | Primary blue, selection, key metrics |
 | `AppColors.primaryDeep` | `#073EA7` | Smart Scan hero surface |
-| `AppColors.accentOrange` | `#FF8A00` | Cleanup accent only, never a brand |
+| `AppColors.accentOrange` | `#FF8500` | Cleanup accent only, never a brand |
 | `AppColors.lightBackground` | `#F7F9FC` | Page background |
-| `AppColors.textPrimary` | `#14191F` | Primary text |
-| `AppColors.textSecondary` | `#687078` | Supporting text |
+| `AppColors.textPrimary` | `#151A20` | Primary text |
+| `AppColors.textSecondary` | `#68717A` | Supporting text |
 | `AppColors.border` | `#E7EAF0` | Card hairlines, dividers |
 | `AppColors.success` / `danger` | green / red | Genuine success / destructive only |
 
@@ -26,11 +26,13 @@ Dark mode keeps seed-derived tones — cards use the dark surface, not white.
 - `lib/app/theme/app_tokens.dart` — `AppSpacing` (4/8/12/16/20/24/32 scale)
   and `AppRadius`, reusable by every future screen.
 - `lib/core/ui/app_card.dart` — `AppCard`, the one card surface.
+- `lib/core/ui/app_visuals.dart` — reusable responsive section headers and
+  tinted icon containers.
 - Theme: blue scheme, one card language, refined bottom navigation (white
-  surface, blue selection, gray rest, subtle top divider). Destinations
-  untouched.
-- Home header: compact mark + "Mobile Cleaner" + tagline, Settings in a
-  subtle rounded surface. Same key, same route.
+  surface, blue selection, gray rest, subtle top divider). Destinations are
+  untouched; labels scale down within their own slot instead of clipping.
+- Home header: compact "Mobile Cleaner" identity + tagline, with Settings in
+  a subtle rounded surface. Same key, same route.
 - Storage Overview: two-column hierarchy — large blue used-percentage left,
   storage ring right (blue arc, small orange accent tip, light track) with
   real available space at its centre, and a real `used / total` summary row.
@@ -41,10 +43,13 @@ Dark mode keeps seed-derived tones — cards use the dark surface, not white.
   Card and CTA both call the existing navigation. No fake progress.
   Privacy cue ("Files stay on your device.") kept directly beneath.
 - Quick Tools: 2×2 compact tinted tiles (Photos / Large Files / Apps /
-  Storage Access), same four callbacks, same destinations.
+  Storage Access), same four callbacks, same destinations. Narrow layouts and
+  large text switch to compact rows rather than clipping labels.
 - Cleanup summary: real lifetime total and last-cleanup date when history
-  exists; an honest "No cleanups yet" empty state before that. Nothing
-  invented.
+  exists; an honest "No cleanups yet" empty state before that, plus explicit
+  loading/error states. Nothing is invented.
+- Existing data-backed recommendations are preserved after the required Home
+  flow rather than being removed or placed ahead of Quick Tools.
 
 ## Data integrity
 
@@ -56,7 +61,8 @@ Zero hardcoded metrics. Every number on Home renders from
 
 `test/home_screen_test.dart` and the Home-card group in
 `test/cleanup_history_test.dart` updated for the new presentation
-(hero card, "Scan Now" casing, Quick Tools heading, history empty state).
+(hero card, "Scan Now" casing, required section order, responsive Quick
+Tools, and cleanup-history empty/error states).
 All keys used by cross-cutting tests are preserved: `home_dashboard`,
 `smart_scan_button`, `home_settings_button`, `storage_percentage`,
 `used_storage`, `free_storage`, `total_storage`, `quick_*`,
