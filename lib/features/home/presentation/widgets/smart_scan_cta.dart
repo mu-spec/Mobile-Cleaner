@@ -50,7 +50,7 @@ class SmartScanCta extends StatelessWidget {
                 key: const Key('smart_scan_hero'),
                 onTap: onScan,
                 child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
+                  padding: const EdgeInsets.all(AppSpacing.sm),
                   child: LayoutBuilder(
                     builder: (BuildContext context, BoxConstraints constraints) {
                       final double textScale = MediaQuery.textScalerOf(
@@ -65,11 +65,11 @@ class SmartScanCta extends StatelessWidget {
                         children: <Widget>[
                           Expanded(child: _HeroCopy(onScan: onScan)),
                           if (showMotif) ...<Widget>[
-                            const SizedBox(width: AppSpacing.sm),
+                            const SizedBox(width: AppSpacing.xs),
                             const ExcludeSemantics(
                               child: SizedBox.square(
                                 key: Key('smart_scan_artwork'),
-                                dimension: 80,
+                                dimension: 72,
                                 child: CustomPaint(
                                   painter: _ScannerMotifPainter(),
                                 ),
@@ -85,24 +85,24 @@ class SmartScanCta extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.xxs),
+        const SizedBox(height: 2),
         // The subtle trust cue, deliberately not visually dominant.
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Icon(
               Icons.shield_outlined,
-              size: 13,
+              size: 12,
               color: colors.onSurfaceVariant,
             ),
-            const SizedBox(width: AppSpacing.xxs),
+            const SizedBox(width: 3),
             Flexible(
               child: Text(
                 'Files stay on your device.',
                 key: const Key('smart_scan_privacy_note'),
                 maxLines: 2,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 11,
+                  fontSize: 10,
                   color: colors.onSurfaceVariant,
                 ),
               ),
@@ -132,10 +132,10 @@ class _HeroCopy extends StatelessWidget {
           children: <Widget>[
             const Icon(
               Icons.auto_awesome_rounded,
-              size: 16,
+              size: 15,
               color: Color(0xFFFFD39D),
             ),
-            const SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: 6),
             Flexible(
               child: Text(
                 'Smart Scan',
@@ -150,32 +150,33 @@ class _HeroCopy extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xxs),
+        const SizedBox(height: 2),
         Text(
           'Find and clean junk files\nto free up space.',
           style: theme.textTheme.bodySmall?.copyWith(
+            fontSize: 11,
             color: Colors.white.withValues(alpha: 0.85),
-            height: 1.35,
+            height: 1.25,
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.xs),
         FilledButton.icon(
           key: const Key('smart_scan_button'),
           onPressed: onScan,
           style: FilledButton.styleFrom(
             backgroundColor: Colors.white,
             foregroundColor: AppColors.brandBlue,
-            minimumSize: const Size(0, 40),
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            minimumSize: const Size(0, 38),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             textStyle: const TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.tile),
             ),
           ),
-          icon: const Icon(Icons.search_rounded, size: 17),
+          icon: const Icon(Icons.search_rounded, size: 16),
           label: const Text('Scan Now'),
         ),
       ],

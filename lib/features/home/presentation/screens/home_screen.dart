@@ -40,8 +40,8 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final double textScale = MediaQuery.textScalerOf(context).scale(1);
-    final double headerHeight = (58 + (textScale - 1) * 40)
-        .clamp(58.0, 112.0)
+    final double headerHeight = (48 + (textScale - 1) * 48)
+        .clamp(48.0, 116.0)
         .toDouble();
 
     return Scaffold(
@@ -56,7 +56,7 @@ class HomeScreen extends ConsumerWidget {
             icon: Icons.settings_outlined,
             onTap: () => context.go(AppRoutes.settings),
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: AppSpacing.xs),
         ],
       ),
       body: SafeArea(
@@ -132,12 +132,12 @@ class _HomeHeaderTitle extends StatelessWidget {
             color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 1),
         Text(
           'Clean more. Save more. Do more.',
           maxLines: 2,
           style: theme.textTheme.bodySmall?.copyWith(
-            fontSize: 11,
+            fontSize: 10.5,
             color: isDark
                 ? theme.colorScheme.onSurfaceVariant
                 : AppColors.textSecondary,
@@ -178,11 +178,11 @@ class _HeaderIconButton extends StatelessWidget {
             onTap: onTap,
             borderRadius: BorderRadius.circular(AppRadius.tile),
             child: SizedBox.square(
-              dimension: 48,
+              dimension: 44,
               child: Center(
                 child: Container(
-                  width: 38,
-                  height: 38,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     color: isDark
                         ? theme.colorScheme.surfaceContainerHigh
@@ -196,7 +196,7 @@ class _HeaderIconButton extends StatelessWidget {
                   ),
                   child: Icon(
                     icon,
-                    size: 19,
+                    size: 17,
                     color: isDark
                         ? theme.colorScheme.onSurfaceVariant
                         : AppColors.actionBlue,
