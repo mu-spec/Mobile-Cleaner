@@ -33,6 +33,10 @@ class _SuccessCheckState extends State<SuccessCheck>
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: widget.duration,
+    // MediaQuery below is the single accessibility decision point. Preserve
+    // the requested duration here so a test or nested MediaQuery that enables
+    // motion is not silently shortened by the binding-level platform flag.
+    animationBehavior: AnimationBehavior.preserve,
   );
 
   late final Animation<double> _scale = CurvedAnimation(
