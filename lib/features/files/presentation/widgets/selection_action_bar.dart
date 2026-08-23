@@ -4,27 +4,10 @@ import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 
 /// Bottom action bar shown whenever files are selected in a cleaner.
 ///
-/// One implementation shared by every selectable screen, so the Delete action
-/// cannot be present in one tool and missing in another, and so there is only
-/// ever one route into the Phase 12 safe-delete flow.
-///
-/// ## Placement
-///
-/// This belongs in the screen's body `Column`, directly below the `Expanded`
-/// scrollable list — **not** in `Scaffold.bottomNavigationBar`.
-///
-/// ## Why the width is bounded explicitly
-///
-/// A `Column` gives its children **unbounded width** on the cross axis. With a
-/// bare `Row` inside, the row laid out at infinite width: `Flexible` cannot
-/// divide infinity, and the buttons were handed
-/// `BoxConstraints(w=Infinity, 56.0<=h<=Infinity)` — the 56 being the
-/// Material 3 minimum button height — which throws *BoxConstraints forces an
-/// infinite width* and takes the whole screen down with it.
-///
-/// `LayoutBuilder` reports the real width the parent offers, and the row is
-/// tightened to it. Note that `SizedBox(width: double.infinity)` would **not**
-/// fix this: it sets exactly the infinite width that caused the crash.
+/// The bar belongs directly below the screen's Expanded list. At normal
+/// widths it is one compact row. Narrow screens and large system text use a
+/// two-row layout so the summary and actions never compete for the same
+/// horizontal space.
 class SelectionActionBar extends StatelessWidget {
   const SelectionActionBar({
     required this.selection,
@@ -43,29 +26,26 @@ class SelectionActionBar extends StatelessWidget {
   final VoidCallback onClear;
   final VoidCallback onDelete;
 
-  /// Per-screen keys, so existing tests and tooling keep working.
+  /// Per-screen keys retained for existing tests and automation.
   final Key barKey;
   final Key countKey;
   final Key bytesKey;
   final Key clearKey;
   final Key deleteKey;
 
-  /// How many of the selected items Android will actually let us delete.
-  ///
-  /// Null means "all of them". When zero, Delete is disabled rather than
-  /// letting the user start a flow the platform will certainly refuse.
+  /// Number of selected items Android can actually delete.
+  /// Null means every selected item is deletable.
   final int? deletableCount;
 
-  /// Material 3's minimum button height. Applied as a *height* only — never a
-  /// width — so a button can never request infinite horizontal space.
   static const double _minButtonHeight = 48;
+  static const double _stackBreakpoint = 380;
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
-
     final int deletable = deletableCount ?? selection.count;
     final bool canDelete = deletable > 0;
+    final double textScale = MediaQuery.textScalerOf(context).scale(1);
 
     return Material(
       key: barKey,
@@ -73,81 +53,130 @@ class SelectionActionBar extends StatelessWidget {
       elevation: 8,
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-          // Fall back to the screen width if an ancestor really is unbounded,
-          // rather than propagating infinity down to the buttons.
           final double barWidth = constraints.maxWidth.isFinite
               ? constraints.maxWidth
               : MediaQuery.sizeOf(context).width;
+          final bool stacked =
+              barWidth < _stackBreakpoint || textScale > 1.3;
+
+          final Widget summary = _SelectionSummary(
+            selection: selection,
+            deletable: deletable,
+            canDelete: canDelete,
+            countKey: countKey,
+            bytesKey: bytesKey,
+            allowTwoLines: stacked,
+          );
+          final Widget clearButton = TextButton(
+            key: clearKey,
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, _minButtonHeight),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            onPressed: onClear,
+            child: const Text('Clear'),
+          );
+          final Widget deleteButton = FilledButton.icon(
+            key: deleteKey,
+            style: FilledButton.styleFrom(
+              backgroundColor: colors.error,
+              foregroundColor: colors.onError,
+              minimumSize: const Size(0, _minButtonHeight),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+            onPressed: canDelete ? onDelete : null,
+            icon: const Icon(Icons.delete_outline_rounded, size: 18),
+            label: const Text('Delete'),
+          );
 
           return SizedBox(
             width: barWidth,
             child: Padding(
-              // The body's SafeArea already clears the navigation bar.
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                children: <Widget>[
-                  // Takes the leftover space and ellipsises, so the buttons
-                  // keep their intrinsic width on narrow phones.
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              child: stacked
+                  ? Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        Text(
-                          '${selection.count} selected',
-                          key: countKey,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        Text(
-                          canDelete && deletable < selection.count
-                              // Be explicit when Android protects some.
-                              ? '${ByteFormatter.format(selection.totalBytes)}'
-                                    ' · $deletable can be deleted'
-                              : ByteFormatter.format(selection.totalBytes),
-                          key: bytesKey,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: colors.onSurfaceVariant),
+                        summary,
+                        const SizedBox(height: 4),
+                        Row(
+                          children: <Widget>[
+                            Expanded(child: clearButton),
+                            const SizedBox(width: 8),
+                            Expanded(child: deleteButton),
+                          ],
                         ),
                       ],
+                    )
+                  : Row(
+                      children: <Widget>[
+                        Expanded(child: summary),
+                        const SizedBox(width: 8),
+                        clearButton,
+                        const SizedBox(width: 4),
+                        deleteButton,
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    key: clearKey,
-                    style: TextButton.styleFrom(
-                      // Height only. A minimumSize with an infinite or very
-                      // large width would reintroduce the crash.
-                      minimumSize: const Size(0, _minButtonHeight),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    onPressed: onClear,
-                    child: const Text('Clear'),
-                  ),
-                  const SizedBox(width: 4),
-                  FilledButton.icon(
-                    key: deleteKey,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: colors.error,
-                      foregroundColor: colors.onError,
-                      minimumSize: const Size(0, _minButtonHeight),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                    ),
-                    onPressed: canDelete ? onDelete : null,
-                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                    label: const Text('Delete'),
-                  ),
-                ],
-              ),
             ),
           );
         },
       ),
+    );
+  }
+}
+
+class _SelectionSummary extends StatelessWidget {
+  const _SelectionSummary({
+    required this.selection,
+    required this.deletable,
+    required this.canDelete,
+    required this.countKey,
+    required this.bytesKey,
+    required this.allowTwoLines,
+  });
+
+  final FileSelection selection;
+  final int deletable;
+  final bool canDelete;
+  final Key countKey;
+  final Key bytesKey;
+  final bool allowTwoLines;
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final String bytesLabel = canDelete && deletable < selection.count
+        ? '${ByteFormatter.format(selection.totalBytes)}'
+              ' · $deletable can be deleted'
+        : ByteFormatter.format(selection.totalBytes);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Text(
+          '${selection.count} selected',
+          key: countKey,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        Text(
+          bytesLabel,
+          key: bytesKey,
+          maxLines: allowTwoLines ? 2 : 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+        ),
+      ],
     );
   }
 }

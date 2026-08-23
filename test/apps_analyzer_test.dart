@@ -165,6 +165,20 @@ List<String> _names(AppSort sort, {AppFilter filter = AppFilter.userApps}) =>
         .map((InstalledApp a) => a.name)
         .toList();
 
+Future<void> _tapFilter(WidgetTester tester, Key key) async {
+  final Finder control = find.byKey(key);
+  final Finder bar = find
+      .descendant(
+        of: find.byKey(const Key('apps_filter_bar')),
+        matching: find.byType(Scrollable),
+      )
+      .first;
+  await tester.scrollUntilVisible(control, 120, scrollable: bar);
+  await tester.pumpAndSettle();
+  await tester.tap(control);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   group('InstalledApp parsing', () {
     test('reads a well-formed platform row', () {
@@ -441,8 +455,7 @@ void main() {
     ) async {
       await _pumpApps(tester);
 
-      await tester.tap(find.byKey(const Key('app_filter_all')));
-      await tester.pumpAndSettle();
+      await _tapFilter(tester, const Key('app_filter_all'));
 
       final Finder uninstall = find.byKey(
         const Key('app_uninstall_com.android.systemthing'),
@@ -556,8 +569,7 @@ void main() {
     ) async {
       final _StubApps repo = await _pumpApps(tester);
 
-      await tester.tap(find.byKey(const Key('app_filter_all')));
-      await tester.pumpAndSettle();
+      await _tapFilter(tester, const Key('app_filter_all'));
 
       expect(
         tester.widget<Text>(find.byKey(const Key('apps_count'))).data,

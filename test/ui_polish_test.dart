@@ -47,6 +47,14 @@ Future<void> _pump(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  tearDown(() {
+    // Platform-channel mocks are process-global. Never let a haptics stub
+    // leak into later MaterialApp tests, where Flutter legitimately sends
+    // SystemChrome.setApplicationSwitcherDescription on the same channel.
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SystemChannels.platform, null);
+  });
+
   group('Haptics', () {
     testWidgets('each level reaches the platform', (
       WidgetTester tester,
@@ -69,7 +77,12 @@ void main() {
           .setMockMethodCallHandler(SystemChannels.platform, (
             MethodCall call,
           ) async {
-            throw PlatformException(code: 'UNAVAILABLE');
+            if (call.method == 'HapticFeedback.vibrate') {
+              throw PlatformException(code: 'UNAVAILABLE');
+            }
+            // SystemChrome and other real framework traffic shares this
+            // channel and is unrelated to the no-vibrator scenario.
+            return null;
           });
 
       // Fire-and-forget: a failure here must never surface to the user.

@@ -102,6 +102,7 @@ class _Case {
     required this.bytesKey,
     required this.deleteKey,
     required this.selectAllKey,
+    required this.listKey,
   });
 
   final String name;
@@ -112,6 +113,7 @@ class _Case {
   final String bytesKey;
   final String deleteKey;
   final String selectAllKey;
+  final String listKey;
 }
 
 final List<_Case> _cases = <_Case>[
@@ -132,6 +134,7 @@ final List<_Case> _cases = <_Case>[
     bytesKey: 'selection_bytes',
     deleteKey: 'selection_delete',
     selectAllKey: 'downloads_select_all',
+    listKey: 'downloads_list',
   ),
   _Case(
     name: 'APK Cleaner',
@@ -156,6 +159,7 @@ final List<_Case> _cases = <_Case>[
     bytesKey: 'apk_selection_bytes',
     deleteKey: 'apk_selection_delete',
     selectAllKey: 'apk_select_all',
+    listKey: 'apk_list',
   ),
   _Case(
     name: 'Images browser',
@@ -182,6 +186,7 @@ final List<_Case> _cases = <_Case>[
     bytesKey: 'category_selection_bytes',
     deleteKey: 'category_selection_delete',
     selectAllKey: 'category_select_all',
+    listKey: 'category_list_images',
   ),
   _Case(
     name: 'Screenshot Cleaner',
@@ -208,6 +213,7 @@ final List<_Case> _cases = <_Case>[
     bytesKey: 'screenshot_selection_bytes',
     deleteKey: 'screenshot_selection_delete',
     selectAllKey: 'screenshot_select_all',
+    listKey: 'screenshot_list',
   ),
 ];
 
@@ -263,10 +269,25 @@ Future<_RecordingDelete> _pump(
   return deleter;
 }
 
-/// Taps the first row's checkbox, scrolling it into view first.
-Future<void> _selectFirst(WidgetTester tester) async {
+Finder _fileList(_Case testCase) => find
+    .descendant(
+      of: find.byKey(Key(testCase.listKey)),
+      matching: find.byType(Scrollable),
+    )
+    .first;
+
+/// Taps the first row's checkbox, scrolling the owning file list only.
+///
+/// Cleaner screens legitimately contain other horizontal scrollers. Using an
+/// unqualified `find.byType(Scrollable)` makes the test ambiguous and throws
+/// "Too many elements" before it reaches the selection behavior.
+Future<void> _selectFirst(WidgetTester tester, _Case testCase) async {
   final Finder checkbox = find.byKey(const Key('file_checkbox_1'));
-  await tester.scrollUntilVisible(checkbox, 150);
+  await tester.scrollUntilVisible(
+    checkbox,
+    150,
+    scrollable: _fileList(testCase),
+  );
   await tester.pumpAndSettle();
   await tester.tap(checkbox);
   await tester.pumpAndSettle();
@@ -287,7 +308,7 @@ void main() {
       ) async {
         await _pump(tester, testCase);
 
-        await _selectFirst(tester);
+        await _selectFirst(tester, testCase);
 
         final Finder deleteButton = find.byKey(Key(testCase.deleteKey));
         expect(find.byKey(Key(testCase.barKey)), findsOneWidget);
@@ -321,7 +342,7 @@ void main() {
       ) async {
         await _pump(tester, testCase);
 
-        await _selectFirst(tester);
+        await _selectFirst(tester, testCase);
         expect(
           tester.widget<Text>(find.byKey(Key(testCase.countKey))).data,
           '1 selected',
@@ -349,7 +370,7 @@ void main() {
       ) async {
         final _RecordingDelete deleter = await _pump(tester, testCase);
 
-        await _selectFirst(tester);
+        await _selectFirst(tester, testCase);
         await tester.tap(find.byKey(Key(testCase.deleteKey)));
         await tester.pumpAndSettle();
 
@@ -364,7 +385,7 @@ void main() {
       ) async {
         final _RecordingDelete deleter = await _pump(tester, testCase);
 
-        await _selectFirst(tester);
+        await _selectFirst(tester, testCase);
         await tester.tap(find.byKey(Key(testCase.deleteKey)));
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const Key('delete_confirm')));
@@ -387,7 +408,7 @@ void main() {
         WidgetTester tester,
       ) async {
         await _pump(tester, testCase, undeletable: true);
-        await _selectFirst(tester);
+        await _selectFirst(tester, testCase);
 
         expect(
           tester
@@ -404,9 +425,9 @@ void main() {
         // The reported bug: after selecting, the body stopped receiving
         // pointer events and the list could not be scrolled.
         await _pump(tester, testCase, manyFiles: true);
-        await _selectFirst(tester);
+        await _selectFirst(tester, testCase);
 
-        final Finder list = find.byType(Scrollable).last;
+        final Finder list = _fileList(testCase);
         final double before =
             tester.state<ScrollableState>(list).position.pixels;
 
@@ -427,10 +448,14 @@ void main() {
         WidgetTester tester,
       ) async {
         await _pump(tester, testCase);
-        await _selectFirst(tester);
+        await _selectFirst(tester, testCase);
 
         final Finder second = find.byKey(const Key('file_checkbox_2'));
-        await tester.scrollUntilVisible(second, 150);
+        await tester.scrollUntilVisible(
+          second,
+          150,
+          scrollable: _fileList(testCase),
+        );
         await tester.pumpAndSettle();
         await tester.tap(second);
         await tester.pumpAndSettle();
@@ -445,10 +470,10 @@ void main() {
         WidgetTester tester,
       ) async {
         await _pump(tester, testCase);
-        await _selectFirst(tester);
+        await _selectFirst(tester, testCase);
 
         final Rect bar = tester.getRect(find.byKey(Key(testCase.barKey)));
-        final Rect list = tester.getRect(find.byType(Scrollable).last);
+        final Rect list = tester.getRect(_fileList(testCase));
         expect(
           list.bottom <= bar.top + 0.5,
           isTrue,
@@ -462,7 +487,7 @@ void main() {
         // A small phone in portrait, where the old fixed Row overflowed.
         await _pump(tester, testCase, size: const Size(320, 640));
 
-        await _selectFirst(tester);
+        await _selectFirst(tester, testCase);
 
         expect(find.byKey(Key(testCase.deleteKey)), findsOneWidget);
         // An overflowing Row throws during layout; this catches it.
@@ -501,7 +526,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await _selectFirst(tester);
+        await _selectFirst(tester, testCase);
 
         expect(find.byKey(Key(testCase.deleteKey)), findsOneWidget);
         expect(tester.takeException(), isNull);

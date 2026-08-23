@@ -11,6 +11,7 @@ import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/category_files_screen.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 
 const int _mib = 1024 * 1024;
 
@@ -93,6 +94,41 @@ Future<void> _pumpCategory(
         thumbnailRepositoryProvider.overrideWithValue(thumbnails),
       ],
       child: MaterialApp(home: CategoryFilesScreen(category: category)),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pumpFileTile(
+  WidgetTester tester,
+  ScannedFile file, {
+  Size size = const Size(320, 640),
+  double textScale = 1,
+}) async {
+  await tester.binding.setSurfaceSize(size);
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
+      ],
+      child: MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(
+            size: size,
+            textScaler: TextScaler.linear(textScale),
+          ),
+          child: Scaffold(
+            body: ScannedFileTile(
+              file: file,
+              selectionMode: true,
+              selected: false,
+              onTap: () {},
+            ),
+          ),
+        ),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -302,6 +338,23 @@ void main() {
       // A document has no preview, so it uses the category icon.
       expect(find.byKey(const Key('thumbnail_icon_d1')), findsOneWidget);
       expect(find.byKey(const Key('thumbnail_image_d1')), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('metadata stays responsive on a narrow large-text screen', (
+      WidgetTester tester,
+    ) async {
+      final ScannedFile doc = _file(
+        id: 'd3',
+        name: 'a-very-long-contract-filename.pdf',
+        category: FileCategory.documents,
+        sizeBytes: 300 * _mib,
+        modified: DateTime(2026, 2, 9),
+      );
+      await _pumpFileTile(tester, doc, textScale: 1.8);
+
+      expect(find.byKey(const Key('file_size_d3')), findsOneWidget);
+      expect(find.byKey(const Key('file_date_d3')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

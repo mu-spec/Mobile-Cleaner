@@ -186,23 +186,29 @@ class _GroupBar extends StatelessWidget {
     return SizedBox(
       // Grows with the user's text scale so chip labels are never clipped.
       height: Responsive.chipBarHeight(context),
-      child: ListView(
+      // There are only three options. A SingleChildScrollView keeps every
+      // chip mounted while still allowing horizontal scrolling on narrow
+      // phones; a lazy horizontal ListView could dispose the 90-day chip.
+      child: SingleChildScrollView(
         key: const Key('screenshot_group_bar'),
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-        children: <Widget>[
-          for (final ScreenshotGroup option in ScreenshotGroup.values)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                key: Key('screenshot_group_${option.name}'),
-                label: Text(option.label),
-                selected: option == selected,
-                onSelected: (_) => onSelected(option),
-                visualDensity: VisualDensity.compact,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            for (final ScreenshotGroup option in ScreenshotGroup.values)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  key: Key('screenshot_group_${option.name}'),
+                  label: Text(option.label),
+                  selected: option == selected,
+                  onSelected: (_) => onSelected(option),
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

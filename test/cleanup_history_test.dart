@@ -179,9 +179,10 @@ void main() {
 
       // Today only.
       expect(history.bytesRecoveredWithin(1, now: now), 1843 * _mib);
-      // A week back still misses 11 August.
-      expect(history.bytesRecoveredWithin(7, now: now), 1843 * _mib);
-      // Thirty days reaches it.
+      // Six inclusive calendar days covers 12–17 August, so 11 August is out.
+      expect(history.bytesRecoveredWithin(6, now: now), 1843 * _mib);
+      // Seven inclusive calendar days covers 11–17 August, so it is included.
+      expect(history.bytesRecoveredWithin(7, now: now), 2463 * _mib);
       expect(history.bytesRecoveredWithin(30, now: now), 2463 * _mib);
     });
 

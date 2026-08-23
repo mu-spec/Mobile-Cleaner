@@ -223,35 +223,41 @@ class _FilterBar extends StatelessWidget {
     return SizedBox(
       // Grows with the user's text scale so chip labels are never clipped.
       height: Responsive.chipBarHeight(context),
-      child: ListView(
+      // The option set is small and fixed. Build every chip inside one
+      // horizontal scroller so off-screen filters retain their state and
+      // semantics instead of being lazily disposed.
+      child: SingleChildScrollView(
         key: const Key('apps_filter_bar'),
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-        children: <Widget>[
-          for (final AppSort option in AppSort.values)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                key: Key('app_sort_${option.name}'),
-                label: Text(option.label),
-                selected: option == sort,
-                onSelected: (_) => onSort(option),
-                visualDensity: VisualDensity.compact,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            for (final AppSort option in AppSort.values)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: ChoiceChip(
+                  key: Key('app_sort_${option.name}'),
+                  label: Text(option.label),
+                  selected: option == sort,
+                  onSelected: (_) => onSort(option),
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-          const SizedBox(width: 8),
-          for (final AppFilter option in AppFilter.values)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
-                key: Key('app_filter_${option.name}'),
-                label: Text(option.label),
-                selected: option == filter,
-                onSelected: (_) => onFilter(option),
-                visualDensity: VisualDensity.compact,
+            const SizedBox(width: 8),
+            for (final AppFilter option in AppFilter.values)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  key: Key('app_filter_${option.name}'),
+                  label: Text(option.label),
+                  selected: option == filter,
+                  onSelected: (_) => onFilter(option),
+                  visualDensity: VisualDensity.compact,
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -372,37 +378,44 @@ class _AppRow extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            // Scrollable: three labelled actions overflow a narrow phone, and
-            // an overflowing Row would throw rather than clip.
+            // Scrollable: three labelled actions overflow a narrow phone.
+            // They are a tiny fixed set, so keep all actions mounted inside a
+            // SingleChildScrollView rather than lazily dropping off-screen
+            // buttons from the widget tree.
             SizedBox(
               height: 44,
-              child: ListView(
-                key: Key('app_actions_${app.packageName}'),
-                scrollDirection: Axis.horizontal,
-                reverse: true,
-                children: <Widget>[
-                  _ActionButton(
-                    actionKey: Key('app_uninstall_${app.packageName}'),
-                    icon: Icons.delete_outline_rounded,
-                    label: 'Uninstall',
-                    // Android refuses for system apps; say so up front rather
-                    // than opening a dialog that will fail.
-                    onPressed: app.isSystemApp ? null : onUninstall,
-                    destructive: true,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: SingleChildScrollView(
+                  key: Key('app_actions_${app.packageName}'),
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      _ActionButton(
+                        actionKey: Key('app_open_${app.packageName}'),
+                        icon: Icons.launch_rounded,
+                        label: 'Open',
+                        onPressed: app.canOpen ? onOpen : null,
+                      ),
+                      _ActionButton(
+                        actionKey: Key('app_settings_${app.packageName}'),
+                        icon: Icons.settings_outlined,
+                        label: 'App Settings',
+                        onPressed: onSettings,
+                      ),
+                      _ActionButton(
+                        actionKey: Key('app_uninstall_${app.packageName}'),
+                        icon: Icons.delete_outline_rounded,
+                        label: 'Uninstall',
+                        // Android refuses for system apps; say so up front
+                        // rather than opening a dialog that will fail.
+                        onPressed: app.isSystemApp ? null : onUninstall,
+                        destructive: true,
+                      ),
+                    ],
                   ),
-                  _ActionButton(
-                    actionKey: Key('app_settings_${app.packageName}'),
-                    icon: Icons.settings_outlined,
-                    label: 'App Settings',
-                    onPressed: onSettings,
-                  ),
-                  _ActionButton(
-                    actionKey: Key('app_open_${app.packageName}'),
-                    icon: Icons.launch_rounded,
-                    label: 'Open',
-                    onPressed: app.canOpen ? onOpen : null,
-                  ),
-                ],
+                ),
               ),
             ),
           ],

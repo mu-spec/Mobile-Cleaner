@@ -12,6 +12,7 @@ class ScannedFileTile extends StatelessWidget {
     required this.file,
     this.onTap,
     this.onLongPress,
+    this.onSelectionToggle,
     this.selected,
     this.selectionMode = false,
     super.key,
@@ -20,6 +21,10 @@ class ScannedFileTile extends StatelessWidget {
   final ScannedFile file;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+
+  /// Optional checkbox callback when row taps and selection taps differ.
+  /// Cleaners can omit it to keep their existing tap-to-select behavior.
+  final VoidCallback? onSelectionToggle;
 
   /// Whether this row is currently selected. Null means selection is not in
   /// use, which keeps every existing caller unchanged.
@@ -31,6 +36,7 @@ class ScannedFileTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
+    final VoidCallback? selectionToggle = onSelectionToggle ?? onTap;
 
     return ListTile(
       key: Key('file_tile_${file.id}'),
@@ -44,35 +50,52 @@ class ScannedFileTile extends StatelessWidget {
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Padding(
-        padding: const EdgeInsets.only(top: 3),
-        child: Row(
-          children: <Widget>[
-            Text(
+        padding: const EdgeInsets.only(top: 4),
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final bool stackMetadata =
+                constraints.maxWidth < 200 ||
+                MediaQuery.textScalerOf(context).scale(1) > 1.3;
+            final Widget size = Text(
               ByteFormatter.format(file.sizeBytes),
               key: Key('file_size_${file.id}'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: colors.onSurface,
               ),
-            ),
-            Text(
-              '  ·  ',
+            );
+            final Widget date = Text(
+              DateFormatter.relative(file.dateModified),
+              key: Key('file_date_${file.id}'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-            ),
-            Flexible(
-              child: Text(
-                DateFormatter.relative(file.dateModified),
-                key: Key('file_date_${file.id}'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-              ),
-            ),
-          ],
+            );
+
+            if (stackMetadata) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[size, date],
+              );
+            }
+            return Row(
+              children: <Widget>[
+                Flexible(child: size),
+                Text(
+                  '  ·  ',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+                Expanded(child: date),
+              ],
+            );
+          },
         ),
       ),
       trailing: selectionMode
@@ -82,11 +105,11 @@ class ScannedFileTile extends StatelessWidget {
               // checkbox" rather than an unlabelled control in a long list.
               semanticLabel: file.name,
               value: selected ?? false,
-              onChanged: onTap == null
+              onChanged: selectionToggle == null
                   ? null
                   : (_) {
                       Haptics.selection();
-                      onTap!();
+                      selectionToggle();
                     },
             )
           : Icon(
@@ -110,7 +133,7 @@ void showFileDetails(BuildContext context, ScannedFile file) {
     isScrollControlled: true,
     builder: (BuildContext sheetContext) {
       return SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -166,22 +189,39 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Text labelText = Text(
+      label,
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+    );
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          SizedBox(
-            width: 92,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool stack =
+              constraints.maxWidth < 320 ||
+              MediaQuery.textScalerOf(context).scale(1) > 1.3;
+          if (stack) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                labelText,
+                const SizedBox(height: 4),
+                Text(value),
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              SizedBox(width: 92, child: labelText),
+              Expanded(child: Text(value)),
+            ],
+          );
+        },
       ),
     );
   }

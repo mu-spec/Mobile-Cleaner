@@ -258,8 +258,14 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
                           file: file,
                           selectionMode: true,
                           selected: _selection.contains(file),
-                          onTap: () => _toggle(file),
-                          onLongPress: () => showFileDetails(context, file),
+                          // A normal row tap opens details. Once selection is
+                          // active, row taps join the selection workflow; the
+                          // checkbox and long press can start it.
+                          onTap: _selection.isNotEmpty
+                              ? () => _toggle(file)
+                              : () => showFileDetails(context, file),
+                          onSelectionToggle: () => _toggle(file),
+                          onLongPress: () => _toggle(file),
                         );
                       },
                     ),
