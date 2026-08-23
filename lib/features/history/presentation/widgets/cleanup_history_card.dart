@@ -52,6 +52,7 @@ class _HistorySummaryCard extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
+    final double textScale = MediaQuery.textScalerOf(context).scale(1);
     final CleanupEntry? latest = history.mostRecent;
     final String latestLabel = latest == null
         ? 'View your cleanup history'
@@ -60,16 +61,16 @@ class _HistorySummaryCard extends StatelessWidget {
     return AppCard(
       cardKey: const Key('home_history_card'),
       onTap: onOpen,
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         children: <Widget>[
           const AppIconContainer(
             icon: Icons.history_rounded,
             accent: AppColors.actionBlue,
-            size: 40,
-            iconSize: 20,
+            size: 36,
+            iconSize: 18,
           ),
-          const SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,33 +79,68 @@ class _HistorySummaryCard extends StatelessWidget {
                 Text(
                   ByteFormatter.format(history.totalBytesRecovered),
                   key: const Key('home_history_total'),
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.2,
                     color: isDark ? colors.onSurface : AppColors.navy,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  'Cleaned so far',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
+                const SizedBox(height: 2),
+                if (textScale <= 1.3)
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        'Cleaned so far',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 10.5,
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xxs),
+                      Text(
+                        '·',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xxs),
+                      Expanded(
+                        child: Text(
+                          latestLabel,
+                          key: const Key('home_history_latest'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 10.5,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                else ...<Widget>[
+                  Text(
+                    'Cleaned so far',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  latestLabel,
-                  key: const Key('home_history_latest'),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
+                  const SizedBox(height: 2),
+                  Text(
+                    latestLabel,
+                    key: const Key('home_history_latest'),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
           const SizedBox(width: AppSpacing.xs),
           Icon(
             Icons.chevron_right_rounded,
+            size: 20,
             color: colors.onSurfaceVariant,
           ),
         ],
@@ -124,16 +160,16 @@ class _EmptyHistoryCard extends StatelessWidget {
 
     return AppCard(
       cardKey: const Key('home_history_empty'),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         children: <Widget>[
           const AppIconContainer(
             icon: Icons.history_rounded,
             accent: AppColors.actionBlue,
-            size: 40,
-            iconSize: 20,
+            size: 36,
+            iconSize: 18,
           ),
-          const SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,7 +182,7 @@ class _EmptyHistoryCard extends StatelessWidget {
                     color: isDark ? colors.onSurface : AppColors.navy,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xxs),
+                const SizedBox(height: 2),
                 Text(
                   'Space you free up will be tracked here.',
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -169,11 +205,11 @@ class _LoadingHistoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return const AppCard(
       cardKey: Key('home_history_loading'),
-      padding: EdgeInsets.all(AppSpacing.md),
+      padding: EdgeInsets.all(AppSpacing.sm),
       child: Row(
         children: <Widget>[
           SizedBox.square(
-            dimension: 22,
+            dimension: 20,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           SizedBox(width: AppSpacing.md),
@@ -193,17 +229,17 @@ class _HistoryErrorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       cardKey: const Key('home_history_error'),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           const AppIconContainer(
             icon: Icons.history_toggle_off_rounded,
             accent: AppColors.actionBlue,
-            size: 40,
-            iconSize: 20,
+            size: 36,
+            iconSize: 18,
           ),
-          const SizedBox(width: AppSpacing.md),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -6,9 +6,9 @@ import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.d
 
 /// Four compact shortcuts to existing features.
 ///
-/// A normal phone shows all four in one row. Narrow layouts move to two
-/// columns, while large system text uses full-width rows so no label clips.
-/// Destinations are supplied by Home and remain unchanged.
+/// A normal portrait phone presents one neutral bar with all four tools.
+/// Narrow screens fall back to two columns, and large accessibility text uses
+/// full-width rows so labels and touch targets remain usable.
 class QuickToolsSection extends StatelessWidget {
   const QuickToolsSection({
     required this.onPhotos,
@@ -34,6 +34,7 @@ class QuickToolsSection extends StatelessWidget {
         surface: AppColors.softPhoto,
         title: 'Photos',
         subtitle: 'Duplicates & screenshots',
+        compactSubtitle: 'Review photos',
         onTap: onPhotos,
       ),
       _QuickToolData(
@@ -43,6 +44,7 @@ class QuickToolsSection extends StatelessWidget {
         surface: AppColors.softBlue,
         title: 'Large Files',
         subtitle: 'Biggest space users',
+        compactSubtitle: 'Find big files',
         onTap: onFiles,
       ),
       _QuickToolData(
@@ -52,6 +54,7 @@ class QuickToolsSection extends StatelessWidget {
         surface: AppColors.softIndigo,
         title: 'Apps',
         subtitle: 'Installed app sizes',
+        compactSubtitle: 'App sizes',
         onTap: onApps,
       ),
       _QuickToolData(
@@ -61,6 +64,7 @@ class QuickToolsSection extends StatelessWidget {
         surface: AppColors.softOrange,
         title: 'Storage Access',
         subtitle: 'Review permissions',
+        compactSubtitle: 'Permissions',
         onTap: onPermissions,
       ),
     ];
@@ -75,19 +79,13 @@ class QuickToolsSection extends StatelessWidget {
         ),
         LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
-            final _QuickToolLayout layout;
-            final int columns;
-            if (constraints.maxWidth >= 360 && textScale <= 1.2) {
-              layout = _QuickToolLayout.fourAcross;
-              columns = 4;
-            } else if (constraints.maxWidth >= 280 && textScale <= 1.35) {
-              layout = _QuickToolLayout.grid;
-              columns = 2;
-            } else {
-              layout = _QuickToolLayout.row;
-              columns = 1;
+            if (constraints.maxWidth >= 300 && textScale <= 1.2) {
+              return _CompactToolsBar(tools: tools);
             }
 
+            final bool useGrid =
+                constraints.maxWidth >= 280 && textScale <= 1.35;
+            final int columns = useGrid ? 2 : 1;
             final double itemWidth =
                 (constraints.maxWidth - HomeMetrics.rowGap * (columns - 1)) /
                 columns;
@@ -99,7 +97,10 @@ class QuickToolsSection extends StatelessWidget {
                 for (final _QuickToolData tool in tools)
                   SizedBox(
                     width: itemWidth,
-                    child: _QuickToolTile(data: tool, layout: layout),
+                    child: _AdaptiveQuickToolTile(
+                      data: tool,
+                      showChevron: !useGrid,
+                    ),
                   ),
               ],
             );
@@ -110,8 +111,6 @@ class QuickToolsSection extends StatelessWidget {
   }
 }
 
-enum _QuickToolLayout { fourAcross, grid, row }
-
 class _QuickToolData {
   const _QuickToolData({
     required this.key,
@@ -120,6 +119,7 @@ class _QuickToolData {
     required this.surface,
     required this.title,
     required this.subtitle,
+    required this.compactSubtitle,
     required this.onTap,
   });
 
@@ -129,57 +129,116 @@ class _QuickToolData {
   final Color surface;
   final String title;
   final String subtitle;
+  final String compactSubtitle;
   final VoidCallback onTap;
 }
 
-class _QuickToolTile extends StatelessWidget {
-  const _QuickToolTile({required this.data, required this.layout});
+/// One white surface instead of four prominent cards.
+class _CompactToolsBar extends StatelessWidget {
+  const _CompactToolsBar({required this.tools});
+
+  final List<_QuickToolData> tools;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color divider = Theme.of(context).colorScheme.outlineVariant;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          for (int index = 0; index < tools.length; index++) ...<Widget>[
+            if (index > 0)
+              Container(
+                width: 1,
+                height: 72,
+                margin: const EdgeInsets.only(top: 13),
+                color: divider,
+              ),
+            Expanded(child: _CompactQuickTool(data: tools[index])),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactQuickTool extends StatelessWidget {
+  const _CompactQuickTool({required this.data});
 
   final _QuickToolData data;
-  final _QuickToolLayout layout;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final bool isDark = theme.brightness == Brightness.dark;
-    final bool fourAcross = layout == _QuickToolLayout.fourAcross;
-    final bool fullRow = layout == _QuickToolLayout.row;
 
-    final Widget copy = Column(
-      crossAxisAlignment: fourAcross
-          ? CrossAxisAlignment.center
-          : CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        Text(
-          data.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          textAlign: fourAcross ? TextAlign.center : TextAlign.start,
-          style: (fourAcross
-                  ? theme.textTheme.labelMedium
-                  : theme.textTheme.bodySmall)
-              ?.copyWith(
-                fontWeight: FontWeight.w700,
-                height: 1.15,
-                color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
+    return InkWell(
+      key: data.key,
+      onTap: data.onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 98),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              AppIconContainer(
+                icon: data.icon,
+                accent: data.tint,
+                backgroundColor: isDark
+                    ? data.tint.withValues(alpha: 0.22)
+                    : data.surface,
+                size: 30,
+                iconSize: 16,
               ),
-        ),
-        if (!fourAcross) ...<Widget>[
-          const SizedBox(height: 2),
-          Text(
-            data.subtitle,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontSize: 10,
-              height: 1.2,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                data.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  height: 1.1,
+                  color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                data.compactSubtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 8.5,
+                  height: 1.1,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
-        ],
-      ],
+        ),
+      ),
     );
+  }
+}
+
+class _AdaptiveQuickToolTile extends StatelessWidget {
+  const _AdaptiveQuickToolTile({
+    required this.data,
+    required this.showChevron,
+  });
+
+  final _QuickToolData data;
+  final bool showChevron;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -187,50 +246,62 @@ class _QuickToolTile extends StatelessWidget {
         key: data.key,
         onTap: data.onTap,
         child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: fourAcross ? 92 : 72),
+          constraints: const BoxConstraints(minHeight: 68),
           child: Padding(
-            padding: EdgeInsets.all(fourAcross ? AppSpacing.xs : 10),
-            child: fourAcross
-                ? Column(
+            padding: const EdgeInsets.all(AppSpacing.xs),
+            child: Row(
+              children: <Widget>[
+                AppIconContainer(
+                  icon: data.icon,
+                  accent: data.tint,
+                  backgroundColor: isDark
+                      ? data.tint.withValues(alpha: 0.22)
+                      : data.surface,
+                  size: 34,
+                  iconSize: 18,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      AppIconContainer(
-                        icon: data.icon,
-                        accent: data.tint,
-                        backgroundColor: isDark
-                            ? data.tint.withValues(alpha: 0.22)
-                            : data.surface,
-                        size: 32,
-                        iconSize: 17,
+                      Text(
+                        data.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          height: 1.15,
+                          color: isDark
+                              ? theme.colorScheme.onSurface
+                              : AppColors.navy,
+                        ),
                       ),
-                      const SizedBox(height: 6),
-                      copy,
-                    ],
-                  )
-                : Row(
-                    children: <Widget>[
-                      AppIconContainer(
-                        icon: data.icon,
-                        accent: data.tint,
-                        backgroundColor: isDark
-                            ? data.tint.withValues(alpha: 0.22)
-                            : data.surface,
-                        size: 34,
-                        iconSize: 18,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(child: copy),
-                      if (fullRow) ...<Widget>[
-                        const SizedBox(width: AppSpacing.xxs),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          size: 18,
+                      const SizedBox(height: 2),
+                      Text(
+                        data.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 10,
+                          height: 1.15,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
-                      ],
+                      ),
                     ],
                   ),
+                ),
+                if (showChevron) ...<Widget>[
+                  const SizedBox(width: AppSpacing.xxs),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),

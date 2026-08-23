@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/core/ui/app_visuals.dart';
 import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
 import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
@@ -89,8 +88,8 @@ class HomeScreen extends ConsumerWidget {
                   onApps: () => context.go(AppRoutes.apps),
                   onPermissions: () => context.push(AppRoutes.permissions),
                 ),
-                const SizedBox(height: HomeMetrics.sectionGap),
-                const AppSectionHeader(title: 'Cleanup Summary'),
+                const SizedBox(height: AppSpacing.sm),
+                const _CompactHomeSectionLabel(title: 'Cleanup Summary'),
                 CleanupHistoryCard(
                   onOpen: () => context.push(AppRoutes.history),
                 ),
@@ -104,6 +103,35 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactHomeSectionLabel extends StatelessWidget {
+  const _CompactHomeSectionLabel({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: AppSpacing.xxs,
+        bottom: AppSpacing.xxs,
+      ),
+      child: Semantics(
+        header: true,
+        child: Text(
+          title,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
           ),
         ),
       ),
