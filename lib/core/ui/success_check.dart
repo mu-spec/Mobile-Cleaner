@@ -88,6 +88,7 @@ class _SuccessCheckState extends State<SuccessCheck>
     final ColorScheme colors = Theme.of(context).colorScheme;
 
     return FadeTransition(
+      key: const Key('success_check_fade'),
       opacity: _fade,
       child: ScaleTransition(
         scale: _scale,

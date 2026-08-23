@@ -320,17 +320,21 @@ void main() {
           reason: 'Delete must be tappable once something is selected',
         );
 
-        // The regression: the button must actually be on screen.
+        // The button must be inside the actual logical Scaffold viewport.
+        // TestFlutterView.physicalSize can differ from setSurfaceSize on
+        // multi-view Flutter SDKs, so comparing those two coordinate spaces
+        // reports an on-screen bottom bar as off-screen.
         final Rect rect = tester.getRect(deleteButton);
-        final Size screen = tester.view.physicalSize /
-            tester.view.devicePixelRatio;
+        final Rect viewport = tester.getRect(find.byType(Scaffold).first);
         expect(
-          rect.right <= screen.width + 0.5,
+          rect.left >= viewport.left - 0.5 &&
+              rect.right <= viewport.right + 0.5,
           isTrue,
           reason: 'Delete button is cut off horizontally',
         );
         expect(
-          rect.bottom <= screen.height + 0.5,
+          rect.top >= viewport.top - 0.5 &&
+              rect.bottom <= viewport.bottom + 0.5,
           isTrue,
           reason: 'Delete button is below the visible area',
         );

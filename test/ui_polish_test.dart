@@ -113,7 +113,7 @@ void main() {
 
       // Jumps to the final frame rather than animating.
       final FadeTransition fade = tester.widget<FadeTransition>(
-        find.byType(FadeTransition).first,
+        find.byKey(const Key('success_check_fade')),
       );
       expect(fade.opacity.value, 1.0);
     });
@@ -137,13 +137,13 @@ void main() {
       // Mid-flight it is not yet fully shown.
       await tester.pump(const Duration(milliseconds: 100));
       final FadeTransition midway = tester.widget<FadeTransition>(
-        find.byType(FadeTransition).first,
+        find.byKey(const Key('success_check_fade')),
       );
       expect(midway.opacity.value, lessThan(1.0));
 
       await tester.pumpAndSettle();
       final FadeTransition done = tester.widget<FadeTransition>(
-        find.byType(FadeTransition).first,
+        find.byKey(const Key('success_check_fade')),
       );
       expect(done.opacity.value, 1.0);
     });

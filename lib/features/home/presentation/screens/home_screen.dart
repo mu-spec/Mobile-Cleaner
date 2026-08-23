@@ -67,7 +67,7 @@ class HomeScreen extends ConsumerWidget {
             refreshRecommendations(ref);
             await ref.read(storageOverviewProvider.future);
           },
-          child: ListView(
+          child: SingleChildScrollView(
             key: const Key('home_dashboard'),
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(
@@ -76,31 +76,34 @@ class HomeScreen extends ConsumerWidget {
               AppSpacing.md,
               AppSpacing.xl,
             ),
-            children: <Widget>[
-              const StorageOverviewCard(),
-              const SizedBox(height: HomeMetrics.sectionGap),
-              SmartScanCta(onScan: () => context.go(AppRoutes.clean)),
-              const SizedBox(height: HomeMetrics.sectionGap),
-              QuickToolsSection(
-                onPhotos: () => context.go(AppRoutes.photos),
-                onFiles: () => context.push(AppRoutes.largeFiles),
-                onApps: () => context.go(AppRoutes.apps),
-                onPermissions: () => context.push(AppRoutes.permissions),
-              ),
-              const SizedBox(height: HomeMetrics.sectionGap),
-              const AppSectionHeader(title: 'Cleanup Summary'),
-              CleanupHistoryCard(
-                onOpen: () => context.push(AppRoutes.history),
-              ),
-              const SizedBox(height: HomeMetrics.sectionGap),
-              // Preserved from the existing Home feature. It remains based
-              // entirely on real scan findings and opens existing tools.
-              RecommendationsCard(
-                onScan: () => context.go(AppRoutes.clean),
-                onOpen: (RecommendationKind kind) =>
-                    _openRecommendation(context, kind),
-              ),
-            ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                const StorageOverviewCard(),
+                const SizedBox(height: HomeMetrics.sectionGap),
+                SmartScanCta(onScan: () => context.go(AppRoutes.clean)),
+                const SizedBox(height: HomeMetrics.sectionGap),
+                QuickToolsSection(
+                  onPhotos: () => context.go(AppRoutes.photos),
+                  onFiles: () => context.push(AppRoutes.largeFiles),
+                  onApps: () => context.go(AppRoutes.apps),
+                  onPermissions: () => context.push(AppRoutes.permissions),
+                ),
+                const SizedBox(height: HomeMetrics.sectionGap),
+                const AppSectionHeader(title: 'Cleanup Summary'),
+                CleanupHistoryCard(
+                  onOpen: () => context.push(AppRoutes.history),
+                ),
+                const SizedBox(height: HomeMetrics.sectionGap),
+                // Preserved from the existing Home feature. It remains based
+                // entirely on real scan findings and opens existing tools.
+                RecommendationsCard(
+                  onScan: () => context.go(AppRoutes.clean),
+                  onOpen: (RecommendationKind kind) =>
+                      _openRecommendation(context, kind),
+                ),
+              ],
+            ),
           ),
         ),
       ),
