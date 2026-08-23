@@ -7,13 +7,13 @@ import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 /// without introducing a second spacing system.
 abstract final class HomeMetrics {
   /// Gap between a section heading and its content.
-  static const double headingGap = AppSpacing.sm;
+  static const double headingGap = AppSpacing.xs;
 
   /// Gap between rows or tiles inside one section.
-  static const double rowGap = AppSpacing.sm;
+  static const double rowGap = AppSpacing.xs;
 
   /// Gap between major sections.
-  static const double sectionGap = AppSpacing.lg;
+  static const double sectionGap = AppSpacing.md;
 
   /// Padding inside a card.
   static const EdgeInsets cardPadding = AppSpacing.card;

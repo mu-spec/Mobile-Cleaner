@@ -7,8 +7,8 @@ import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 /// The Smart Scan hero: the strongest action card on Home.
 ///
 /// One deep-blue card so there is never a question about what to do first.
-/// The left side names the feature, explains it in one line, and carries the
-/// compact white CTA; the right side is a quiet scanner motif built from
+/// The left side names the feature, explains it in two short lines, and
+/// carries the compact white CTA; the right side is a scanner motif built from
 /// plain shapes — decoration only, no fake progress, no animation.
 ///
 /// The privacy line sits directly under the card rather than in Settings or
@@ -47,7 +47,7 @@ class SmartScanCta extends StatelessWidget {
                 key: const Key('smart_scan_hero'),
                 onTap: onScan,
                 child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   child: LayoutBuilder(
                     builder: (BuildContext context, BoxConstraints constraints) {
                       final double textScale = MediaQuery.textScalerOf(
@@ -56,7 +56,7 @@ class SmartScanCta extends StatelessWidget {
                       // Decoration yields to content on narrow layouts and at
                       // accessibility text sizes.
                       final bool showMotif =
-                          constraints.maxWidth >= 340 && textScale <= 1.3;
+                          constraints.maxWidth >= 280 && textScale <= 1.3;
 
                       return Row(
                         children: <Widget>[
@@ -65,7 +65,8 @@ class SmartScanCta extends StatelessWidget {
                             const SizedBox(width: AppSpacing.sm),
                             const ExcludeSemantics(
                               child: SizedBox.square(
-                                dimension: 92,
+                                key: Key('smart_scan_artwork'),
+                                dimension: 80,
                                 child: CustomPaint(
                                   painter: _ScannerMotifPainter(),
                                 ),
@@ -81,23 +82,24 @@ class SmartScanCta extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xxs),
         // The subtle trust cue, deliberately not visually dominant.
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Icon(
-              Icons.lock_outline_rounded,
-              size: 14,
+              Icons.shield_outlined,
+              size: 13,
               color: colors.onSurfaceVariant,
             ),
-            const SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: AppSpacing.xxs),
             Flexible(
               child: Text(
                 'Files stay on your device.',
                 key: const Key('smart_scan_privacy_note'),
                 maxLines: 2,
                 style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 11,
                   color: colors.onSurfaceVariant,
                 ),
               ),
@@ -127,7 +129,7 @@ class _HeroCopy extends StatelessWidget {
           children: <Widget>[
             const Icon(
               Icons.auto_awesome_rounded,
-              size: 18,
+              size: 16,
               color: Colors.white,
             ),
             const SizedBox(width: AppSpacing.xs),
@@ -145,23 +147,23 @@ class _HeroCopy extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xxs),
         Text(
-          'Find and clean junk files to free up space.',
+          'Find and clean junk files\nto free up space.',
           style: theme.textTheme.bodySmall?.copyWith(
             color: Colors.white.withValues(alpha: 0.85),
             height: 1.35,
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
         FilledButton.icon(
           key: const Key('smart_scan_button'),
           onPressed: onScan,
           style: FilledButton.styleFrom(
             backgroundColor: Colors.white,
             foregroundColor: AppColors.primaryDeep,
-            minimumSize: const Size(0, 44),
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            minimumSize: const Size(0, 40),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             textStyle: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
@@ -170,7 +172,7 @@ class _HeroCopy extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppRadius.tile),
             ),
           ),
-          icon: const Icon(Icons.search_rounded, size: 18),
+          icon: const Icon(Icons.search_rounded, size: 17),
           label: const Text('Scan Now'),
         ),
       ],
@@ -188,45 +190,69 @@ class _ScannerMotifPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final Offset center = size.center(Offset.zero);
     final double radius = math.min(size.width, size.height) / 2;
+    const Color cyan = Color(0xFF67D8FF);
+
+    // A quiet field gives the motif enough presence without reading as a
+    // progress indicator or a glow effect.
+    canvas.drawCircle(
+      center,
+      radius * 0.94,
+      Paint()..color = cyan.withValues(alpha: 0.06),
+    );
 
     final Paint ring = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
-
-    for (final (double factor, double alpha) in <(double, double)>[
-      (0.34, 0.30),
-      (0.62, 0.20),
-      (0.92, 0.12),
+      ..strokeWidth = 1.3;
+    for (final (double factor, Color color) in <(double, Color)>[
+      (0.30, cyan.withValues(alpha: 0.52)),
+      (0.55, Colors.white.withValues(alpha: 0.28)),
+      (0.78, cyan.withValues(alpha: 0.30)),
+      (0.96, Colors.white.withValues(alpha: 0.16)),
     ]) {
-      ring.color = Colors.white.withValues(alpha: alpha);
+      ring.color = color;
       canvas.drawCircle(center, radius * factor, ring);
     }
 
-    // One thin radial line, as if mid-sweep.
-    const double angle = -math.pi / 3.2;
+    // A short orange arc echoes cleanup/recoverable storage without implying
+    // any measured scan progress.
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius * 0.78),
+      math.pi * 0.08,
+      math.pi * 0.34,
+      false,
+      Paint()
+        ..color = AppColors.accentOrange.withValues(alpha: 0.92)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..strokeCap = StrokeCap.round,
+    );
+
+    const double angle = -math.pi / 3.1;
     final Offset tip = center +
         Offset(math.cos(angle), math.sin(angle)) * (radius * 0.92);
     canvas.drawLine(
       center,
       tip,
       Paint()
-        ..color = Colors.white.withValues(alpha: 0.38)
-        ..strokeWidth = 1.4
+        ..color = cyan.withValues(alpha: 0.78)
+        ..strokeWidth = 1.5
         ..strokeCap = StrokeCap.round,
     );
 
-    // A few highlight points on the rings.
-    final Paint dot = Paint()..color = Colors.white.withValues(alpha: 0.85);
-    canvas.drawCircle(center, 3, dot);
-    for (final (double factor, double dotAngle, double dotRadius)
-        in <(double, double, double)>[
-      (0.62, -math.pi / 3.2, 2.6),
-      (0.92, math.pi / 7, 2.2),
-      (0.34, math.pi * 0.78, 1.8),
+    final Paint whiteDot = Paint()
+      ..color = Colors.white.withValues(alpha: 0.92);
+    final Paint cyanDot = Paint()..color = cyan.withValues(alpha: 0.92);
+    canvas.drawCircle(center, 2.8, whiteDot);
+    for (final (double factor, double dotAngle, double dotRadius, Paint paint)
+        in <(double, double, double, Paint)>[
+      (0.55, angle, 2.5, cyanDot),
+      (0.96, math.pi / 6, 2.0, whiteDot),
+      (0.78, math.pi * 0.77, 1.7, cyanDot),
+      (0.30, math.pi * 1.25, 1.5, whiteDot),
     ]) {
       final Offset position = center +
           Offset(math.cos(dotAngle), math.sin(dotAngle)) * (radius * factor);
-      canvas.drawCircle(position, dotRadius, dot);
+      canvas.drawCircle(position, dotRadius, paint);
     }
   }
 

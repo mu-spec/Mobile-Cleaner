@@ -40,8 +40,8 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final double textScale = MediaQuery.textScalerOf(context).scale(1);
-    final double headerHeight = (64 + (textScale - 1) * AppSpacing.xxl)
-        .clamp(64.0, 112.0)
+    final double headerHeight = (58 + (textScale - 1) * 40)
+        .clamp(58.0, 112.0)
         .toDouble();
 
     return Scaffold(
@@ -130,7 +130,7 @@ class _HomeHeaderTitle extends StatelessWidget {
             letterSpacing: -0.2,
           ),
         ),
-        const SizedBox(height: AppSpacing.xxs),
+        const SizedBox(height: 2),
         Text(
           'Clean more. Save more. Do more.',
           maxLines: 2,
@@ -168,29 +168,34 @@ class _HeaderIconButton extends StatelessWidget {
         button: true,
         label: tooltip,
         child: Material(
-          color: isDark
-              ? theme.colorScheme.surfaceContainerHigh
-              : Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.tile),
+          color: Colors.transparent,
           child: InkWell(
             key: buttonKey,
             onTap: onTap,
             borderRadius: BorderRadius.circular(AppRadius.tile),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.tile),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : AppColors.border,
+            child: SizedBox.square(
+              dimension: 48,
+              child: Center(
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? theme.colorScheme.surfaceContainerHigh
+                        : Colors.white,
+                    borderRadius: BorderRadius.circular(AppRadius.tile),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : AppColors.border,
+                    ),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 19,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),

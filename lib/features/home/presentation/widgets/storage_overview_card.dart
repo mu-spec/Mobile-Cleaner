@@ -36,6 +36,8 @@ class StorageOverviewCard extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
 
     return AppCard(
+      cardKey: const Key('storage_overview_card'),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -46,7 +48,7 @@ class StorageOverviewCard extends ConsumerWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.xs),
           storage.when(
             loading: () => const _LoadingStorage(),
             error: (Object error, StackTrace stackTrace) => _StorageError(
@@ -91,7 +93,7 @@ class _StorageDetails extends StatelessWidget {
                         '${info.usedPercentage}%',
                         key: const Key('storage_percentage'),
                         style: theme.textTheme.displaySmall?.copyWith(
-                          fontSize: 44,
+                          fontSize: 40,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -1,
                           color: colors.primary,
@@ -99,7 +101,7 @@ class _StorageDetails extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xxs),
+                    const SizedBox(height: 2),
                     Text(
                       'Used',
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -115,15 +117,15 @@ class _StorageDetails extends StatelessWidget {
             _StorageRing(info: info),
           ],
         ),
-        const SizedBox(height: AppSpacing.md),
-        const Divider(height: 1),
         const SizedBox(height: AppSpacing.sm),
+        const Divider(height: 1),
+        const SizedBox(height: AppSpacing.xs),
         Row(
           key: const Key('total_storage'),
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.xxs),
+              padding: const EdgeInsets.only(top: 2),
               child: Icon(
                 Icons.storage_rounded,
                 size: 16,
@@ -167,7 +169,7 @@ class _StorageDetails extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.xxs),
+                  const SizedBox(height: 2),
                   Text(
                     'Internal storage',
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -195,7 +197,7 @@ class _StorageRing extends StatelessWidget {
 
   final StorageInfo info;
 
-  static const double _size = 118;
+  static const double _size = 94;
 
   @override
   Widget build(BuildContext context) {
@@ -219,7 +221,7 @@ class _StorageRing extends StatelessWidget {
           ),
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Column(
@@ -233,11 +235,11 @@ class _StorageRing extends StatelessWidget {
                         letterSpacing: -0.2,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xxs),
+                    const SizedBox(height: 2),
                     Text(
                       'Available',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 11,
+                        fontSize: 10,
                         color: colors.onSurfaceVariant,
                       ),
                     ),
@@ -265,7 +267,7 @@ class _StorageRingPainter extends CustomPainter {
   final Color accentColor;
   final Color trackColor;
 
-  static const double _stroke = 11;
+  static const double _stroke = 9;
   static const double _startAngle = -math.pi / 2;
 
   @override
@@ -323,7 +325,7 @@ class _LoadingStorage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const SizedBox(
-      height: 220,
+      height: 150,
       child: Center(child: CircularProgressIndicator()),
     );
   }
@@ -337,13 +339,13 @@ class _StorageError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 220,
+      height: 160,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Icon(
             Icons.storage_rounded,
-            size: 44,
+            size: 36,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: AppSpacing.sm),

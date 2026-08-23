@@ -58,7 +58,7 @@ class AppSectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(
         left: AppSpacing.xxs,
-        bottom: AppSpacing.sm,
+        bottom: AppSpacing.xs,
       ),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {

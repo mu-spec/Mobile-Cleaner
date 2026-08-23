@@ -6,10 +6,9 @@ import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.d
 
 /// Four compact shortcuts to existing features.
 ///
-/// Normal phone widths use a 2×2 tile layout. Narrow screens and large system
-/// text switch to compact full-width rows so labels can grow without clipping
-/// or overflowing. The destinations themselves are supplied by Home and are
-/// unchanged.
+/// A normal phone shows all four in one row. Narrow layouts move to two
+/// columns, while large system text uses full-width rows so no label clips.
+/// Destinations are supplied by Home and remain unchanged.
 class QuickToolsSection extends StatelessWidget {
   const QuickToolsSection({
     required this.onPhotos,
@@ -72,11 +71,22 @@ class QuickToolsSection extends StatelessWidget {
         ),
         LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
-            final bool useGrid =
-                constraints.maxWidth >= 320 && textScale <= 1.3;
-            final double itemWidth = useGrid
-                ? (constraints.maxWidth - HomeMetrics.rowGap) / 2
-                : constraints.maxWidth;
+            final _QuickToolLayout layout;
+            final int columns;
+            if (constraints.maxWidth >= 360 && textScale <= 1.2) {
+              layout = _QuickToolLayout.fourAcross;
+              columns = 4;
+            } else if (constraints.maxWidth >= 280 && textScale <= 1.35) {
+              layout = _QuickToolLayout.grid;
+              columns = 2;
+            } else {
+              layout = _QuickToolLayout.row;
+              columns = 1;
+            }
+
+            final double itemWidth =
+                (constraints.maxWidth - HomeMetrics.rowGap * (columns - 1)) /
+                columns;
 
             return Wrap(
               spacing: HomeMetrics.rowGap,
@@ -85,10 +95,7 @@ class QuickToolsSection extends StatelessWidget {
                 for (final _QuickToolData tool in tools)
                   SizedBox(
                     width: itemWidth,
-                    child: _QuickToolTile(
-                      data: tool,
-                      horizontal: !useGrid,
-                    ),
+                    child: _QuickToolTile(data: tool, layout: layout),
                   ),
               ],
             );
@@ -98,6 +105,8 @@ class QuickToolsSection extends StatelessWidget {
     );
   }
 }
+
+enum _QuickToolLayout { fourAcross, grid, row }
 
 class _QuickToolData {
   const _QuickToolData({
@@ -118,31 +127,46 @@ class _QuickToolData {
 }
 
 class _QuickToolTile extends StatelessWidget {
-  const _QuickToolTile({required this.data, required this.horizontal});
+  const _QuickToolTile({required this.data, required this.layout});
 
   final _QuickToolData data;
-  final bool horizontal;
+  final _QuickToolLayout layout;
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool fourAcross = layout == _QuickToolLayout.fourAcross;
+    final bool fullRow = layout == _QuickToolLayout.row;
+
     final Widget copy = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: fourAcross
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Text(
           data.title,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: fourAcross ? TextAlign.center : TextAlign.start,
+          style: (fourAcross
+                  ? theme.textTheme.labelMedium
+                  : theme.textTheme.bodySmall)
+              ?.copyWith(fontWeight: FontWeight.w700, height: 1.15),
         ),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(
-          data.subtitle,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            height: 1.3,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        if (!fourAcross) ...<Widget>[
+          const SizedBox(height: 2),
+          Text(
+            data.subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 10,
+              height: 1.2,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
+        ],
       ],
     );
 
@@ -152,42 +176,42 @@ class _QuickToolTile extends StatelessWidget {
         key: data.key,
         onTap: data.onTap,
         child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: horizontal ? 72 : 122,
-          ),
+          constraints: BoxConstraints(minHeight: fourAcross ? 92 : 72),
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: horizontal
-                ? Row(
+            padding: EdgeInsets.all(fourAcross ? AppSpacing.xs : 10),
+            child: fourAcross
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       AppIconContainer(
                         icon: data.icon,
                         accent: data.tint,
-                        size: 40,
-                        iconSize: 20,
+                        size: 32,
+                        iconSize: 17,
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(child: copy),
-                      const SizedBox(width: AppSpacing.xs),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      const SizedBox(height: 6),
+                      copy,
                     ],
                   )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
+                : Row(
                     children: <Widget>[
                       AppIconContainer(
                         icon: data.icon,
                         accent: data.tint,
-                        size: 36,
-                        iconSize: 19,
+                        size: 34,
+                        iconSize: 18,
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      copy,
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(child: copy),
+                      if (fullRow) ...<Widget>[
+                        const SizedBox(width: AppSpacing.xxs),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ],
                     ],
                   ),
           ),
