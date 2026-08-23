@@ -127,6 +127,19 @@ class _PhotoDuplicatesScreenState
           const SizedBox(width: 8),
         ],
       ),
+      bottomNavigationBar: selecting
+          ? SelectionActionBar(
+              selection: _selection,
+              onClear: _clearSelection,
+              onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
+              barKey: const Key('photo_duplicates_selection_bar'),
+              countKey: const Key('photo_duplicates_selection_count'),
+              bytesKey: const Key('photo_duplicates_selection_bytes'),
+              clearKey: const Key('photo_duplicates_selection_clear'),
+              deleteKey: const Key('photo_duplicates_selection_delete'),
+            )
+          : null,
       body: SafeArea(
         child: duplicates.when(
           loading: () => const _ComparingView(),
@@ -156,20 +169,6 @@ class _PhotoDuplicatesScreenState
                         ),
                 ),
               ),
-              // In the body Column, below the Expanded list, never in
-              // Scaffold.bottomNavigationBar.
-              if (selecting)
-                SelectionActionBar(
-                  selection: _selection,
-                  onClear: _clearSelection,
-                  onDelete: _deleteSelected,
-                  deletableCount: _selection.deletableCount,
-                  barKey: const Key('photo_duplicates_selection_bar'),
-                  countKey: const Key('photo_duplicates_selection_count'),
-                  bytesKey: const Key('photo_duplicates_selection_bytes'),
-                  clearKey: const Key('photo_duplicates_selection_clear'),
-                  deleteKey: const Key('photo_duplicates_selection_delete'),
-                ),
             ],
           ),
         ),

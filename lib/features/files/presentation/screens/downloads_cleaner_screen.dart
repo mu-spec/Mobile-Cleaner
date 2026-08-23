@@ -123,6 +123,19 @@ class _DownloadsCleanerScreenState
           const SizedBox(width: 8),
         ],
       ),
+      bottomNavigationBar: selecting
+          ? SelectionActionBar(
+              selection: _selection,
+              onClear: _clearSelection,
+              onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
+              barKey: const Key('downloads_selection_bar'),
+              countKey: const Key('selection_count'),
+              bytesKey: const Key('selection_bytes'),
+              clearKey: const Key('selection_clear'),
+              deleteKey: const Key('selection_delete'),
+            )
+          : null,
       body: SafeArea(
         child: summary.when(
           loading: () => const FilesScanningView(),
@@ -154,20 +167,6 @@ class _DownloadsCleanerScreenState
                           ),
                   ),
                 ),
-                // In the body, below the Expanded list, so it shares the
-                // Column rather than competing for the Scaffold's bottom slot.
-                if (selecting)
-                  SelectionActionBar(
-                    selection: _selection,
-                    onClear: _clearSelection,
-                    onDelete: _deleteSelected,
-                    deletableCount: _selection.deletableCount,
-                    barKey: const Key('downloads_selection_bar'),
-                    countKey: const Key('selection_count'),
-                    bytesKey: const Key('selection_bytes'),
-                    clearKey: const Key('selection_clear'),
-                    deleteKey: const Key('selection_delete'),
-                  ),
               ],
             );
           },

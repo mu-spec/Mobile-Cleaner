@@ -181,6 +181,19 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
           ],
         ],
       ),
+      bottomNavigationBar: _selection.isNotEmpty
+          ? SelectionActionBar(
+              selection: _selection,
+              onClear: _clearSelection,
+              onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
+              barKey: const Key('category_selection_bar'),
+              countKey: const Key('category_selection_count'),
+              bytesKey: const Key('category_selection_bytes'),
+              clearKey: const Key('category_selection_clear'),
+              deleteKey: const Key('category_selection_delete'),
+            )
+          : null,
       body: SafeArea(
         child: files.when(
           loading: () => const FilesScanningView(),
@@ -270,21 +283,6 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
                       },
                     ),
                   ),
-                  // In the body, below the Expanded list, so it shares the
-                  // Column rather than competing for the Scaffold's bottom
-                  // slot.
-                  if (_selection.isNotEmpty)
-                    SelectionActionBar(
-                      selection: _selection,
-                      onClear: _clearSelection,
-                      onDelete: _deleteSelected,
-                      deletableCount: _selection.deletableCount,
-                      barKey: const Key('category_selection_bar'),
-                      countKey: const Key('category_selection_count'),
-                      bytesKey: const Key('category_selection_bytes'),
-                      clearKey: const Key('category_selection_clear'),
-                      deleteKey: const Key('category_selection_delete'),
-                    ),
                 ],
               ),
             );

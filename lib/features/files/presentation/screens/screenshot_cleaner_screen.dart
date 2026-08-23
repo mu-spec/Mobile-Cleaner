@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/core/ui/responsive.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
@@ -121,6 +120,19 @@ class _ScreenshotCleanerScreenState
           const SizedBox(width: 8),
         ],
       ),
+      bottomNavigationBar: selecting
+          ? SelectionActionBar(
+              selection: _selection,
+              onClear: _clearSelection,
+              onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
+              barKey: const Key('screenshot_selection_bar'),
+              countKey: const Key('screenshot_selection_count'),
+              bytesKey: const Key('screenshot_selection_bytes'),
+              clearKey: const Key('screenshot_selection_clear'),
+              deleteKey: const Key('screenshot_selection_delete'),
+            )
+          : null,
       body: SafeArea(
         child: summary.when(
           loading: () => const FilesScanningView(),
@@ -151,20 +163,6 @@ class _ScreenshotCleanerScreenState
                         ),
                 ),
               ),
-              // In the body, below the Expanded list, so it shares the Column
-              // rather than competing for the Scaffold's bottom slot.
-              if (selecting)
-                SelectionActionBar(
-                  selection: _selection,
-                  onClear: _clearSelection,
-                  onDelete: _deleteSelected,
-                  deletableCount: _selection.deletableCount,
-                  barKey: const Key('screenshot_selection_bar'),
-                  countKey: const Key('screenshot_selection_count'),
-                  bytesKey: const Key('screenshot_selection_bytes'),
-                  clearKey: const Key('screenshot_selection_clear'),
-                  deleteKey: const Key('screenshot_selection_delete'),
-                ),
             ],
           ),
         ),
@@ -182,33 +180,44 @@ class _GroupBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Horizontally scrollable: three chips can overflow a narrow phone.
-    return SizedBox(
-      // Grows with the user's text scale so chip labels are never clipped.
-      height: Responsive.chipBarHeight(context),
-      // There are only three options. A SingleChildScrollView keeps every
-      // chip mounted while still allowing horizontal scrolling on narrow
-      // phones; a lazy horizontal ListView could dispose the 90-day chip.
-      child: SingleChildScrollView(
-        key: const Key('screenshot_group_bar'),
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            for (final ScreenshotGroup option in ScreenshotGroup.values)
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  key: Key('screenshot_group_${option.name}'),
-                  label: Text(option.label),
-                  selected: option == selected,
-                  onSelected: (_) => onSelected(option),
-                  visualDensity: VisualDensity.compact,
+    final double textScale = MediaQuery.textScalerOf(context).scale(1);
+
+    return Padding(
+      key: const Key('screenshot_group_bar'),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final int columns =
+              constraints.maxWidth >= 360 && textScale <= 1.3 ? 3 : 2;
+          const double gap = 8;
+          final double chipWidth =
+              (constraints.maxWidth - gap * (columns - 1)) / columns;
+
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: <Widget>[
+              for (final ScreenshotGroup option in ScreenshotGroup.values)
+                SizedBox(
+                  width: chipWidth,
+                  child: ChoiceChip(
+                    key: Key('screenshot_group_${option.name}'),
+                    label: SizedBox(
+                      width: double.infinity,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(option.label, maxLines: 1),
+                      ),
+                    ),
+                    selected: option == selected,
+                    onSelected: (_) => onSelected(option),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
-              ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
   }

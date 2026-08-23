@@ -32,30 +32,41 @@ class RecommendationsCard extends ConsumerWidget {
       recommendationsProvider,
     );
 
-    return advice.when(
-      // Home must stay usable while scans run, so loading and failure both
-      // fall back to the plain card rather than a spinner or an error.
-      loading: () => _IdleCard(
-        onScan: onScan,
-        message: 'Checking your storage for cleanup suggestions…',
-        showAction: false,
-      ),
-      error: (Object error, StackTrace stackTrace) => _IdleCard(
-        onScan: onScan,
-        message: 'Run Smart Scan to get safe, personalized cleanup '
-            'suggestions.',
-      ),
-      data: (List<Recommendation> found) {
-        if (found.isEmpty) {
-          return _IdleCard(
+    // The section identity is stable across loading, empty, error, and data
+    // states. No recommendations are fabricated when [found] is empty; only
+    // the established section container remains present.
+    return Column(
+      key: const Key('recommendations_section'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        advice.when(
+          // Home must stay usable while scans run, so loading and failure both
+          // fall back to the plain card rather than a spinner or an error.
+          loading: () => _IdleCard(
             onScan: onScan,
-            message: 'Nothing needs attention right now. Your storage looks '
-                'tidy.',
-            icon: Icons.check_circle_outline_rounded,
-          );
-        }
-        return _AdviceCard(recommendations: found, onOpen: onOpen);
-      },
+            message: 'Checking your storage for cleanup suggestions…',
+            showAction: false,
+          ),
+          error: (Object error, StackTrace stackTrace) => _IdleCard(
+            onScan: onScan,
+            message: 'Run Smart Scan to get safe, personalized cleanup '
+                'suggestions.',
+          ),
+          data: (List<Recommendation> found) {
+            if (found.isEmpty) {
+              return _IdleCard(
+                onScan: onScan,
+                message:
+                    'Nothing needs attention right now. Your storage looks '
+                    'tidy.',
+                icon: Icons.check_circle_outline_rounded,
+              );
+            }
+            return _AdviceCard(recommendations: found, onOpen: onOpen);
+          },
+        ),
+      ],
     );
   }
 }
@@ -71,7 +82,6 @@ class _AdviceCard extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
 
     return Column(
-      key: const Key('recommendations_section'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Padding(
@@ -257,7 +267,6 @@ class _IdleCard extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
 
     return Card(
-      key: const Key('recommendations_section'),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
@@ -276,7 +285,8 @@ class _IdleCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'Recommendations',
+                    'Recommended for you',
+                    key: const Key('recommendations_title'),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),

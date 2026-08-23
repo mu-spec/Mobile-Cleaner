@@ -145,6 +145,19 @@ class _SimilarPhotosScreenState extends ConsumerState<SimilarPhotosScreen> {
           const SizedBox(width: 8),
         ],
       ),
+      bottomNavigationBar: selecting
+          ? SelectionActionBar(
+              selection: _selection,
+              onClear: _clearSelection,
+              onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
+              barKey: const Key('similar_photos_selection_bar'),
+              countKey: const Key('similar_photos_selection_count'),
+              bytesKey: const Key('similar_photos_selection_bytes'),
+              clearKey: const Key('similar_photos_selection_clear'),
+              deleteKey: const Key('similar_photos_selection_delete'),
+            )
+          : null,
       body: SafeArea(
         child: similar.when(
           loading: () => const _AnalyzingView(),
@@ -175,20 +188,6 @@ class _SimilarPhotosScreenState extends ConsumerState<SimilarPhotosScreen> {
                         ),
                 ),
               ),
-              // In the body Column, below the Expanded list, never in
-              // Scaffold.bottomNavigationBar.
-              if (selecting)
-                SelectionActionBar(
-                  selection: _selection,
-                  onClear: _clearSelection,
-                  onDelete: _deleteSelected,
-                  deletableCount: _selection.deletableCount,
-                  barKey: const Key('similar_photos_selection_bar'),
-                  countKey: const Key('similar_photos_selection_count'),
-                  bytesKey: const Key('similar_photos_selection_bytes'),
-                  clearKey: const Key('similar_photos_selection_clear'),
-                  deleteKey: const Key('similar_photos_selection_delete'),
-                ),
             ],
           ),
         ),

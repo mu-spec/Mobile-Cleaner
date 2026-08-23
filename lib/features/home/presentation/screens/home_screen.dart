@@ -72,7 +72,7 @@ class HomeScreen extends ConsumerWidget {
             // Home is a short dashboard rather than an unbounded feed. Keep
             // its lower cards mounted when responsive sections grow, so the
             // dashboard remains stable as the user scrolls between them.
-            cacheExtent: 2000,
+            scrollCacheExtent: 2000,
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,

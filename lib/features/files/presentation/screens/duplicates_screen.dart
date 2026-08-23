@@ -96,6 +96,19 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
           const SizedBox(width: 8),
         ],
       ),
+      bottomNavigationBar: selecting
+          ? SelectionActionBar(
+              selection: _selection,
+              onClear: _clearSelection,
+              onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
+              barKey: const Key('duplicates_selection_bar'),
+              countKey: const Key('duplicates_selection_count'),
+              bytesKey: const Key('duplicates_selection_bytes'),
+              clearKey: const Key('duplicates_selection_clear'),
+              deleteKey: const Key('duplicates_selection_delete'),
+            )
+          : null,
       body: SafeArea(
         child: duplicates.when(
           loading: () => const _HashingView(),
@@ -122,18 +135,6 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
                         ),
                 ),
               ),
-              if (selecting)
-                SelectionActionBar(
-                  selection: _selection,
-                  onClear: _clearSelection,
-                  onDelete: _deleteSelected,
-                  deletableCount: _selection.deletableCount,
-                  barKey: const Key('duplicates_selection_bar'),
-                  countKey: const Key('duplicates_selection_count'),
-                  bytesKey: const Key('duplicates_selection_bytes'),
-                  clearKey: const Key('duplicates_selection_clear'),
-                  deleteKey: const Key('duplicates_selection_delete'),
-                ),
             ],
           ),
         ),

@@ -32,13 +32,15 @@ Future<void> _pump(
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
   await tester.pumpWidget(
-    MediaQuery(
-      data: MediaQueryData(
-        size: size,
-        textScaler: TextScaler.linear(textScale),
-        disableAnimations: disableAnimations,
+    MaterialApp(
+      home: MediaQuery(
+        data: MediaQueryData(
+          size: size,
+          textScaler: TextScaler.linear(textScale),
+          disableAnimations: disableAnimations,
+        ),
+        child: Scaffold(body: child),
       ),
-      child: MaterialApp(home: Scaffold(body: child)),
     ),
   );
   await tester.pumpAndSettle();
@@ -123,7 +125,12 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: SuccessCheck())),
+        const MaterialApp(
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: false),
+            child: Scaffold(body: SuccessCheck()),
+          ),
+        ),
       );
       await tester.pump();
 
@@ -158,8 +165,20 @@ void main() {
 
       expect(find.byKey(const Key('demo_empty')), findsOneWidget);
       expect(find.text('All clear'), findsOneWidget);
-      // The icon is excluded, so a screen reader reads the words, not "image".
-      expect(find.byType(ExcludeSemantics), findsOneWidget);
+      // Target this EmptyState's icon rather than framework-level semantics
+      // wrappers that MaterialApp may legitimately add.
+      final Finder semantics = find.byKey(
+        const Key('empty_state_icon_semantics'),
+      );
+      expect(semantics, findsOneWidget);
+      expect(tester.widget<ExcludeSemantics>(semantics).excluding, isTrue);
+      expect(
+        find.descendant(
+          of: semantics,
+          matching: find.byIcon(Icons.check_circle_outline_rounded),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('survives a large text scale on a short screen', (

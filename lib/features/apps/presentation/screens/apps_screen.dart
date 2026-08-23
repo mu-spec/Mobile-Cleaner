@@ -378,45 +378,11 @@ class _AppRow extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            // Scrollable: three labelled actions overflow a narrow phone.
-            // They are a tiny fixed set, so keep all actions mounted inside a
-            // SingleChildScrollView rather than lazily dropping off-screen
-            // buttons from the widget tree.
-            SizedBox(
-              height: 44,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: SingleChildScrollView(
-                  key: Key('app_actions_${app.packageName}'),
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      _ActionButton(
-                        actionKey: Key('app_open_${app.packageName}'),
-                        icon: Icons.launch_rounded,
-                        label: 'Open',
-                        onPressed: app.canOpen ? onOpen : null,
-                      ),
-                      _ActionButton(
-                        actionKey: Key('app_settings_${app.packageName}'),
-                        icon: Icons.settings_outlined,
-                        label: 'App Settings',
-                        onPressed: onSettings,
-                      ),
-                      _ActionButton(
-                        actionKey: Key('app_uninstall_${app.packageName}'),
-                        icon: Icons.delete_outline_rounded,
-                        label: 'Uninstall',
-                        // Android refuses for system apps; say so up front
-                        // rather than opening a dialog that will fail.
-                        onPressed: app.isSystemApp ? null : onUninstall,
-                        destructive: true,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+            _AppActions(
+              app: app,
+              onOpen: onOpen,
+              onSettings: onSettings,
+              onUninstall: onUninstall,
             ),
           ],
         ),
@@ -456,7 +422,79 @@ class _AppRow extends StatelessWidget {
   }
 }
 
-/// One action. Height-constrained only, never width.
+/// The three existing app actions, kept inside the card at every width.
+class _AppActions extends StatelessWidget {
+  const _AppActions({
+    required this.app,
+    required this.onOpen,
+    required this.onSettings,
+    required this.onUninstall,
+  });
+
+  final InstalledApp app;
+  final VoidCallback onOpen;
+  final VoidCallback onSettings;
+  final VoidCallback onUninstall;
+
+  @override
+  Widget build(BuildContext context) {
+    final double textScale = MediaQuery.textScalerOf(context).scale(1);
+
+    Widget open() => _ActionButton(
+      actionKey: Key('app_open_${app.packageName}'),
+      icon: Icons.launch_rounded,
+      label: 'Open',
+      onPressed: app.canOpen ? onOpen : null,
+    );
+    Widget settings() => _ActionButton(
+      actionKey: Key('app_settings_${app.packageName}'),
+      icon: Icons.settings_outlined,
+      label: 'App Settings',
+      onPressed: onSettings,
+    );
+    Widget uninstall() => _ActionButton(
+      actionKey: Key('app_uninstall_${app.packageName}'),
+      icon: Icons.delete_outline_rounded,
+      label: 'Uninstall',
+      // Android refuses for system apps; disable the handoff up front.
+      onPressed: app.isSystemApp ? null : onUninstall,
+      destructive: true,
+    );
+
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final bool stacked =
+            constraints.maxWidth < 320 || textScale > 1.3;
+        if (stacked) {
+          return Column(
+            key: Key('app_actions_${app.packageName}'),
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(child: open()),
+                  Expanded(child: settings()),
+                ],
+              ),
+              const SizedBox(height: 4),
+              SizedBox(width: double.infinity, child: uninstall()),
+            ],
+          );
+        }
+        return Row(
+          key: Key('app_actions_${app.packageName}'),
+          children: <Widget>[
+            Expanded(child: open()),
+            Expanded(child: settings()),
+            Expanded(child: uninstall()),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// One action constrained by its responsive action-cell width.
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.actionKey,
@@ -477,18 +515,22 @@ class _ActionButton extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.only(left: 6),
-      child: TextButton.icon(
-        key: actionKey,
-        onPressed: onPressed,
-        icon: Icon(icon, size: 17),
-        label: Text(label),
-        style: TextButton.styleFrom(
-          foregroundColor: destructive ? colors.error : colors.primary,
-          // Height only. A minimum width here could force an infinite width
-          // inside a horizontal list.
-          minimumSize: const Size(0, 36),
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: SizedBox(
+        width: double.infinity,
+        child: TextButton.icon(
+          key: actionKey,
+          onPressed: onPressed,
+          icon: Icon(icon, size: 17),
+          label: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(label, maxLines: 1),
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: destructive ? colors.error : colors.primary,
+            minimumSize: const Size(0, 40),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+          ),
         ),
       ),
     );

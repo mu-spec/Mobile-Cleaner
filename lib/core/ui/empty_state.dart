@@ -47,6 +47,7 @@ class EmptyState extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(32, 60, 32, 32),
       children: <Widget>[
         ExcludeSemantics(
+          key: const Key('empty_state_icon_semantics'),
           child: Icon(icon, size: 56, color: colors.primary),
         ),
         const SizedBox(height: 16),

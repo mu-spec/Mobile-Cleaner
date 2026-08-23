@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 
-/// Bottom action bar shown whenever files are selected in a cleaner.
+/// Persistent bottom action bar shown while files are selected.
 ///
-/// The bar belongs directly below the screen's Expanded list. At normal
-/// widths it is one compact row. Narrow screens and large system text use a
-/// two-row layout so the summary and actions never compete for the same
-/// horizontal space.
+/// Cleaner screens place this shared component in Scaffold.bottomNavigationBar
+/// so it remains inside the viewport while Scaffold shortens the scrollable
+/// body above it. Narrow screens and large system text use a two-row layout so
+/// the summary and actions never compete for horizontal space.
 class SelectionActionBar extends StatelessWidget {
   const SelectionActionBar({
     required this.selection,
@@ -47,83 +47,86 @@ class SelectionActionBar extends StatelessWidget {
     final bool canDelete = deletable > 0;
     final double textScale = MediaQuery.textScalerOf(context).scale(1);
 
-    return Material(
-      key: barKey,
-      color: colors.surfaceContainerHighest,
-      elevation: 8,
-      child: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          final double barWidth = constraints.maxWidth.isFinite
-              ? constraints.maxWidth
-              : MediaQuery.sizeOf(context).width;
-          final bool stacked =
-              barWidth < _stackBreakpoint || textScale > 1.3;
+    return SafeArea(
+      top: false,
+      child: Material(
+        key: barKey,
+        color: colors.surfaceContainerHighest,
+        elevation: 8,
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            final double barWidth = constraints.maxWidth.isFinite
+                ? constraints.maxWidth
+                : MediaQuery.sizeOf(context).width;
+            final bool stacked =
+                barWidth < _stackBreakpoint || textScale > 1.3;
 
-          final Widget summary = _SelectionSummary(
-            selection: selection,
-            deletable: deletable,
-            canDelete: canDelete,
-            countKey: countKey,
-            bytesKey: bytesKey,
-            allowTwoLines: stacked,
-          );
-          final Widget clearButton = TextButton(
-            key: clearKey,
-            style: TextButton.styleFrom(
-              minimumSize: const Size(0, _minButtonHeight),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            onPressed: onClear,
-            child: const Text('Clear'),
-          );
-          final Widget deleteButton = FilledButton.icon(
-            key: deleteKey,
-            style: FilledButton.styleFrom(
-              backgroundColor: colors.error,
-              foregroundColor: colors.onError,
-              minimumSize: const Size(0, _minButtonHeight),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-            ),
-            onPressed: canDelete ? onDelete : null,
-            icon: const Icon(Icons.delete_outline_rounded, size: 18),
-            label: const Text('Delete'),
-          );
-
-          return SizedBox(
-            width: barWidth,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
+            final Widget summary = _SelectionSummary(
+              selection: selection,
+              deletable: deletable,
+              canDelete: canDelete,
+              countKey: countKey,
+              bytesKey: bytesKey,
+              allowTwoLines: stacked,
+            );
+            final Widget clearButton = TextButton(
+              key: clearKey,
+              style: TextButton.styleFrom(
+                minimumSize: const Size(0, _minButtonHeight),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
-              child: stacked
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: <Widget>[
-                        summary,
-                        const SizedBox(height: 4),
-                        Row(
-                          children: <Widget>[
-                            Expanded(child: clearButton),
-                            const SizedBox(width: 8),
-                            Expanded(child: deleteButton),
-                          ],
-                        ),
-                      ],
-                    )
-                  : Row(
-                      children: <Widget>[
-                        Expanded(child: summary),
-                        const SizedBox(width: 8),
-                        clearButton,
-                        const SizedBox(width: 4),
-                        deleteButton,
-                      ],
-                    ),
-            ),
-          );
-        },
+              onPressed: onClear,
+              child: const Text('Clear'),
+            );
+            final Widget deleteButton = FilledButton.icon(
+              key: deleteKey,
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.error,
+                foregroundColor: colors.onError,
+                minimumSize: const Size(0, _minButtonHeight),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              onPressed: canDelete ? onDelete : null,
+              icon: const Icon(Icons.delete_outline_rounded, size: 18),
+              label: const Text('Delete'),
+            );
+
+            return SizedBox(
+              width: barWidth,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: stacked
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: <Widget>[
+                          summary,
+                          const SizedBox(height: 4),
+                          Row(
+                            children: <Widget>[
+                              Expanded(child: clearButton),
+                              const SizedBox(width: 8),
+                              Expanded(child: deleteButton),
+                            ],
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: <Widget>[
+                          Expanded(child: summary),
+                          const SizedBox(width: 8),
+                          clearButton,
+                          const SizedBox(width: 4),
+                          deleteButton,
+                        ],
+                      ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

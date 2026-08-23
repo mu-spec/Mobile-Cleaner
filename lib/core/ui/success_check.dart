@@ -60,9 +60,17 @@ class _SuccessCheckState extends State<SuccessCheck>
     if (MediaQuery.disableAnimationsOf(context)) {
       // Jump straight to the finished state.
       _controller.value = 1;
-    } else {
-      _controller.forward();
+      return;
     }
+
+    // Start after the initial frame so the zero-progress state is actually
+    // painted once. Starting during dependency resolution can let a test or a
+    // busy first frame consume the whole short animation before it is visible.
+    WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+      if (mounted) {
+        _controller.forward(from: 0);
+      }
+    });
   }
 
   @override

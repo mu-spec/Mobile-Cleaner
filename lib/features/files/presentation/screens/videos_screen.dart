@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/core/ui/responsive.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/duration_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
@@ -105,6 +104,19 @@ class _VideosScreenState extends ConsumerState<VideosScreen> {
           const SizedBox(width: 8),
         ],
       ),
+      bottomNavigationBar: selecting
+          ? SelectionActionBar(
+              selection: _selection,
+              onClear: _clearSelection,
+              onDelete: _deleteSelected,
+              deletableCount: _selection.deletableCount,
+              barKey: const Key('videos_selection_bar'),
+              countKey: const Key('videos_selection_count'),
+              bytesKey: const Key('videos_selection_bytes'),
+              clearKey: const Key('videos_selection_clear'),
+              deleteKey: const Key('videos_selection_delete'),
+            )
+          : null,
       body: SafeArea(
         child: summary.when(
           loading: () => const FilesScanningView(),
@@ -132,20 +144,6 @@ class _VideosScreenState extends ConsumerState<VideosScreen> {
                         ),
                 ),
               ),
-              // In the body Column, below the Expanded list, never in
-              // Scaffold.bottomNavigationBar.
-              if (selecting)
-                SelectionActionBar(
-                  selection: _selection,
-                  onClear: _clearSelection,
-                  onDelete: _deleteSelected,
-                  deletableCount: _selection.deletableCount,
-                  barKey: const Key('videos_selection_bar'),
-                  countKey: const Key('videos_selection_count'),
-                  bytesKey: const Key('videos_selection_bytes'),
-                  clearKey: const Key('videos_selection_clear'),
-                  deleteKey: const Key('videos_selection_delete'),
-                ),
             ],
           ),
         ),
@@ -163,27 +161,44 @@ class _SortBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Horizontally scrollable: four chips overflow a narrow phone.
-    return SizedBox(
-      // Grows with the user's text scale so chip labels are never clipped.
-      height: Responsive.chipBarHeight(context),
-      child: ListView(
-        key: const Key('videos_sort_bar'),
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-        children: <Widget>[
-          for (final VideoSort option in VideoSort.values)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                key: Key('video_sort_${option.name}'),
-                label: Text(option.label),
-                selected: option == selected,
-                onSelected: (_) => onSelected(option),
-                visualDensity: VisualDensity.compact,
-              ),
-            ),
-        ],
+    final double textScale = MediaQuery.textScalerOf(context).scale(1);
+
+    return Padding(
+      key: const Key('videos_sort_bar'),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final int columns =
+              constraints.maxWidth >= 360 && textScale <= 1.3 ? 4 : 2;
+          const double gap = 8;
+          final double chipWidth =
+              (constraints.maxWidth - gap * (columns - 1)) / columns;
+
+          return Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: <Widget>[
+              for (final VideoSort option in VideoSort.values)
+                SizedBox(
+                  width: chipWidth,
+                  child: ChoiceChip(
+                    key: Key('video_sort_${option.name}'),
+                    label: SizedBox(
+                      width: double.infinity,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(option.label, maxLines: 1),
+                      ),
+                    ),
+                    selected: option == selected,
+                    onSelected: (_) => onSelected(option),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
