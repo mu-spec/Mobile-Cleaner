@@ -222,6 +222,14 @@ void main() {
       expect(find.text('64%'), findsOneWidget);
     });
 
+    testWidgets('the card is titled Storage Overview', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester);
+
+      expect(find.text('Storage Overview'), findsOneWidget);
+    });
+
     testWidgets('storage appears before the scan action', (
       WidgetTester tester,
     ) async {
@@ -239,13 +247,14 @@ void main() {
   });
 
   group('Smart Scan is the primary action', () {
-    testWidgets('the CTA reads Scan now and carries the privacy note', (
+    testWidgets('the CTA reads Scan Now and carries the privacy note', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
 
+      expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
       expect(find.byKey(const Key('smart_scan_button')), findsOneWidget);
-      expect(find.text('Scan now'), findsOneWidget);
+      expect(find.text('Scan Now'), findsOneWidget);
       expect(
         tester
             .widget<Text>(find.byKey(const Key('smart_scan_privacy_note')))
@@ -259,21 +268,21 @@ void main() {
     ) async {
       await _pumpHome(tester);
 
-      // The heading names the feature; the button states the action. Several
-      // existing tests use this text to confirm they landed on Home.
+      // The hero card names the feature; the button states the action.
+      // Several existing tests use this text to confirm they landed on Home.
       expect(find.text('Smart Scan'), findsOneWidget);
     });
 
-    testWidgets('it is the full width of the content area', (
+    testWidgets('the hero card is the full width of the content area', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
 
-      final Size button = tester.getSize(
-        find.byKey(const Key('smart_scan_button')),
+      final Size hero = tester.getSize(
+        find.byKey(const Key('smart_scan_hero')),
       );
       // 420 surface minus 16pt padding each side.
-      expect(button.width, 388);
+      expect(hero.width, 388);
     });
   });
 
@@ -340,7 +349,7 @@ void main() {
   });
 
   group('Quick tools', () {
-    testWidgets('all four tools are present as compact rows', (
+    testWidgets('all four tools are present as compact tiles', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
@@ -356,7 +365,17 @@ void main() {
       }
     });
 
-    testWidgets('rows meet the minimum touch target', (
+    testWidgets('the section is headed Quick Tools with the review note', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester);
+      await _scrollTo(tester, find.byKey(const Key('quick_tools_section')));
+
+      expect(find.text('Quick Tools'), findsOneWidget);
+      expect(find.text('Review before removing'), findsOneWidget);
+    });
+
+    testWidgets('tiles meet the minimum touch target', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
@@ -384,11 +403,15 @@ void main() {
   });
 
   group('History card', () {
-    testWidgets('is hidden until a cleanup has happened', (
+    testWidgets('shows an honest empty state before the first cleanup', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
+
+      await _scrollTo(tester, find.byKey(const Key('home_history_empty')));
+      // No invented amounts or dates — just where real numbers will appear.
       expect(find.byKey(const Key('home_history_card')), findsNothing);
+      expect(find.text('No cleanups yet'), findsOneWidget);
     });
 
     testWidgets('appears once there is real history', (

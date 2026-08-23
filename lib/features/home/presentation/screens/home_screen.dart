@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
+import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
@@ -12,20 +14,16 @@ import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 
-/// Home.
+/// Home (UI V2.1).
 ///
 /// ## Order, and why
 ///
-/// 1. **Storage** — the question the user opened the app to answer.
-/// 2. **Smart Scan** — the single primary action, with the privacy note.
-/// 3. **Recommended for you** — real findings from real scans, so it earns
-///    its place above the generic tools.
-/// 4. **Quick tools** — secondary, compact, always available.
-/// 5. **Cleanup history** — context, and only once something has happened.
-///
-/// The page-level heading and its blurb were removed. They restated the app
-/// name and took the whole top of the screen to say nothing the storage card
-/// does not say better with real numbers.
+/// 1. **Compact header** — identity and Settings, nothing oversized.
+/// 2. **Storage Overview** — the question the user opened the app to answer.
+/// 3. **Smart Scan hero** — the single primary action, with the privacy note.
+/// 4. **Recommended for you** — real findings from real scans.
+/// 5. **Quick Tools** — secondary, compact, always available.
+/// 6. **Cleanup summary** — real history, or an honest empty state.
 ///
 /// This screen only reports and routes. No storage calculation, scan, or
 /// destination changed.
@@ -52,24 +50,17 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(Icons.auto_awesome_rounded),
-            SizedBox(width: 10),
-            Flexible(
-              child: Text('Mobile Cleaner', overflow: TextOverflow.ellipsis),
-            ),
-          ],
-        ),
+        toolbarHeight: 64,
+        titleSpacing: AppSpacing.md,
+        title: const _HomeHeaderTitle(),
         actions: <Widget>[
-          IconButton(
-            key: const Key('home_settings_button'),
+          _HeaderIconButton(
+            buttonKey: const Key('home_settings_button'),
             tooltip: 'Settings',
-            onPressed: () => context.go(AppRoutes.settings),
-            icon: const Icon(Icons.settings_outlined),
+            icon: Icons.settings_outlined,
+            onTap: () => context.go(AppRoutes.settings),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.md),
         ],
       ),
       body: SafeArea(
@@ -82,21 +73,17 @@ class HomeScreen extends ConsumerWidget {
           child: ListView(
             key: const Key('home_dashboard'),
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.xxs,
+              AppSpacing.md,
+              AppSpacing.xl,
+            ),
             children: <Widget>[
               const StorageOverviewCard(),
-              const SizedBox(height: 20),
+              const SizedBox(height: HomeMetrics.sectionGap),
 
               // The one primary action, given the most visual weight.
-              //
-              // The heading names the feature ("Smart Scan") while the button
-              // states the action ("Scan now") — clearer than a button that
-              // repeats a product name, and it keeps the feature discoverable
-              // by name on the Home screen.
-              const HomeSectionHeader(
-                title: 'Smart Scan',
-                caption: 'Check the whole device for recoverable space.',
-              ),
               SmartScanCta(onScan: () => context.go(AppRoutes.clean)),
               const SizedBox(height: HomeMetrics.sectionGap),
 
@@ -117,11 +104,126 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: HomeMetrics.sectionGap),
 
-              // Renders nothing until a cleanup has actually happened.
+              // Real history when it exists, an honest empty state before.
               CleanupHistoryCard(
                 onOpen: () => context.push(AppRoutes.history),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact identity: a small polished mark, the app name, and one quiet
+/// tagline underneath. Deliberately not oversized — the storage card below
+/// says everything else with real numbers.
+class _HomeHeaderTitle extends StatelessWidget {
+  const _HomeHeaderTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Row(
+      children: <Widget>[
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: <Color>[AppColors.primary, AppColors.primaryDeep],
+            ),
+            borderRadius: BorderRadius.circular(AppRadius.tile),
+          ),
+          child: const Icon(
+            Icons.auto_awesome_rounded,
+            size: 20,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                'Mobile Cleaner',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                'Clean more. Save more. Do more.',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A header action inside a subtle rounded surface, matching the card
+/// language rather than floating as a bare icon.
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({
+    required this.buttonKey,
+    required this.tooltip,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final Key buttonKey;
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: isDark ? theme.colorScheme.surfaceContainerHigh : Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.tile),
+        child: InkWell(
+          key: buttonKey,
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.tile),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.tile),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : AppColors.border,
+              ),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ),

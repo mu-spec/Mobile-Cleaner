@@ -1,16 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_cleaner/app/theme/app_colors.dart';
+import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 
 abstract final class AppTheme {
   static ThemeData get light => _build(Brightness.light);
   static ThemeData get dark => _build(Brightness.dark);
 
   static ThemeData _build(Brightness brightness) {
-    final ColorScheme colors = ColorScheme.fromSeed(
+    final bool isDark = brightness == Brightness.dark;
+
+    ColorScheme colors = ColorScheme.fromSeed(
       seedColor: AppColors.primary,
       brightness: brightness,
     );
-    final bool isDark = brightness == Brightness.dark;
+    if (!isDark) {
+      // Pin the exact brand tokens in light mode rather than the seed's
+      // tonal approximations. Dark mode keeps the derived tones, which stay
+      // readable on dark surfaces where the raw brand blue would not.
+      colors = colors.copyWith(
+        primary: AppColors.primary,
+        onPrimary: Colors.white,
+        surface: Colors.white,
+        onSurface: AppColors.textPrimary,
+        onSurfaceVariant: AppColors.textSecondary,
+        outlineVariant: AppColors.border,
+        error: AppColors.danger,
+      );
+    }
 
     return ThemeData(
       useMaterial3: true,
@@ -22,14 +38,36 @@ abstract final class AppTheme {
       appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: colors.onSurface,
       ),
+      // One card language everywhere: white (or dark surface), soft
+      // hairline border, no floating shadow, no glassmorphism.
       cardTheme: CardThemeData(
         elevation: 0,
-        color: colors.surface,
+        color: isDark ? colors.surfaceContainerHigh : Colors.white,
         margin: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          side: BorderSide(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : AppColors.border,
+          ),
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: isDark ? Colors.white.withValues(alpha: 0.08) : AppColors.border,
+      ),
+      // Bottom navigation: light surface, blue selection, neutral gray rest.
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: isDark ? colors.surfaceContainerHigh : Colors.white,
+        selectedItemColor: colors.primary,
+        unselectedItemColor: isDark
+            ? colors.onSurfaceVariant
+            : AppColors.textSecondary,
+        elevation: 0,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
@@ -43,7 +81,7 @@ abstract final class AppTheme {
           // every button in the app being forced to stretch.
           minimumSize: const Size(0, 56),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.button),
           ),
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
@@ -61,6 +99,7 @@ abstract final class AppTheme {
           letterSpacing: -0.5,
         ),
         titleLarge: const TextStyle(fontWeight: FontWeight.w700),
+        titleMedium: const TextStyle(fontWeight: FontWeight.w600),
         bodyLarge: const TextStyle(height: 1.45),
       ),
     );

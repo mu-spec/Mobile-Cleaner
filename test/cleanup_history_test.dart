@@ -400,17 +400,21 @@ void main() {
         tester
             .widget<Text>(find.byKey(const Key('home_history_total')))
             .data,
-        '2.4 GB cleaned so far',
+        '2.4 GB',
       );
+      expect(find.text('Cleaned so far'), findsOneWidget);
     });
 
-    testWidgets('hides itself entirely before the first cleanup', (
+    testWidgets('shows an honest empty state before the first cleanup', (
       WidgetTester tester,
     ) async {
       await pumpCard(tester, _StubHistory());
 
-      // A card reading "0 B recovered" would be noise, not information.
+      // Real data only: no invented amounts, no "0 B recovered" trophy —
+      // just an honest note about where the numbers will appear.
       expect(find.byKey(const Key('home_history_card')), findsNothing);
+      expect(find.byKey(const Key('home_history_empty')), findsOneWidget);
+      expect(find.text('No cleanups yet'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });
