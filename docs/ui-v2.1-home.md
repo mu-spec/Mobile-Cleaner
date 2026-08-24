@@ -46,9 +46,9 @@ Dark mode keeps seed-derived tones — cards use the dark surface, not white.
   white "Scan Now" CTA, static cyan/blue radar motif with an orange accent.
   Card and CTA both call the existing navigation. No fake progress.
   Privacy cue ("Your files stay on your device") kept directly beneath.
-- Quick Tools: four compact category-tinted tiles in one row when space
-  allows, with the same callbacks and destinations. Narrow layouts move to
-  two columns; large text moves to compact rows rather than clipping.
+- Quick Tools: four independent compact white tiles in one row when space
+  allows, each with a soft category icon surface, title, subtitle, and small
+  action label. Narrow layouts use two columns; large text uses compact rows.
 - Cleanup summary: real lifetime total and last-cleanup date when history
   exists; an honest "No cleanups yet" empty state before that, plus explicit
   loading/error states. Nothing is invented.

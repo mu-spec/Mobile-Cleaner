@@ -79,7 +79,7 @@ class HomeScreen extends ConsumerWidget {
               AppSpacing.md,
               AppSpacing.xxs,
               AppSpacing.md,
-              AppSpacing.xl,
+              AppSpacing.md,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

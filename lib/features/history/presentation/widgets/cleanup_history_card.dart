@@ -33,7 +33,7 @@ class CleanupHistoryCard extends ConsumerWidget {
       ),
       data: (CleanupHistory data) {
         if (data.isEmpty) {
-          return const _EmptyHistoryCard();
+          return _EmptyHistoryCard(onOpen: onOpen);
         }
         return _HistorySummaryCard(history: data, onOpen: onOpen);
       },
@@ -150,7 +150,9 @@ class _HistorySummaryCard extends StatelessWidget {
 }
 
 class _EmptyHistoryCard extends StatelessWidget {
-  const _EmptyHistoryCard();
+  const _EmptyHistoryCard({required this.onOpen});
+
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -160,6 +162,7 @@ class _EmptyHistoryCard extends StatelessWidget {
 
     return AppCard(
       cardKey: const Key('home_history_empty'),
+      onTap: onOpen,
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         children: <Widget>[
@@ -184,13 +187,19 @@ class _EmptyHistoryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Space you free up will be tracked here.',
+                  'Your cleanup activity will appear here.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 20,
+            color: colors.onSurfaceVariant,
           ),
         ],
       ),

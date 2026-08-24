@@ -71,7 +71,7 @@ class AppShell extends StatelessWidget {
           child: SafeArea(
             top: false,
             child: SizedBox(
-              height: 62,
+              height: 58,
               child: Row(
                 children: <Widget>[
                   for (int index = 0; index < _destinations.length; index++)
@@ -143,16 +143,16 @@ class _BottomDestination extends StatelessWidget {
           key: data.key,
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(2, 7, 2, 5),
+            padding: const EdgeInsets.fromLTRB(2, 5, 2, 4),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Icon(
                   selected ? data.activeIcon : data.icon,
-                  size: selected ? 24 : 23,
+                  size: selected ? 23 : 22,
                   color: color,
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 2),
                 Expanded(
                   child: Center(
                     child: FittedBox(
@@ -162,7 +162,7 @@ class _BottomDestination extends StatelessWidget {
                         maxLines: 1,
                         style: TextStyle(
                           color: color,
-                          fontSize: selected ? 11 : 10,
+                          fontSize: selected ? 10.5 : 9.5,
                           fontWeight: selected
                               ? FontWeight.w700
                               : FontWeight.w500,
