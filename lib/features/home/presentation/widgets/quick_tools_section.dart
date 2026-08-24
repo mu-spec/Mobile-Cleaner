@@ -133,11 +133,16 @@ class _QuickToolsHeader extends StatelessWidget {
     );
     final Widget trailing = Row(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.end,
       children: <Widget>[
-        Text(
-          'Review before removing',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: colors.onSurfaceVariant,
+        Flexible(
+          child: Text(
+            'Review before removing',
+            softWrap: true,
+            textAlign: TextAlign.end,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
           ),
         ),
         const SizedBox(width: 2),
@@ -172,7 +177,10 @@ class _QuickToolsHeader extends StatelessWidget {
             children: <Widget>[
               Expanded(child: heading),
               const SizedBox(width: AppSpacing.xs),
-              trailing,
+              // Flexible (not Expanded) keeps the note on one line when it
+              // fits at normal text scale, but lets it shrink and wrap at
+              // large accessibility sizes instead of overflowing.
+              Flexible(child: trailing),
             ],
           );
         },
