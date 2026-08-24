@@ -8,7 +8,8 @@ import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.d
 ///
 /// A normal portrait phone presents four independent premium tiles in one
 /// row. Narrow screens use two columns, and large accessibility text uses
-/// full-width rows so every label and action remains readable.
+/// full-width rows so every label remains readable. Each tile carries just
+/// an icon, a compact bold title, and a short neutral subtitle.
 class QuickToolsSection extends StatelessWidget {
   const QuickToolsSection({
     required this.onPhotos,
@@ -34,7 +35,6 @@ class QuickToolsSection extends StatelessWidget {
         surface: AppColors.softPhoto,
         title: 'Photos',
         subtitle: 'Review photos',
-        action: 'Duplicates ›',
         onTap: onPhotos,
       ),
       _QuickToolData(
@@ -44,7 +44,6 @@ class QuickToolsSection extends StatelessWidget {
         surface: AppColors.softBlue,
         title: 'Large Files',
         subtitle: 'Find big files',
-        action: 'See files ›',
         onTap: onFiles,
       ),
       _QuickToolData(
@@ -53,8 +52,7 @@ class QuickToolsSection extends StatelessWidget {
         tint: AppColors.indigoAccent,
         surface: AppColors.softIndigo,
         title: 'Apps',
-        subtitle: 'Check app sizes',
-        action: 'Manage ›',
+        subtitle: 'App sizes',
         onTap: onApps,
       ),
       _QuickToolData(
@@ -62,9 +60,8 @@ class QuickToolsSection extends StatelessWidget {
         icon: Icons.folder_shared_rounded,
         tint: AppColors.cleanupOrange,
         surface: AppColors.softOrange,
-        title: 'Storage Access',
-        subtitle: 'Review permissions',
-        action: 'Review ›',
+        title: 'Storage',
+        subtitle: 'Permissions',
         onTap: onPermissions,
       ),
     ];
@@ -199,7 +196,6 @@ class _QuickToolData {
     required this.surface,
     required this.title,
     required this.subtitle,
-    required this.action,
     required this.onTap,
   });
 
@@ -209,7 +205,6 @@ class _QuickToolData {
   final Color surface;
   final String title;
   final String subtitle;
-  final String action;
   final VoidCallback onTap;
 }
 
@@ -265,10 +260,10 @@ class _VerticalToolContent extends StatelessWidget {
     final bool isDark = theme.brightness == Brightness.dark;
 
     return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: fourAcross ? 120 : 112),
+      constraints: BoxConstraints(minHeight: fourAcross ? 108 : 102),
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: fourAcross ? 5 : AppSpacing.xs,
+          horizontal: fourAcross ? 6 : AppSpacing.xs,
           vertical: AppSpacing.xs,
         ),
         child: Column(
@@ -281,43 +276,36 @@ class _VerticalToolContent extends StatelessWidget {
               backgroundColor: isDark
                   ? data.tint.withValues(alpha: 0.22)
                   : data.surface,
-              size: fourAcross ? 30 : 34,
-              iconSize: fourAcross ? 16 : 18,
+              size: fourAcross ? 32 : 36,
+              iconSize: fourAcross ? 17 : 19,
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 8),
+            // Compact, bold title. Prefers one line; wraps to two only at
+            // large accessibility text scales so it never overflows.
             Text(
               data.title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: theme.textTheme.labelMedium?.copyWith(
+                fontSize: fourAcross ? 12 : 13,
                 fontWeight: FontWeight.w700,
-                height: 1.1,
+                height: 1.15,
+                letterSpacing: -0.1,
                 color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
+            // Smaller, neutral grey supporting line.
             Text(
               data.subtitle,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: theme.textTheme.labelSmall?.copyWith(
-                fontSize: fourAcross ? 8.5 : 9.5,
-                height: 1.1,
+                fontSize: fourAcross ? 10.5 : 11,
+                height: 1.2,
                 color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 5),
-            Text(
-              data.action,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontSize: fourAcross ? 8.5 : 9.5,
-                fontWeight: FontWeight.w700,
-                color: data.tint,
               ),
             ),
           ],
@@ -338,7 +326,7 @@ class _HorizontalToolContent extends StatelessWidget {
     final bool isDark = theme.brightness == Brightness.dark;
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 72),
+      constraints: const BoxConstraints(minHeight: 64),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xs),
         child: Row(
@@ -349,10 +337,10 @@ class _HorizontalToolContent extends StatelessWidget {
               backgroundColor: isDark
                   ? data.tint.withValues(alpha: 0.22)
                   : data.surface,
-              size: 36,
-              iconSize: 18,
+              size: 38,
+              iconSize: 19,
             ),
-            const SizedBox(width: AppSpacing.xs),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,7 +348,10 @@ class _HorizontalToolContent extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     data.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: isDark
                           ? theme.colorScheme.onSurface
@@ -370,16 +361,10 @@ class _HorizontalToolContent extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     data.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    data.action,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: data.tint,
                     ),
                   ),
                 ],
