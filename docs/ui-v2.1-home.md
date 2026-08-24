@@ -38,15 +38,14 @@ Dark mode keeps seed-derived tones — cards use the dark surface, not white.
   untouched; labels scale down within their own slot instead of clipping.
 - Home header: compact "Mobile Cleaner" identity + tagline, with Settings in
   a subtle rounded surface. Same key, same route.
-- Storage Overview: two-column hierarchy — large blue used-percentage left,
-  storage ring right (blue arc, small orange accent tip, light track) with
-  real available space at its centre, and a real `used / total` summary row.
-  All figures still come straight from `StorageInfo`; the orange tip restyles
-  the head of the real used arc, it never adds to it.
+- Storage Overview: two-column hierarchy — strong blue used-percentage left
+  and a two-colour donut right. Blue is the real used fraction and orange is
+  the real available fraction; together they fill the entire ring. All values
+  still come directly from `StorageInfo`.
 - Smart Scan hero: deep-blue gradient card, two-line supporting copy, compact
   white "Scan Now" CTA, static cyan/blue radar motif with an orange accent.
   Card and CTA both call the existing navigation. No fake progress.
-  Privacy cue ("Files stay on your device.") kept directly beneath.
+  Privacy cue ("Your files stay on your device") kept directly beneath.
 - Quick Tools: four compact category-tinted tiles in one row when space
   allows, with the same callbacks and destinations. Narrow layouts move to
   two columns; large text moves to compact rows rather than clipping.

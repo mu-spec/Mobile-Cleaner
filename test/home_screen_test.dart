@@ -192,7 +192,7 @@ void main() {
       await _pumpHome(tester);
 
       expect(find.text('Mobile Cleaner'), findsOneWidget);
-      expect(find.text('Clean more. Save more. Do more.'), findsOneWidget);
+      expect(find.text('Clean smarter. Keep what matters.'), findsOneWidget);
       expect(find.byKey(const Key('home_settings_button')), findsOneWidget);
     });
   });
@@ -271,7 +271,7 @@ void main() {
         tester
             .widget<Text>(find.byKey(const Key('smart_scan_privacy_note')))
             .data,
-        'Files stay on your device.',
+        'Your files stay on your device',
       );
     });
 

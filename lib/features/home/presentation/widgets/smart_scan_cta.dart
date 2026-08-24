@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
 /// The Smart Scan hero: the strongest action card on Home.
 ///
@@ -32,7 +32,7 @@ class SmartScanCta extends StatelessWidget {
     return Column(
       children: <Widget>[
         ClipRRect(
-          borderRadius: BorderRadius.circular(AppRadius.card),
+          borderRadius: BorderRadius.circular(HomeUpperStyle.heroRadius),
           child: Material(
             color: Colors.transparent,
             child: Ink(
@@ -41,8 +41,8 @@ class SmartScanCta extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: <Color>[
-                    AppColors.brandBlue,
-                    Color(0xFF173F9E),
+                    HomeUpperStyle.deepBlue,
+                    HomeUpperStyle.primaryBlue,
                   ],
                 ),
               ),
@@ -98,7 +98,7 @@ class SmartScanCta extends StatelessWidget {
             const SizedBox(width: 3),
             Flexible(
               child: Text(
-                'Files stay on your device.',
+                'Your files stay on your device',
                 key: const Key('smart_scan_privacy_note'),
                 maxLines: 2,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -133,7 +133,7 @@ class _HeroCopy extends StatelessWidget {
             const Icon(
               Icons.auto_awesome_rounded,
               size: 15,
-              color: Color(0xFFFFD39D),
+              color: HomeUpperStyle.orange,
             ),
             const SizedBox(width: 6),
             Flexible(
@@ -165,7 +165,7 @@ class _HeroCopy extends StatelessWidget {
           onPressed: onScan,
           style: FilledButton.styleFrom(
             backgroundColor: Colors.white,
-            foregroundColor: AppColors.brandBlue,
+            foregroundColor: HomeUpperStyle.deepBlue,
             minimumSize: const Size(0, 38),
             padding: const EdgeInsets.symmetric(horizontal: 12),
             textStyle: const TextStyle(
@@ -194,7 +194,7 @@ class _ScannerMotifPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final Offset center = size.center(Offset.zero);
     final double radius = math.min(size.width, size.height) / 2;
-    const Color cyan = Color(0xFF67D8FF);
+    const Color cyan = HomeUpperStyle.radarCyan;
 
     // A quiet field gives the motif enough presence without reading as a
     // progress indicator or a glow effect.
@@ -225,7 +225,7 @@ class _ScannerMotifPainter extends CustomPainter {
       math.pi * 0.34,
       false,
       Paint()
-        ..color = AppColors.cleanupOrange.withValues(alpha: 0.92)
+        ..color = HomeUpperStyle.orange.withValues(alpha: 0.92)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.2
         ..strokeCap = StrokeCap.round,

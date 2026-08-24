@@ -9,6 +9,7 @@ import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_his
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/recommendations_card.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
@@ -38,12 +39,17 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
     final double textScale = MediaQuery.textScalerOf(context).scale(1);
     final double headerHeight = (48 + (textScale - 1) * 48)
         .clamp(48.0, 116.0)
         .toDouble();
 
     return Scaffold(
+      backgroundColor: isDark
+          ? theme.scaffoldBackgroundColor
+          : HomeUpperStyle.background,
       appBar: AppBar(
         toolbarHeight: headerHeight,
         titleSpacing: AppSpacing.md,
@@ -157,18 +163,20 @@ class _HomeHeaderTitle extends StatelessWidget {
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w800,
             letterSpacing: -0.2,
-            color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
+            color: isDark
+                ? theme.colorScheme.onSurface
+                : HomeUpperStyle.textPrimary,
           ),
         ),
         const SizedBox(height: 1),
         Text(
-          'Clean more. Save more. Do more.',
+          'Clean smarter. Keep what matters.',
           maxLines: 2,
           style: theme.textTheme.bodySmall?.copyWith(
             fontSize: 10.5,
             color: isDark
                 ? theme.colorScheme.onSurfaceVariant
-                : AppColors.textSecondary,
+                : HomeUpperStyle.textSecondary,
           ),
         ),
       ],
@@ -214,20 +222,29 @@ class _HeaderIconButton extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isDark
                         ? theme.colorScheme.surfaceContainerHigh
-                        : AppColors.card,
+                        : HomeUpperStyle.card,
                     borderRadius: BorderRadius.circular(AppRadius.tile),
                     border: Border.all(
                       color: isDark
                           ? Colors.white.withValues(alpha: 0.08)
-                          : AppColors.border,
+                          : HomeUpperStyle.border,
                     ),
+                    boxShadow: isDark
+                        ? null
+                        : <BoxShadow>[
+                            BoxShadow(
+                              color: HomeUpperStyle.navy.withValues(alpha: 0.06),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                   ),
                   child: Icon(
                     icon,
                     size: 17,
                     color: isDark
                         ? theme.colorScheme.onSurfaceVariant
-                        : AppColors.actionBlue,
+                        : HomeUpperStyle.primaryBlue,
                   ),
                 ),
               ),

@@ -2,10 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/core/ui/app_card.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 
@@ -36,29 +35,47 @@ class StorageOverviewCard extends ConsumerWidget {
     final ThemeData theme = Theme.of(context);
     final bool isDark = theme.brightness == Brightness.dark;
 
-    return AppCard(
-      cardKey: const Key('storage_overview_card'),
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            'Storage Overview',
-            key: const Key('storage_overview_title'),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-              color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
+    return Card(
+      key: const Key('storage_overview_card'),
+      elevation: isDark ? 0 : 1,
+      shadowColor: HomeUpperStyle.navy.withValues(alpha: 0.06),
+      color: isDark
+          ? theme.colorScheme.surfaceContainerHigh
+          : HomeUpperStyle.card,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(HomeUpperStyle.storageRadius),
+        side: BorderSide(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : HomeUpperStyle.border,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              'Storage Overview',
+              key: const Key('storage_overview_title'),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? theme.colorScheme.onSurface
+                    : HomeUpperStyle.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          storage.when(
-            loading: () => const _LoadingStorage(),
-            error: (Object error, StackTrace stackTrace) => _StorageError(
-              onRetry: () => ref.invalidate(storageOverviewProvider),
+            const SizedBox(height: AppSpacing.xs),
+            storage.when(
+              loading: () => const _LoadingStorage(),
+              error: (Object error, StackTrace stackTrace) => _StorageError(
+                onRetry: () => ref.invalidate(storageOverviewProvider),
+              ),
+              data: (StorageInfo info) => _StorageDetails(info: info),
             ),
-            data: (StorageInfo info) => _StorageDetails(info: info),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -96,10 +113,12 @@ class _StorageDetails extends StatelessWidget {
                         '${info.usedPercentage}%',
                         key: const Key('storage_percentage'),
                         style: theme.textTheme.displaySmall?.copyWith(
-                          fontSize: 36,
+                          fontSize: 38,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -1,
-                          color: isDark ? colors.primary : AppColors.actionBlue,
+                          color: isDark
+                              ? colors.primary
+                              : HomeUpperStyle.primaryBlue,
                           height: 1.05,
                         ),
                       ),
@@ -149,7 +168,7 @@ class _StorageDetails extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      ' / ',
+                      ' of ',
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 10.5,
                         color: colors.onSurfaceVariant,
@@ -183,18 +202,14 @@ class _StorageDetails extends StatelessWidget {
   }
 }
 
-/// The storage ring: mostly blue, a small orange accent at the head of the
-/// used arc, and a light gray track for the unused remainder.
-///
-/// The blue and orange segments together are exactly [StorageInfo.usedFraction]
-/// of the circle — the accent restyles the tip of the real value, it never
-/// adds to it.
+/// Two-colour donut: blue is the real used fraction and orange is the real
+/// available fraction. Together they always fill exactly 360 degrees.
 class _StorageRing extends StatelessWidget {
   const _StorageRing({required this.info});
 
   final StorageInfo info;
 
-  static const double _size = 72;
+  static const double _size = 80;
 
   @override
   Widget build(BuildContext context) {
@@ -210,11 +225,8 @@ class _StorageRing extends StatelessWidget {
         child: CustomPaint(
           painter: _StorageRingPainter(
             usedFraction: info.usedFraction,
-            usedColor: isDark ? colors.primary : AppColors.brandBlue,
-            accentColor: AppColors.cleanupOrange,
-            trackColor: isDark
-                ? Colors.white.withValues(alpha: 0.10)
-                : AppColors.border,
+            usedColor: isDark ? colors.primary : HomeUpperStyle.primaryBlue,
+            availableColor: HomeUpperStyle.orange,
           ),
           child: Center(
             child: Padding(
@@ -255,16 +267,14 @@ class _StorageRingPainter extends CustomPainter {
   const _StorageRingPainter({
     required this.usedFraction,
     required this.usedColor,
-    required this.accentColor,
-    required this.trackColor,
+    required this.availableColor,
   });
 
   final double usedFraction;
   final Color usedColor;
-  final Color accentColor;
-  final Color trackColor;
+  final Color availableColor;
 
-  static const double _stroke = 7;
+  static const double _stroke = 8;
   static const double _startAngle = -math.pi / 2;
 
   @override
@@ -277,32 +287,27 @@ class _StorageRingPainter extends CustomPainter {
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = _stroke
-      ..strokeCap = StrokeCap.round;
-
-    // Unused remainder: a full, very light track underneath.
-    canvas.drawArc(rect, 0, math.pi * 2, false, stroke(trackColor));
+      // Butt caps keep blue + orange equal to exactly one full circle.
+      ..strokeCap = StrokeCap.butt;
 
     final double used = usedFraction.clamp(0.0, 1.0);
-    if (used <= 0) {
-      return;
-    }
 
-    final double usedSweep = math.pi * 2 * used;
-    // A small accent at the head of the used arc — capped so it always reads
-    // as an accent, and skipped entirely when the arc is too short for it.
-    final double accentSweep = usedSweep > 0.5
-        ? math.min(usedSweep * 0.16, math.pi * 2 * 0.055)
-        : 0.0;
-    final double blueSweep = usedSweep - accentSweep;
-
-    canvas.drawArc(rect, _startAngle, blueSweep, false, stroke(usedColor));
-    if (accentSweep > 0) {
+    // Orange owns the complete circle first; blue replaces exactly the real
+    // used fraction. No gray/white track or decorative third segment exists.
+    canvas.drawArc(
+      rect,
+      _startAngle,
+      math.pi * 2,
+      false,
+      stroke(availableColor),
+    );
+    if (used > 0) {
       canvas.drawArc(
         rect,
-        _startAngle + blueSweep,
-        accentSweep,
+        _startAngle,
+        math.pi * 2 * used,
         false,
-        stroke(accentColor),
+        stroke(usedColor),
       );
     }
   }
@@ -311,8 +316,7 @@ class _StorageRingPainter extends CustomPainter {
   bool shouldRepaint(_StorageRingPainter oldDelegate) {
     return oldDelegate.usedFraction != usedFraction ||
         oldDelegate.usedColor != usedColor ||
-        oldDelegate.accentColor != accentColor ||
-        oldDelegate.trackColor != trackColor;
+        oldDelegate.availableColor != availableColor;
   }
 }
 
