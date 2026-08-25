@@ -48,7 +48,7 @@ class SmartScanCta extends StatelessWidget {
             key: const Key('smart_scan_button'),
             onTap: onScan,
             borderRadius: BorderRadius.circular(18),
-            child: const ConstrainedBox(
+            child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: 60),
               child: Padding(
                 padding: EdgeInsets.symmetric(
