@@ -65,13 +65,13 @@ class _HistorySummaryCard extends StatelessWidget {
       child: Row(
         children: <Widget>[
           AppIconContainer(
-            icon: Icons.history_rounded,
+            icon: Icons.cleaning_services,
             accent: AppColors.actionBlue,
             backgroundColor: isDark
                 ? AppColors.actionBlue.withValues(alpha: 0.22)
                 : AppColors.softBlue,
-            size: 36,
-            iconSize: 18,
+            size: 40,
+            iconSize: 20,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -142,7 +142,7 @@ class _HistorySummaryCard extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.xs),
           Icon(
-            Icons.chevron_right_rounded,
+            Icons.chevron_right,
             size: 20,
             color: colors.onSurfaceVariant,
           ),
@@ -170,13 +170,13 @@ class _EmptyHistoryCard extends StatelessWidget {
       child: Row(
         children: <Widget>[
           AppIconContainer(
-            icon: Icons.history_rounded,
+            icon: Icons.cleaning_services,
             accent: AppColors.actionBlue,
             backgroundColor: isDark
                 ? AppColors.actionBlue.withValues(alpha: 0.22)
                 : AppColors.softBlue,
-            size: 36,
-            iconSize: 18,
+            size: 40,
+            iconSize: 20,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -203,7 +203,7 @@ class _EmptyHistoryCard extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.xs),
           Icon(
-            Icons.chevron_right_rounded,
+            Icons.chevron_right,
             size: 20,
             color: colors.onSurfaceVariant,
           ),

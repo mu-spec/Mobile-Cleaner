@@ -93,7 +93,21 @@ class _AdviceCard extends StatelessWidget {
             bottom: HomeMetrics.headingGap,
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: AppIconContainer(
+                  icon: Icons.lightbulb_outline,
+                  accent: AppColors.indigoAccent,
+                  backgroundColor: isDark
+                      ? AppColors.indigoAccent.withValues(alpha: 0.22)
+                      : AppColors.softIndigo,
+                  size: 38,
+                  iconSize: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,7 +142,9 @@ class _AdviceCard extends StatelessWidget {
                   vertical: AppSpacing.xxs,
                 ),
                 decoration: BoxDecoration(
-                  color: isDark ? colors.primaryContainer : AppColors.softBlue,
+                  color: isDark
+                      ? AppColors.indigoAccent.withValues(alpha: 0.22)
+                      : AppColors.softIndigo,
                   borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Text(
@@ -138,8 +154,17 @@ class _AdviceCard extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     color: isDark
                         ? colors.onPrimaryContainer
-                        : AppColors.actionBlue,
+                        : AppColors.indigoAccent,
                   ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xxs),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Icon(
+                  Icons.chevron_right,
+                  size: HomeMetrics.rowIconSize,
+                  color: colors.onSurfaceVariant,
                 ),
               ),
             ],
@@ -260,7 +285,7 @@ class _IdleCard extends StatelessWidget {
   const _IdleCard({
     required this.onScan,
     required this.message,
-    this.icon = Icons.lightbulb_rounded,
+    this.icon = Icons.lightbulb_outline,
     this.showAction = true,
   });
 
@@ -275,14 +300,14 @@ class _IdleCard extends StatelessWidget {
     final ColorScheme colors = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
     final bool positive = icon == Icons.check_circle_outline_rounded;
-    final Color accent = positive ? AppColors.success : AppColors.actionBlue;
+    final Color accent = positive ? AppColors.success : AppColors.indigoAccent;
     final Color iconBackground;
     if (isDark) {
-      iconBackground = accent.withValues(alpha: 0.20);
+      iconBackground = accent.withValues(alpha: 0.22);
     } else if (positive) {
       iconBackground = AppColors.success.withValues(alpha: 0.10);
     } else {
-      iconBackground = AppColors.softBlue;
+      iconBackground = AppColors.softIndigo;
     }
 
     return Card(
