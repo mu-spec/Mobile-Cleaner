@@ -70,10 +70,10 @@ class _HistorySummaryCard extends StatelessWidget {
             backgroundColor: isDark
                 ? AppColors.actionBlue.withValues(alpha: 0.22)
                 : AppColors.softBlue,
-            size: 40,
-            iconSize: 20,
+            size: 38,
+            iconSize: 19,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,10 +175,10 @@ class _EmptyHistoryCard extends StatelessWidget {
             backgroundColor: isDark
                 ? AppColors.actionBlue.withValues(alpha: 0.22)
                 : AppColors.softBlue,
-            size: 40,
-            iconSize: 20,
+            size: 38,
+            iconSize: 19,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,10 +257,10 @@ class _HistoryErrorCard extends StatelessWidget {
             backgroundColor: isDark
                 ? AppColors.actionBlue.withValues(alpha: 0.22)
                 : AppColors.softBlue,
-            size: 36,
-            iconSize: 18,
+            size: 38,
+            iconSize: 19,
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -85,27 +85,28 @@ class _AdviceCard extends StatelessWidget {
     final bool isDark = theme.brightness == Brightness.dark;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
+        // Section header. Same icon tile size, gap, and left padding as the
+        // Cleanup Summary and advice rows so all titles share one vertical
+        // alignment line. No chevron here — only the real count badge.
         Padding(
           padding: const EdgeInsets.only(
-            left: AppSpacing.xxs,
+            left: AppSpacing.sm,
+            right: AppSpacing.sm,
             bottom: HomeMetrics.headingGap,
           ),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: AppIconContainer(
-                  icon: Icons.lightbulb_outline,
-                  accent: AppColors.indigoAccent,
-                  backgroundColor: isDark
-                      ? AppColors.indigoAccent.withValues(alpha: 0.22)
-                      : AppColors.softIndigo,
-                  size: 38,
-                  iconSize: 20,
-                ),
+              AppIconContainer(
+                icon: Icons.lightbulb_outline,
+                accent: AppColors.indigoAccent,
+                backgroundColor: isDark
+                    ? AppColors.indigoAccent.withValues(alpha: 0.22)
+                    : AppColors.softIndigo,
+                size: 38,
+                iconSize: 19,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -118,7 +119,7 @@ class _AdviceCard extends StatelessWidget {
                       child: Text(
                         'Recommended for you',
                         key: const Key('recommendations_title'),
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: isDark ? colors.onSurface : AppColors.navy,
                         ),
@@ -127,7 +128,9 @@ class _AdviceCard extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
                       'Based on what is actually on your device.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                       ),
                     ),
@@ -156,15 +159,6 @@ class _AdviceCard extends StatelessWidget {
                         ? colors.onPrimaryContainer
                         : AppColors.indigoAccent,
                   ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xxs),
-              Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Icon(
-                  Icons.chevron_right,
-                  size: HomeMetrics.rowIconSize,
-                  color: colors.onSurfaceVariant,
                 ),
               ),
             ],
@@ -226,7 +220,7 @@ class _AdviceRow extends StatelessWidget {
           onTap: onOpen,
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
+              horizontal: AppSpacing.sm,
               vertical: AppSpacing.sm,
             ),
             child: Row(
@@ -289,7 +283,7 @@ class _AdviceRow extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          Divider(height: 1, indent: 66, color: colors.outlineVariant),
+          Divider(height: 1, indent: 62, color: colors.outlineVariant),
       ],
     );
   }
@@ -327,26 +321,27 @@ class _IdleCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.sm),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
             AppIconContainer(
               icon: icon,
               accent: accent,
               backgroundColor: iconBackground,
-              size: 42,
-              iconSize: 21,
+              size: 38,
+              iconSize: 19,
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
                   Text(
                     'Recommended for you',
                     key: const Key('recommendations_title'),
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: isDark ? colors.onSurface : AppColors.navy,
                     ),

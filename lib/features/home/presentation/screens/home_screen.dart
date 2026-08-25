@@ -146,7 +146,7 @@ class _HomeHeaderTitle extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.titleMedium?.copyWith(
-            fontSize: 20,
+            fontSize: 21,
             fontWeight: FontWeight.w800,
             letterSpacing: -0.4,
             color: isDark

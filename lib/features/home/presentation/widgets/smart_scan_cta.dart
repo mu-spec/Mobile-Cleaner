@@ -75,26 +75,31 @@ class _CompactScanContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final double textScale = MediaQuery.textScalerOf(context).scale(1);
 
-    final Widget label = Row(
+    final Widget copy = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        const Icon(
-          Icons.auto_awesome_rounded,
-          size: 18,
-          color: HomeUpperStyle.orange,
+        Text(
+          'Smart Scan',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Colors.white,
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.2,
+            height: 1.1,
+          ),
         ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            'Smart Scan',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontSize: 15.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.2,
-            ),
+        const SizedBox(height: 1),
+        Text(
+          'Find and clean unnecessary files',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Colors.white.withValues(alpha: 0.78),
+            fontSize: 10.5,
+            height: 1.15,
           ),
         ),
       ],
@@ -112,7 +117,18 @@ class _CompactScanContent extends StatelessWidget {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          label,
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              const Icon(
+                Icons.auto_awesome_rounded,
+                size: 18,
+                color: HomeUpperStyle.orange,
+              ),
+              const SizedBox(width: 8),
+              Flexible(child: copy),
+            ],
+          ),
           const SizedBox(height: 6),
           arrow,
         ],
@@ -120,11 +136,17 @@ class _CompactScanContent extends StatelessWidget {
     }
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 28),
+      constraints: const BoxConstraints(minHeight: 32),
       child: Row(
         children: <Widget>[
-          label,
-          const Spacer(),
+          const Icon(
+            Icons.auto_awesome_rounded,
+            size: 18,
+            color: HomeUpperStyle.orange,
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: copy),
+          const SizedBox(width: 8),
           arrow,
         ],
       ),

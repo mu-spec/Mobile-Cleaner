@@ -2,7 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
+import 'package:mobile_cleaner/core/ui/app_visuals.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
@@ -146,24 +148,16 @@ class _StorageDetails extends StatelessWidget {
         Row(
           key: const Key('total_storage'),
           children: <Widget>[
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? HomeUpperStyle.primaryBlue.withValues(alpha: 0.22)
-                    : HomeUpperStyle.primaryBlue.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(9),
-              ),
-              child: Icon(
-                Icons.storage_outlined,
-                size: 17,
-                color: isDark
-                    ? colors.primary
-                    : HomeUpperStyle.primaryBlue,
-              ),
+            AppIconContainer(
+              icon: Icons.storage_rounded,
+              accent: AppColors.actionBlue,
+              backgroundColor: isDark
+                  ? AppColors.actionBlue.withValues(alpha: 0.22)
+                  : HomeUpperStyle.softBlue,
+              size: 38,
+              iconSize: 19,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
@@ -224,7 +218,7 @@ class _StorageRing extends StatelessWidget {
 
   final StorageInfo info;
 
-  static const double _size = 104;
+  static const double _size = 112;
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +283,7 @@ class _StorageRingPainter extends CustomPainter {
   final Color usedColor;
   final Color availableColor;
 
-  static const double _stroke = 10.5;
+  static const double _stroke = 11;
   static const double _startAngle = -math.pi / 2;
 
   @override
