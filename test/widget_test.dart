@@ -165,7 +165,6 @@ void main() {
     expect(find.text('82.0 GB'), findsOneWidget);
     expect(find.text('46.0 GB'), findsOneWidget);
     expect(find.byKey(const Key('smart_scan_button')), findsOneWidget);
-    expect(find.byKey(const Key('home_settings_button')), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.byKey(const Key('recommendations_section')),
@@ -177,7 +176,6 @@ void main() {
           )
           .first,
     );
-    expect(find.byKey(const Key('quick_tools_section')), findsOneWidget);
     expect(find.byKey(const Key('recommendations_section')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -217,7 +215,9 @@ void main() {
 
     appRouter.go(AppRoutes.home);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('home_settings_button')));
+    // The in-header Home settings button was removed; Settings remains
+    // reachable through bottom navigation (structure unchanged).
+    await tester.tap(find.byKey(const Key('nav_settings')));
     await tester.pumpAndSettle();
     // 'Settings' appears both in the app bar and as the bottom nav label.
     expect(

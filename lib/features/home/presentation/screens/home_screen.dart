@@ -10,7 +10,6 @@ import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/recommendations_card.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
@@ -18,9 +17,10 @@ import 'package:mobile_cleaner/features/storage/presentation/providers/storage_o
 
 /// UI V2.1 Home.
 ///
-/// The required hierarchy is Header → Storage → Smart Scan → Quick Tools →
-/// Cleanup Summary. Existing recommendations remain available after the new
-/// primary Home flow so no feature is removed. This widget only reads real
+/// The required hierarchy is Header → Storage → Smart Scan → Cleanup
+/// Summary → Recommended for you. Quick Tools and the in-header Settings
+/// button were removed for a cleaner, less crowded premium Home; Settings
+/// remains reachable from bottom navigation. This widget only reads real
 /// providers and routes to existing destinations.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -54,15 +54,6 @@ class HomeScreen extends ConsumerWidget {
         toolbarHeight: headerHeight,
         titleSpacing: AppSpacing.md,
         title: const _HomeHeaderTitle(),
-        actions: <Widget>[
-          _HeaderIconButton(
-            buttonKey: const Key('home_settings_button'),
-            tooltip: 'Settings',
-            icon: Icons.settings_outlined,
-            onTap: () => context.go(AppRoutes.settings),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-        ],
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -87,13 +78,6 @@ class HomeScreen extends ConsumerWidget {
                 const StorageOverviewCard(),
                 const SizedBox(height: HomeMetrics.sectionGap),
                 SmartScanCta(onScan: () => context.go(AppRoutes.clean)),
-                const SizedBox(height: HomeMetrics.sectionGap),
-                QuickToolsSection(
-                  onPhotos: () => context.go(AppRoutes.photos),
-                  onFiles: () => context.push(AppRoutes.largeFiles),
-                  onApps: () => context.go(AppRoutes.apps),
-                  onPermissions: () => context.push(AppRoutes.permissions),
-                ),
                 const SizedBox(height: AppSpacing.sm),
                 const _CompactHomeSectionLabel(title: 'Cleanup Summary'),
                 CleanupHistoryCard(
@@ -184,78 +168,6 @@ class _HomeHeaderTitle extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _HeaderIconButton extends StatelessWidget {
-  const _HeaderIconButton({
-    required this.buttonKey,
-    required this.tooltip,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final Key buttonKey;
-  final String tooltip;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final bool isDark = theme.brightness == Brightness.dark;
-
-    return Tooltip(
-      message: tooltip,
-      child: Semantics(
-        button: true,
-        label: tooltip,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            key: buttonKey,
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(AppRadius.tile),
-            child: SizedBox.square(
-              dimension: 44,
-              child: Center(
-                child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? theme.colorScheme.surfaceContainerHigh
-                        : HomeUpperStyle.card,
-                    borderRadius: BorderRadius.circular(AppRadius.tile),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : HomeUpperStyle.border,
-                    ),
-                    boxShadow: isDark
-                        ? null
-                        : <BoxShadow>[
-                            BoxShadow(
-                              color: HomeUpperStyle.navy.withValues(alpha: 0.06),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 17,
-                    color: isDark
-                        ? theme.colorScheme.onSurfaceVariant
-                        : HomeUpperStyle.primaryBlue,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

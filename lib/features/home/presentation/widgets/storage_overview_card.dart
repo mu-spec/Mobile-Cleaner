@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
@@ -148,20 +147,20 @@ class _StorageDetails extends StatelessWidget {
           key: const Key('total_storage'),
           children: <Widget>[
             Container(
-              width: 24,
-              height: 24,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
                 color: isDark
-                    ? AppColors.actionBlue.withValues(alpha: 0.18)
-                    : AppColors.softBlue,
-                borderRadius: BorderRadius.circular(8),
+                    ? HomeUpperStyle.primaryBlue.withValues(alpha: 0.22)
+                    : HomeUpperStyle.primaryBlue.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(9),
               ),
               child: Icon(
-                Icons.sd_storage_rounded,
-                size: 14,
+                Icons.storage_rounded,
+                size: 17,
                 color: isDark
                     ? colors.primary
-                    : AppColors.actionBlue,
+                    : HomeUpperStyle.primaryBlue,
               ),
             ),
             const SizedBox(width: 8),

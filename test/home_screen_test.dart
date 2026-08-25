@@ -186,14 +186,16 @@ Future<void> _scrollTo(WidgetTester tester, Finder target) async {
 
 void main() {
   group('Compact header', () {
-    testWidgets('shows the app identity and keeps Settings available', (
+    testWidgets('shows the app identity without an in-header action', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
 
       expect(find.text('Mobile Cleaner'), findsOneWidget);
       expect(find.text('Clean smarter. Keep what matters.'), findsOneWidget);
-      expect(find.byKey(const Key('home_settings_button')), findsOneWidget);
+      // The in-header Settings button was removed for a cleaner Home;
+      // Settings stays available through bottom navigation.
+      expect(find.byKey(const Key('home_settings_button')), findsNothing);
     });
   });
 
@@ -358,52 +360,27 @@ void main() {
     });
   });
 
-  group('Quick tools', () {
-    testWidgets('all four tools are present as compact tiles', (
-      WidgetTester tester,
-    ) async {
-      await _pumpHome(tester);
-      await _scrollTo(tester, find.byKey(const Key('quick_tools_section')));
-
-      for (final Key key in <Key>[
-        Key('quick_photos'),
-        Key('quick_files'),
-        Key('quick_apps'),
-        Key('quick_permissions'),
-      ]) {
-        expect(find.byKey(key), findsOneWidget, reason: '$key missing');
-      }
-    });
-
-    testWidgets('the section is headed Quick Tools with the review note', (
-      WidgetTester tester,
-    ) async {
-      await _pumpHome(tester);
-      await _scrollTo(tester, find.byKey(const Key('quick_tools_section')));
-
-      expect(find.text('Quick Tools'), findsOneWidget);
-      expect(find.text('Review before removing'), findsOneWidget);
-    });
-
-    testWidgets('tiles meet the minimum touch target', (
-      WidgetTester tester,
-    ) async {
-      await _pumpHome(tester);
-      await _scrollTo(tester, find.byKey(const Key('quick_photos')));
-
-      final Size row = tester.getSize(find.byKey(const Key('quick_photos')));
-      // Comfortably above the 48dp accessibility guideline.
-      expect(row.height, greaterThanOrEqualTo(48));
-    });
-
-    testWidgets('required Home sections precede existing recommendations', (
+  group('Home hierarchy', () {
+    testWidgets('Storage, Smart Scan, Cleanup Summary and Recommendations '
+        'appear in order without Quick Tools', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
 
-      final double toolsY = tester
-          .getTopLeft(find.byKey(const Key('quick_tools_section')))
+      // Quick Tools was removed from Home.
+      expect(
+        find.byKey(const Key('quick_tools_section')),
+        findsNothing,
+      );
+
+      final double storageY = tester
+          .getTopLeft(find.byKey(const Key('used_storage')))
           .dy;
+      final double scanY = tester
+          .getTopLeft(find.byKey(const Key('smart_scan_button')))
+          .dy;
+
+      await _scrollTo(tester, find.byKey(const Key('home_history_empty')));
       final double historyY = tester
           .getTopLeft(find.byKey(const Key('home_history_empty')))
           .dy;
@@ -411,7 +388,8 @@ void main() {
           .getTopLeft(find.byKey(const Key('recommendations_section')))
           .dy;
 
-      expect(toolsY, lessThan(historyY));
+      expect(storageY, lessThan(scanY));
+      expect(scanY, lessThan(historyY));
       expect(historyY, lessThan(recommendationsY));
       expect(find.text('Cleanup Summary'), findsOneWidget);
     });
