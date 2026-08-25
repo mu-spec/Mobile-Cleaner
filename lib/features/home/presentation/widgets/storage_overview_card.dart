@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
@@ -125,7 +126,7 @@ class _StorageDetails extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Used',
+                      'Storage used',
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 10.5,
                         color: colors.onSurfaceVariant,
@@ -146,53 +147,50 @@ class _StorageDetails extends StatelessWidget {
         Row(
           key: const Key('total_storage'),
           children: <Widget>[
-            Icon(
-              Icons.storage_rounded,
-              size: 14,
-              color: colors.onSurfaceVariant,
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.actionBlue.withValues(alpha: 0.18)
+                    : AppColors.softBlue,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.sd_storage_rounded,
+                size: 14,
+                color: isDark
+                    ? colors.primary
+                    : AppColors.actionBlue,
+              ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             Expanded(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      ByteFormatter.format(info.usedBytes),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 10.5,
-                        color: colors.onSurface,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      ' of ',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 10.5,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                    Text(
-                      ByteFormatter.format(info.totalBytes),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 10.5,
-                        color: colors.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '${ByteFormatter.format(info.usedBytes)} '
+                  'of ${ByteFormatter.format(info.totalBytes)}',
+                  maxLines: 1,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 11,
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
-            Text(
-              'Internal storage',
-              maxLines: 1,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 10,
-                color: colors.onSurfaceVariant,
+            Flexible(
+              child: Text(
+                'Internal storage',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10,
+                  color: colors.onSurfaceVariant,
+                ),
               ),
             ),
           ],
@@ -209,7 +207,7 @@ class _StorageRing extends StatelessWidget {
 
   final StorageInfo info;
 
-  static const double _size = 80;
+  static const double _size = 92;
 
   @override
   Widget build(BuildContext context) {
@@ -274,7 +272,7 @@ class _StorageRingPainter extends CustomPainter {
   final Color usedColor;
   final Color availableColor;
 
-  static const double _stroke = 8;
+  static const double _stroke = 9.5;
   static const double _startAngle = -math.pi / 2;
 
   @override

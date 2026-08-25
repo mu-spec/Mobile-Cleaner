@@ -160,9 +160,12 @@ class _HomeHeaderTitle extends StatelessWidget {
       children: <Widget>[
         Text(
           'Mobile Cleaner',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.titleMedium?.copyWith(
+            fontSize: 18,
             fontWeight: FontWeight.w800,
-            letterSpacing: -0.2,
+            letterSpacing: -0.3,
             color: isDark
                 ? theme.colorScheme.onSurface
                 : HomeUpperStyle.textPrimary,
@@ -172,6 +175,7 @@ class _HomeHeaderTitle extends StatelessWidget {
         Text(
           'Clean smarter. Keep what matters.',
           maxLines: 2,
+          overflow: TextOverflow.ellipsis,
           style: theme.textTheme.bodySmall?.copyWith(
             fontSize: 10.5,
             color: isDark

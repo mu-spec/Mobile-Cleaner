@@ -205,7 +205,7 @@ void main() {
 
       expect(find.byKey(const Key('used_storage')), findsOneWidget);
       expect(find.byKey(const Key('free_storage')), findsOneWidget);
-      expect(find.text('Used'), findsOneWidget);
+      expect(find.text('Storage used'), findsOneWidget);
       // "Available" rather than "Free": plainer, and matches Android.
       expect(find.text('Available'), findsOneWidget);
       expect(find.text('82.0 GB'), findsOneWidget);
@@ -259,20 +259,18 @@ void main() {
   });
 
   group('Smart Scan is the primary action', () {
-    testWidgets('the CTA reads Scan Now and carries the privacy note', (
+    testWidgets('the CTA is a compact Smart Scan action', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
 
       expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
       expect(find.byKey(const Key('smart_scan_button')), findsOneWidget);
-      expect(find.text('Scan Now'), findsOneWidget);
-      expect(
-        tester
-            .widget<Text>(find.byKey(const Key('smart_scan_privacy_note')))
-            .data,
-        'Your files stay on your device',
-      );
+      expect(find.text('Smart Scan'), findsOneWidget);
+      // The separate privacy line was removed to keep Home compact; the app's
+      // privacy/security behavior is unchanged.
+      expect(find.byKey(const Key('smart_scan_privacy_note')), findsNothing);
+      expect(find.text('Your files stay on your device'), findsNothing);
     });
 
     testWidgets('the feature is still named on the screen', (
