@@ -17,6 +17,7 @@ dependencies:
   package_info_plus: ^10.2.1
   path_provider: ^2.1.6
   permission_handler: ^13.0.1
+  phosphor_icons: ^3.0.1
   shared_preferences: ^2.5.5
 
 dev_dependencies:

@@ -2,10 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/core/ui/app_visuals.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_duotone_icon.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
@@ -148,14 +147,13 @@ class _StorageDetails extends StatelessWidget {
         Row(
           key: const Key('total_storage'),
           children: <Widget>[
-            AppIconContainer(
-              icon: Icons.storage_rounded,
-              accent: AppColors.actionBlue,
+            HomeDuotoneIcon(
+              icon: PhosphorIconsDuotone.database,
+              primaryColor: HomeUpperStyle.iconBluePrimary,
+              secondaryColor: HomeUpperStyle.iconBlueSecondary,
               backgroundColor: isDark
-                  ? AppColors.actionBlue.withValues(alpha: 0.22)
+                  ? HomeUpperStyle.iconBluePrimary.withValues(alpha: 0.22)
                   : HomeUpperStyle.softBlue,
-              size: 38,
-              iconSize: 19,
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(

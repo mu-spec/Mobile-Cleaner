@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_cleaner/app/theme/app_colors.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/core/ui/app_visuals.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_duotone_icon.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
 /// Home's recommendations: fixed rules over the real scan results.
 ///
@@ -61,7 +63,7 @@ class RecommendationsCard extends ConsumerWidget {
                 message:
                     'Nothing needs attention right now. Your storage looks '
                     'tidy.',
-                icon: Icons.check_circle_outline_rounded,
+                icon: PhosphorIconsDuotone.checkCircle,
               );
             }
             return _AdviceCard(recommendations: found, onOpen: onOpen);
@@ -99,14 +101,13 @@ class _AdviceCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              AppIconContainer(
-                icon: Icons.lightbulb_outline,
-                accent: AppColors.indigoAccent,
+              HomeDuotoneIcon(
+                icon: PhosphorIconsDuotone.lightbulb,
+                primaryColor: HomeUpperStyle.iconVioletPrimary,
+                secondaryColor: HomeUpperStyle.iconVioletSecondary,
                 backgroundColor: isDark
-                    ? AppColors.indigoAccent.withValues(alpha: 0.22)
-                    : AppColors.softIndigo,
-                size: 38,
-                iconSize: 19,
+                    ? HomeUpperStyle.iconVioletPrimary.withValues(alpha: 0.22)
+                    : HomeUpperStyle.softViolet,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -146,8 +147,8 @@ class _AdviceCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? AppColors.indigoAccent.withValues(alpha: 0.22)
-                      : AppColors.softIndigo,
+                      ? HomeUpperStyle.iconVioletPrimary.withValues(alpha: 0.22)
+                      : HomeUpperStyle.softViolet,
                   borderRadius: BorderRadius.circular(AppRadius.card),
                 ),
                 child: Text(
@@ -157,7 +158,7 @@ class _AdviceCard extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                     color: isDark
                         ? colors.onPrimaryContainer
-                        : AppColors.indigoAccent,
+                        : HomeUpperStyle.iconVioletPrimary,
                   ),
                 ),
               ),
@@ -195,14 +196,9 @@ class _AdviceRow extends StatelessWidget {
   final bool showDivider;
 
   IconData get _icon => switch (item.kind) {
-    RecommendationKind.screenshotReview => Icons.screenshot_rounded,
-    RecommendationKind.duplicateCleanup => Icons.file_copy_outlined,
-    RecommendationKind.largeVideoReview => Icons.movie_rounded,
-  };
-
-  Color get _iconAccent => switch (item.kind) {
-    RecommendationKind.duplicateCleanup => AppColors.indigoAccent,
-    _ => AppColors.actionBlue,
+    RecommendationKind.screenshotReview => PhosphorIconsDuotone.image,
+    RecommendationKind.duplicateCleanup => PhosphorIconsDuotone.files,
+    RecommendationKind.largeVideoReview => PhosphorIconsDuotone.playCircle,
   };
 
   @override
@@ -210,8 +206,6 @@ class _AdviceRow extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
-    final bool isDuplicate =
-        item.kind == RecommendationKind.duplicateCleanup;
 
     return Column(
       children: <Widget>[
@@ -226,16 +220,13 @@ class _AdviceRow extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                AppIconContainer(
+                HomeDuotoneIcon(
                   icon: _icon,
-                  accent: _iconAccent,
-                  backgroundColor: isDuplicate
-                      ? (isDark
-                            ? AppColors.indigoAccent.withValues(alpha: 0.22)
-                            : AppColors.softIndigo)
-                      : colors.surfaceContainerHighest,
-                  size: 38,
-                  iconSize: 19,
+                  primaryColor: HomeUpperStyle.iconVioletPrimary,
+                  secondaryColor: HomeUpperStyle.iconVioletSecondary,
+                  backgroundColor: isDark
+                      ? HomeUpperStyle.iconVioletPrimary.withValues(alpha: 0.22)
+                      : HomeUpperStyle.softViolet,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
@@ -283,7 +274,7 @@ class _AdviceRow extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          Divider(height: 1, indent: 62, color: colors.outlineVariant),
+          Divider(height: 1, indent: 74, color: colors.outlineVariant),
       ],
     );
   }
@@ -294,7 +285,7 @@ class _IdleCard extends StatelessWidget {
   const _IdleCard({
     required this.onScan,
     required this.message,
-    this.icon = Icons.lightbulb_outline,
+    this.icon = PhosphorIconsDuotone.lightbulb,
     this.showAction = true,
   });
 
@@ -308,15 +299,16 @@ class _IdleCard extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
-    final bool positive = icon == Icons.check_circle_outline_rounded;
-    final Color accent = positive ? AppColors.success : AppColors.indigoAccent;
+    final bool positive = icon == PhosphorIconsDuotone.checkCircle;
     final Color iconBackground;
     if (isDark) {
-      iconBackground = accent.withValues(alpha: 0.22);
+      iconBackground = positive
+          ? AppColors.success.withValues(alpha: 0.22)
+          : HomeUpperStyle.iconVioletPrimary.withValues(alpha: 0.22);
     } else if (positive) {
       iconBackground = AppColors.success.withValues(alpha: 0.10);
     } else {
-      iconBackground = AppColors.softIndigo;
+      iconBackground = HomeUpperStyle.softViolet;
     }
 
     return Card(
@@ -325,12 +317,15 @@ class _IdleCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            AppIconContainer(
+            HomeDuotoneIcon(
               icon: icon,
-              accent: accent,
+              primaryColor: positive
+                  ? AppColors.success
+                  : HomeUpperStyle.iconVioletPrimary,
+              secondaryColor: positive
+                  ? AppColors.success.withValues(alpha: 0.5)
+                  : HomeUpperStyle.iconVioletSecondary,
               backgroundColor: iconBackground,
-              size: 38,
-              iconSize: 19,
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(

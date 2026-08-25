@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/core/ui/app_card.dart';
-import 'package:mobile_cleaner/core/ui/app_visuals.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/date_formatter.dart';
 import 'package:mobile_cleaner/features/history/domain/cleanup_entry.dart';
 import 'package:mobile_cleaner/features/history/domain/cleanup_history.dart';
 import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_duotone_icon.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
 /// Compact Home summary of the persisted cleanup history.
 ///
@@ -64,14 +65,13 @@ class _HistorySummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         children: <Widget>[
-          AppIconContainer(
-            icon: Icons.cleaning_services,
-            accent: AppColors.actionBlue,
+          HomeDuotoneIcon(
+            icon: PhosphorIconsDuotone.broom,
+            primaryColor: HomeUpperStyle.iconBluePrimary,
+            secondaryColor: HomeUpperStyle.iconBlueSecondary,
             backgroundColor: isDark
-                ? AppColors.actionBlue.withValues(alpha: 0.22)
-                : AppColors.softBlue,
-            size: 38,
-            iconSize: 19,
+                ? HomeUpperStyle.iconBluePrimary.withValues(alpha: 0.22)
+                : HomeUpperStyle.softBlue,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -169,14 +169,13 @@ class _EmptyHistoryCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         children: <Widget>[
-          AppIconContainer(
-            icon: Icons.cleaning_services,
-            accent: AppColors.actionBlue,
+          HomeDuotoneIcon(
+            icon: PhosphorIconsDuotone.broom,
+            primaryColor: HomeUpperStyle.iconBluePrimary,
+            secondaryColor: HomeUpperStyle.iconBlueSecondary,
             backgroundColor: isDark
-                ? AppColors.actionBlue.withValues(alpha: 0.22)
-                : AppColors.softBlue,
-            size: 38,
-            iconSize: 19,
+                ? HomeUpperStyle.iconBluePrimary.withValues(alpha: 0.22)
+                : HomeUpperStyle.softBlue,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
@@ -251,14 +250,13 @@ class _HistoryErrorCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          AppIconContainer(
-            icon: Icons.history_toggle_off_rounded,
-            accent: AppColors.actionBlue,
+          HomeDuotoneIcon(
+            icon: PhosphorIconsDuotone.warning,
+            primaryColor: AppColors.actionBlue,
+            secondaryColor: HomeUpperStyle.iconBlueSecondary,
             backgroundColor: isDark
                 ? AppColors.actionBlue.withValues(alpha: 0.22)
-                : AppColors.softBlue,
-            size: 38,
-            iconSize: 19,
+                : HomeUpperStyle.softBlue,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(

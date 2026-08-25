@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// A compact, full-width Smart Scan action.
 ///
@@ -120,10 +121,12 @@ class _CompactScanContent extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              const Icon(
-                Icons.auto_awesome_rounded,
+              const PhosphorIcon(
+                PhosphorIconsDuotone.sparkle,
                 size: 18,
                 color: HomeUpperStyle.orange,
+                duotoneSecondaryColor: HomeUpperStyle.orange,
+                duotoneSecondaryOpacity: 0.45,
               ),
               const SizedBox(width: 8),
               Flexible(child: copy),
@@ -139,10 +142,12 @@ class _CompactScanContent extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 32),
       child: Row(
         children: <Widget>[
-          const Icon(
-            Icons.auto_awesome_rounded,
+          const PhosphorIcon(
+            PhosphorIconsDuotone.sparkle,
             size: 18,
             color: HomeUpperStyle.orange,
+            duotoneSecondaryColor: HomeUpperStyle.orange,
+            duotoneSecondaryOpacity: 0.45,
           ),
           const SizedBox(width: 8),
           Expanded(child: copy),
