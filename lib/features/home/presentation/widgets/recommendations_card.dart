@@ -202,14 +202,22 @@ class _AdviceRow extends StatelessWidget {
 
   IconData get _icon => switch (item.kind) {
     RecommendationKind.screenshotReview => Icons.screenshot_rounded,
-    RecommendationKind.duplicateCleanup => Icons.copy_all_rounded,
+    RecommendationKind.duplicateCleanup => Icons.file_copy_outlined,
     RecommendationKind.largeVideoReview => Icons.movie_rounded,
+  };
+
+  Color get _iconAccent => switch (item.kind) {
+    RecommendationKind.duplicateCleanup => AppColors.indigoAccent,
+    _ => AppColors.actionBlue,
   };
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-    final bool high = item.priority == RecommendationPriority.high;
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colors = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
+    final bool isDuplicate =
+        item.kind == RecommendationKind.duplicateCleanup;
 
     return Column(
       children: <Widget>[
@@ -222,18 +230,20 @@ class _AdviceRow extends StatelessWidget {
               vertical: AppSpacing.sm,
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 AppIconContainer(
                   icon: _icon,
-                  backgroundColor: high
-                      ? colors.primaryContainer
+                  accent: _iconAccent,
+                  backgroundColor: isDuplicate
+                      ? (isDark
+                            ? AppColors.indigoAccent.withValues(alpha: 0.22)
+                            : AppColors.softIndigo)
                       : colors.surfaceContainerHighest,
-                  foregroundColor: high
-                      ? colors.primary
-                      : colors.onSurfaceVariant,
+                  size: 38,
+                  iconSize: 19,
                 ),
-                const SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -244,7 +254,12 @@ class _AdviceRow extends StatelessWidget {
                         key: Key('recommendation_title_${item.kind.name}'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? colors.onSurface
+                              : AppColors.navy,
+                        ),
                       ),
                       const SizedBox(height: AppSpacing.xxs),
                       // The numbers the rule fired on, so the advice is
@@ -256,7 +271,7 @@ class _AdviceRow extends StatelessWidget {
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: colors.onSurfaceVariant,
                         ),
                       ),
@@ -265,7 +280,7 @@ class _AdviceRow extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Icon(
-                  Icons.chevron_right_rounded,
+                  Icons.chevron_right,
                   size: HomeMetrics.rowIconSize,
                   color: colors.onSurfaceVariant,
                 ),
@@ -274,7 +289,7 @@ class _AdviceRow extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          Divider(height: 1, indent: 70, color: colors.outlineVariant),
+          Divider(height: 1, indent: 66, color: colors.outlineVariant),
       ],
     );
   }

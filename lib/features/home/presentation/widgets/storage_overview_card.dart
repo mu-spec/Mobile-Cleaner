@@ -156,7 +156,7 @@ class _StorageDetails extends StatelessWidget {
                 borderRadius: BorderRadius.circular(9),
               ),
               child: Icon(
-                Icons.storage_rounded,
+                Icons.storage_outlined,
                 size: 17,
                 color: isDark
                     ? colors.primary
@@ -224,7 +224,7 @@ class _StorageRing extends StatelessWidget {
 
   final StorageInfo info;
 
-  static const double _size = 92;
+  static const double _size = 104;
 
   @override
   Widget build(BuildContext context) {
@@ -289,7 +289,7 @@ class _StorageRingPainter extends CustomPainter {
   final Color usedColor;
   final Color availableColor;
 
-  static const double _stroke = 9.5;
+  static const double _stroke = 10.5;
   static const double _startAngle = -math.pi / 2;
 
   @override

@@ -76,14 +76,14 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 const StorageOverviewCard(),
-                const SizedBox(height: HomeMetrics.sectionGap),
+                const SizedBox(height: AppSpacing.sm),
                 SmartScanCta(onScan: () => context.go(AppRoutes.clean)),
                 const SizedBox(height: AppSpacing.sm),
                 const _CompactHomeSectionLabel(title: 'Cleanup Summary'),
                 CleanupHistoryCard(
                   onOpen: () => context.push(AppRoutes.history),
                 ),
-                const SizedBox(height: HomeMetrics.sectionGap),
+                const SizedBox(height: AppSpacing.sm),
                 // Preserved from the existing Home feature. It remains based
                 // entirely on real scan findings and opens existing tools.
                 RecommendationsCard(
@@ -147,9 +147,9 @@ class _HomeHeaderTitle extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.titleMedium?.copyWith(
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: FontWeight.w800,
-            letterSpacing: -0.3,
+            letterSpacing: -0.4,
             color: isDark
                 ? theme.colorScheme.onSurface
                 : HomeUpperStyle.textPrimary,
