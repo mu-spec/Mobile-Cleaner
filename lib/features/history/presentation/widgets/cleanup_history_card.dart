@@ -64,9 +64,12 @@ class _HistorySummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         children: <Widget>[
-          const AppIconContainer(
+          AppIconContainer(
             icon: Icons.history_rounded,
             accent: AppColors.actionBlue,
+            backgroundColor: isDark
+                ? AppColors.actionBlue.withValues(alpha: 0.22)
+                : AppColors.softBlue,
             size: 36,
             iconSize: 18,
           ),
@@ -166,9 +169,12 @@ class _EmptyHistoryCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         children: <Widget>[
-          const AppIconContainer(
+          AppIconContainer(
             icon: Icons.history_rounded,
             accent: AppColors.actionBlue,
+            backgroundColor: isDark
+                ? AppColors.actionBlue.withValues(alpha: 0.22)
+                : AppColors.softBlue,
             size: 36,
             iconSize: 18,
           ),
@@ -236,15 +242,21 @@ class _HistoryErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+
     return AppCard(
       cardKey: const Key('home_history_error'),
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const AppIconContainer(
+          AppIconContainer(
             icon: Icons.history_toggle_off_rounded,
             accent: AppColors.actionBlue,
+            backgroundColor: isDark
+                ? AppColors.actionBlue.withValues(alpha: 0.22)
+                : AppColors.softBlue,
             size: 36,
             iconSize: 18,
           ),

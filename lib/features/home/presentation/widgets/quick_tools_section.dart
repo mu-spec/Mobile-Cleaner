@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/core/ui/app_visuals.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 
-/// Four compact shortcuts to existing features.
+/// Four equal shortcuts inside one compact premium white container.
 ///
-/// A normal portrait phone presents four independent premium tiles in one
-/// row. Narrow screens use two columns, and large accessibility text uses
-/// full-width rows so every label remains readable. Each tile carries just
-/// an icon, a compact bold title, and a short neutral subtitle.
+/// A single Card holds the four tools in one horizontal row. Each shortcut
+/// is just a softly-tinted rounded icon and a short title — no subtitles,
+/// action text, or per-tool arrows. The row always stays four-across on
+/// normal phone widths; titles wrap (never overflow) and the card grows
+/// vertically at large accessibility text sizes. Destinations and keys are
+/// unchanged.
 class QuickToolsSection extends StatelessWidget {
   const QuickToolsSection({
     required this.onPhotos,
@@ -26,42 +27,41 @@ class QuickToolsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
     final double textScale = MediaQuery.textScalerOf(context).scale(1);
+
     final List<_QuickToolData> tools = <_QuickToolData>[
       _QuickToolData(
         key: const Key('quick_photos'),
-        icon: Icons.photo_library_rounded,
+        icon: Icons.photo_outlined,
         tint: AppColors.photoAccent,
         surface: AppColors.softPhoto,
         title: 'Photos',
-        subtitle: 'Review photos',
         onTap: onPhotos,
       ),
       _QuickToolData(
         key: const Key('quick_files'),
-        icon: Icons.folder_rounded,
+        icon: Icons.folder_outlined,
         tint: AppColors.actionBlue,
         surface: AppColors.softBlue,
         title: 'Large Files',
-        subtitle: 'Find big files',
         onTap: onFiles,
       ),
       _QuickToolData(
         key: const Key('quick_apps'),
-        icon: Icons.apps_rounded,
+        icon: Icons.apps_outlined,
         tint: AppColors.indigoAccent,
         surface: AppColors.softIndigo,
         title: 'Apps',
-        subtitle: 'App sizes',
         onTap: onApps,
       ),
       _QuickToolData(
         key: const Key('quick_permissions'),
-        icon: Icons.folder_shared_rounded,
+        icon: Icons.lock_outline,
         tint: AppColors.cleanupOrange,
         surface: AppColors.softOrange,
         title: 'Storage',
-        subtitle: 'Permissions',
         onTap: onPermissions,
       ),
     ];
@@ -70,38 +70,41 @@ class QuickToolsSection extends StatelessWidget {
       key: const Key('quick_tools_section'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const _QuickToolsHeader(),
-        LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            final _QuickToolLayout layout;
-            final int columns;
-            if (constraints.maxWidth >= 320 && textScale <= 1.15) {
-              layout = _QuickToolLayout.fourAcross;
-              columns = 4;
-            } else if (constraints.maxWidth >= 280 && textScale <= 1.4) {
-              layout = _QuickToolLayout.grid;
-              columns = 2;
-            } else {
-              layout = _QuickToolLayout.row;
-              columns = 1;
-            }
-
-            final double itemWidth =
-                (constraints.maxWidth - HomeMetrics.rowGap * (columns - 1)) /
-                columns;
-
-            return Wrap(
-              spacing: HomeMetrics.rowGap,
-              runSpacing: HomeMetrics.rowGap,
+        _QuickToolsHeader(dense: textScale > 1.3),
+        Card(
+          elevation: isDark ? 0 : 1,
+          shadowColor: AppColors.navy.withValues(alpha: 0.045),
+          color: isDark
+              ? theme.colorScheme.surfaceContainerHigh
+              : AppColors.card,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : AppColors.border,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xxs,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
               children: <Widget>[
-                for (final _QuickToolData tool in tools)
-                  SizedBox(
-                    width: itemWidth,
-                    child: _PremiumQuickToolTile(data: tool, layout: layout),
+                for (int i = 0; i < tools.length; i++) ...<Widget>[
+                  if (i > 0) const SizedBox(width: AppSpacing.xxs),
+                  Expanded(
+                    child: _QuickToolShortcut(
+                      data: tools[i],
+                      isDark: isDark,
+                    ),
                   ),
+                ],
               ],
-            );
-          },
+            ),
+          ),
         ),
       ],
     );
@@ -109,14 +112,15 @@ class QuickToolsSection extends StatelessWidget {
 }
 
 class _QuickToolsHeader extends StatelessWidget {
-  const _QuickToolsHeader();
+  const _QuickToolsHeader({required this.dense});
+
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
-    final double textScale = MediaQuery.textScalerOf(context).scale(1);
 
     final Widget heading = Semantics(
       header: true,
@@ -157,10 +161,8 @@ class _QuickToolsHeader extends StatelessWidget {
         right: AppSpacing.xxs,
         bottom: AppSpacing.xs,
       ),
-      child: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          if (textScale > 1.3 || constraints.maxWidth < 320) {
-            return Column(
+      child: dense
+          ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
@@ -168,25 +170,19 @@ class _QuickToolsHeader extends StatelessWidget {
                 const SizedBox(height: 2),
                 trailing,
               ],
-            );
-          }
-          return Row(
-            children: <Widget>[
-              Expanded(child: heading),
-              const SizedBox(width: AppSpacing.xs),
-              // Flexible (not Expanded) keeps the note on one line when it
-              // fits at normal text scale, but lets it shrink and wrap at
-              // large accessibility sizes instead of overflowing.
-              Flexible(child: trailing),
-            ],
-          );
-        },
-      ),
+            )
+          : Row(
+              children: <Widget>[
+                Expanded(child: heading),
+                const SizedBox(width: AppSpacing.xs),
+                // Flexible keeps the note on one line when it fits but lets
+                // it wrap at large text scales instead of overflowing.
+                Flexible(child: trailing),
+              ],
+            ),
     );
   }
 }
-
-enum _QuickToolLayout { fourAcross, grid, row }
 
 class _QuickToolData {
   const _QuickToolData({
@@ -195,7 +191,6 @@ class _QuickToolData {
     required this.tint,
     required this.surface,
     required this.title,
-    required this.subtitle,
     required this.onTap,
   });
 
@@ -204,173 +199,61 @@ class _QuickToolData {
   final Color tint;
   final Color surface;
   final String title;
-  final String subtitle;
   final VoidCallback onTap;
 }
 
-class _PremiumQuickToolTile extends StatelessWidget {
-  const _PremiumQuickToolTile({required this.data, required this.layout});
+class _QuickToolShortcut extends StatelessWidget {
+  const _QuickToolShortcut({required this.data, required this.isDark});
 
   final _QuickToolData data;
-  final _QuickToolLayout layout;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final bool isDark = theme.brightness == Brightness.dark;
-    final bool horizontal = layout == _QuickToolLayout.row;
-    final bool fourAcross = layout == _QuickToolLayout.fourAcross;
 
-    return Card(
-      elevation: isDark ? 0 : 1,
-      shadowColor: AppColors.navy.withValues(alpha: 0.045),
-      color: isDark ? theme.colorScheme.surfaceContainerHigh : AppColors.card,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(17),
-        side: BorderSide(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
-              : AppColors.border,
-        ),
-      ),
+    return Semantics(
+      button: true,
+      label: data.title,
       child: InkWell(
         key: data.key,
         onTap: data.onTap,
-        child: horizontal
-            ? _HorizontalToolContent(data: data)
-            : _VerticalToolContent(data: data, fourAcross: fourAcross),
-      ),
-    );
-  }
-}
-
-class _VerticalToolContent extends StatelessWidget {
-  const _VerticalToolContent({
-    required this.data,
-    required this.fourAcross,
-  });
-
-  final _QuickToolData data;
-  final bool fourAcross;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final bool isDark = theme.brightness == Brightness.dark;
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: fourAcross ? 108 : 102),
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: fourAcross ? 6 : AppSpacing.xs,
-          vertical: AppSpacing.xs,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            AppIconContainer(
-              icon: data.icon,
-              accent: data.tint,
-              backgroundColor: isDark
-                  ? data.tint.withValues(alpha: 0.22)
-                  : data.surface,
-              size: fourAcross ? 32 : 36,
-              iconSize: fourAcross ? 17 : 19,
-            ),
-            const SizedBox(height: 8),
-            // Compact, bold title. Prefers one line; wraps to two only at
-            // large accessibility text scales so it never overflows.
-            Text(
-              data.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontSize: fourAcross ? 12 : 13,
-                fontWeight: FontWeight.w700,
-                height: 1.15,
-                letterSpacing: -0.1,
-                color: isDark ? theme.colorScheme.onSurface : AppColors.navy,
+        borderRadius: BorderRadius.circular(AppRadius.tile),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xxs,
+            vertical: AppSpacing.xxs,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              AppIconContainer(
+                icon: data.icon,
+                accent: data.tint,
+                backgroundColor: isDark
+                    ? data.tint.withValues(alpha: 0.22)
+                    : data.surface,
+                size: 42,
+                iconSize: 21,
               ),
-            ),
-            const SizedBox(height: 3),
-            // Smaller, neutral grey supporting line.
-            Text(
-              data.subtitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontSize: fourAcross ? 10.5 : 11,
-                height: 1.2,
-                color: theme.colorScheme.onSurfaceVariant,
+              const SizedBox(height: 8),
+              Text(
+                data.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                  height: 1.15,
+                  letterSpacing: -0.1,
+                  color: isDark
+                      ? theme.colorScheme.onSurface
+                      : AppColors.navy,
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HorizontalToolContent extends StatelessWidget {
-  const _HorizontalToolContent({required this.data});
-
-  final _QuickToolData data;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final bool isDark = theme.brightness == Brightness.dark;
-
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 64),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xs),
-        child: Row(
-          children: <Widget>[
-            AppIconContainer(
-              icon: data.icon,
-              accent: data.tint,
-              backgroundColor: isDark
-                  ? data.tint.withValues(alpha: 0.22)
-                  : data.surface,
-              size: 38,
-              iconSize: 19,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    data.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: isDark
-                          ? theme.colorScheme.onSurface
-                          : AppColors.navy,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    data.subtitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
