@@ -111,31 +111,18 @@ class _AdviceCard extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        'Recommended for you',
-                        key: const Key('recommendations_title'),
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: isDark ? colors.onSurface : AppColors.navy,
-                        ),
-                      ),
+                child: Semantics(
+                  header: true,
+                  child: Text(
+                    'Recommended for you',
+                    key: const Key('recommendations_title'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? colors.onSurface : AppColors.navy,
                     ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      'Based on what is actually on your device.',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -218,7 +205,7 @@ class _AdviceRow extends StatelessWidget {
               vertical: AppSpacing.sm,
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 HomeDuotoneIcon(
                   icon: _icon,
@@ -234,17 +221,35 @@ class _AdviceRow extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
-                      Text(
-                        item.title,
-                        key: Key('recommendation_title_${item.kind.name}'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? colors.onSurface
-                              : AppColors.navy,
-                        ),
+                      // Title and chevron share one row so the 2-line
+                      // description below gets the full width and can wrap
+                      // naturally instead of truncating mid-word.
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Expanded(
+                            child: Text(
+                              item.title,
+                              key: Key(
+                                'recommendation_title_${item.kind.name}',
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: isDark
+                                    ? colors.onSurface
+                                    : AppColors.navy,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Icon(
+                            Icons.chevron_right,
+                            size: HomeMetrics.rowIconSize,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: AppSpacing.xxs),
                       // The numbers the rule fired on, so the advice is
@@ -258,16 +263,11 @@ class _AdviceRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colors.onSurfaceVariant,
+                          height: 1.25,
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Icon(
-                  Icons.chevron_right,
-                  size: HomeMetrics.rowIconSize,
-                  color: colors.onSurfaceVariant,
                 ),
               ],
             ),

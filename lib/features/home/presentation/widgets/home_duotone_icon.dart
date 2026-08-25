@@ -26,7 +26,7 @@ class HomeDuotoneIcon extends StatelessWidget {
   static const double containerSize = 50;
 
   /// Shared glyph dimension for every Home feature icon.
-  static const double iconSize = 28;
+  static const double iconSize = 30;
 
   /// Shared corner radius.
   static const double radius = 14;
