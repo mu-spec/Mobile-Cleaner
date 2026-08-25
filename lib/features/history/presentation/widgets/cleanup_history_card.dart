@@ -10,6 +10,7 @@ import 'package:mobile_cleaner/features/history/domain/cleanup_history.dart';
 import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_duotone_icon.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Compact Home summary of the persisted cleanup history.
 ///
