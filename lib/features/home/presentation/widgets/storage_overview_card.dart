@@ -169,15 +169,33 @@ class _StorageDetails extends StatelessWidget {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  '${ByteFormatter.format(info.usedBytes)} '
-                  'of ${ByteFormatter.format(info.totalBytes)}',
-                  maxLines: 1,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 11,
-                    color: colors.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      ByteFormatter.format(info.usedBytes),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: colors.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      ' of ',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      ByteFormatter.format(info.totalBytes),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: colors.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
