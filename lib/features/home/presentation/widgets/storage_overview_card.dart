@@ -112,29 +112,43 @@ class _StorageDetails extends StatelessWidget {
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween<double>(
-                          begin: 0.0,
-                          end: info.usedPercentage.toDouble(),
-                        ),
-                        duration: const Duration(milliseconds: 800),
-                        curve: Curves.easeOutCubic,
-                        builder: (BuildContext context, double value, Widget? child) {
-                          return Text(
-                            '${value.round()}%',
-                            key: const Key('storage_percentage'),
-                            style: theme.textTheme.displaySmall?.copyWith(
-                          fontSize: 38,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -1,
-                          color: isDark
-                              ? colors.primary
-                              : HomeUpperStyle.primaryBlue,
-                          height: 1.05,
-                        ),
-                      );
-                        },
-                      ),
+                      child: MediaQuery.disableAnimationsOf(context)
+                          ? Text(
+                              '${info.usedPercentage}%',
+                              key: const Key('storage_percentage'),
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                fontSize: 38,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -1,
+                                color: isDark
+                                    ? colors.primary
+                                    : HomeUpperStyle.primaryBlue,
+                                height: 1.05,
+                              ),
+                            )
+                          : TweenAnimationBuilder<double>(
+                              tween: Tween<double>(
+                                begin: 0.0,
+                                end: info.usedPercentage.toDouble(),
+                              ),
+                              duration: const Duration(milliseconds: 800),
+                              curve: Curves.easeOutCubic,
+                              builder: (BuildContext context, double value, Widget? child) {
+                                return Text(
+                                  '${value.round()}%',
+                                  key: const Key('storage_percentage'),
+                                  style: theme.textTheme.displaySmall?.copyWith(
+                                    fontSize: 38,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -1,
+                                    color: isDark
+                                        ? colors.primary
+                                        : HomeUpperStyle.primaryBlue,
+                                    height: 1.05,
+                                  ),
+                                );
+                              },
+                            ),
                     ),
                     const SizedBox(height: 2),
                     Text(
