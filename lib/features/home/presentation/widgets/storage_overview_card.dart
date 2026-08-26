@@ -252,18 +252,26 @@ class _StorageRingState extends State<_StorageRing>
     }
     final bool reduced = MediaQuery.disableAnimationsOf(context);
     if (reduced && !_reducedMotion) {
-      _controller.stop();
+      if (_controller.isAnimating) {
+        _controller.stop();
+      }
     }
     _reducedMotion = reduced;
+    if (!_reducedMotion && !_animationStarted) {
+      _animationStarted = true;
+      _startAnimation();
+    }
   }
 
   @override
   void didPopNext() {
+    _animationStarted = false;
     _startAnimation();
   }
 
   void _startAnimation() {
     if (MediaQuery.disableAnimationsOf(context) || _reducedMotion) return;
+    _animationStarted = true;
     _controller.reset();
     _animation = Tween<double>(
       begin: 0.0,
@@ -274,23 +282,22 @@ class _StorageRingState extends State<_StorageRing>
     _controller.forward();
   }
 
+  bool _animationStarted = false;
+
   @override
   void initState() {
     super.initState();
-    _reducedMotion = MediaQuery.disableAnimationsOf(context);
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    if (!_reducedMotion) {
-      _startAnimation();
-    }
   }
 
   @override
   void didUpdateWidget(covariant _StorageRing oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.info.usedFraction != widget.info.usedFraction) {
+      _animationStarted = false;
       _startAnimation();
     }
   }
