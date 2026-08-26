@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/app/route_observer.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/app/theme/app_theme.dart';
 import 'package:mobile_cleaner/core/constants/app_constants.dart';
@@ -25,6 +26,7 @@ class MobileCleanerApp extends ConsumerWidget {
       darkTheme: AppTheme.dark,
       themeMode: themeMode,
       routerConfig: appRouter,
+      navigatorObservers: <NavigatorObserver>[storageRouteObserver],
     );
   }
 }

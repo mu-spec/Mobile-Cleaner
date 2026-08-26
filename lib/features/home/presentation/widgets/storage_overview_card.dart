@@ -7,6 +7,7 @@ import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_duotone_icon.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
+import 'package:mobile_cleaner/app/route_observer.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
@@ -240,9 +241,9 @@ class _StorageRingState extends State<_StorageRing>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final ModalRoute<dynamic>? route = ModalRoute.of(context);
+    final PageRoute<dynamic>? route = ModalRoute.of(context) as PageRoute<dynamic>?;
     if (route != null) {
-      route.subscribe(this);
+      storageRouteObserver.subscribe(this, route);
     }
     _reducedMotion = MediaQuery.disableAnimationsOf(context);
   }
@@ -284,6 +285,10 @@ class _StorageRingState extends State<_StorageRing>
 
   @override
   void dispose() {
+    final PageRoute<dynamic>? route = ModalRoute.of(context) as PageRoute<dynamic>?;
+    if (route != null) {
+      storageRouteObserver.unsubscribe(this);
+    }
     _controller.dispose();
     super.dispose();
   }
@@ -314,7 +319,6 @@ class _StorageRingState extends State<_StorageRing>
                 child: AnimatedBuilder(
                   animation: _animation,
                   builder: (BuildContext context, Widget? child) {
-                    final int pct = (_animation.value * 100).round();
                     return Column(
                       key: const Key('free_storage'),
                       mainAxisSize: MainAxisSize.min,

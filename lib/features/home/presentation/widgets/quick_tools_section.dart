@@ -206,7 +206,7 @@ class _QuickToolShortcut extends StatelessWidget {
                     data.icon,
                     size: 21,
                     color: data.tint,
-                    duotoneSecondaryColor: data.tint.withOpacity(0.55),
+                    duotoneSecondaryColor: data.tint.withValues(alpha: 0.55),
                     duotoneSecondaryOpacity: 0.45,
                   ),
                 ),

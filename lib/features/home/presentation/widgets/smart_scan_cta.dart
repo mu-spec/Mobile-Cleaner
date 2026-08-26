@@ -176,7 +176,7 @@ class _RecommendationState extends StatelessWidget {
             _icon,
             size: 22,
             color: Colors.white,
-            duotoneSecondaryColor: Colors.white.withOpacity(0.55),
+            duotoneSecondaryColor: Colors.white.withValues(alpha: 0.55),
             duotoneSecondaryOpacity: 0.45,
           ),
           const SizedBox(width: 10),
@@ -204,7 +204,7 @@ class _RecommendationState extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.85),
+                      color: Colors.white.withValues(alpha: 0.85),
                       fontSize: 11.5,
                       fontWeight: FontWeight.w500,
                       height: 1.15,
