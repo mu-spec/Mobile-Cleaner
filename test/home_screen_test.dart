@@ -587,7 +587,7 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 100));
       expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
     });
   });
