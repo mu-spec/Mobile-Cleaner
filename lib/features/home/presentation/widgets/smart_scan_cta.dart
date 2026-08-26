@@ -20,7 +20,6 @@ class SmartScanCta extends ConsumerWidget {
   const SmartScanCta({
     required this.onScan,
     required this.onOpen,
-    super.key,
   });
 
   final VoidCallback onScan;
@@ -93,7 +92,7 @@ class SmartScanCta extends ConsumerWidget {
 /// band while still reflowing vertically at large accessibility text
 /// scales instead of overflowing.
 class _ScanNowState extends StatelessWidget {
-  const _ScanNowState({this.onScan, super.key});
+  const _ScanNowState({this.onScan});
 
   final VoidCallback? onScan;
 
@@ -150,7 +149,6 @@ class _RecommendationState extends StatelessWidget {
   const _RecommendationState({
     required this.item,
     required this.onOpen,
-    super.key,
   });
 
   final Recommendation item;

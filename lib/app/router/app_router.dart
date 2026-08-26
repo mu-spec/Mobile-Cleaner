@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/route_observer.dart';
 import 'package:mobile_cleaner/app/shell/app_shell.dart';

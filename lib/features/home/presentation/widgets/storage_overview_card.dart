@@ -2,12 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/app/route_observer.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_duotone_icon.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
-import 'package:mobile_cleaner/app/route_observer.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
@@ -224,7 +224,7 @@ class _StorageDetails extends StatelessWidget {
 /// Two-colour donut: blue is the real used fraction and orange is the real
 /// available fraction. Together they always fill exactly 360 degrees.
 class _StorageRing extends StatefulWidget {
-  const _StorageRing({required this.info, super.key});
+  const _StorageRing({required this.info});
 
   final StorageInfo info;
 
