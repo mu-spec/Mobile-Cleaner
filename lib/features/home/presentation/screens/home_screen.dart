@@ -9,7 +9,6 @@ import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_his
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/recommendations_card.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
@@ -76,20 +75,16 @@ class HomeScreen extends ConsumerWidget {
               children: <Widget>[
                 const StorageOverviewCard(),
                 const SizedBox(height: AppSpacing.sm),
-                SmartScanCta(onScan: () => context.go(AppRoutes.clean)),
+                SmartScanCta(
+                  onScan: () => context.go(AppRoutes.clean),
+                  onOpen: (RecommendationKind kind) => _openRecommendation(context, kind),
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 const _CompactHomeSectionLabel(title: 'Cleanup Summary'),
                 CleanupHistoryCard(
                   onOpen: () => context.push(AppRoutes.history),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                // Preserved from the existing Home feature. It remains based
-                // entirely on real scan findings and opens existing tools.
-                RecommendationsCard(
-                  onScan: () => context.go(AppRoutes.clean),
-                  onOpen: (RecommendationKind kind) =>
-                      _openRecommendation(context, kind),
-                ),
+
               ],
             ),
           ),

@@ -479,4 +479,73 @@ void main() {
       expect(AppRoutes.history, '/history');
     });
   });
+  group('Smart Scan compact flow — Phase 1', () {
+    testWidgets('Scan Now state shown when no recommendation', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester);
+      expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
+      expect(find.text('Smart Scan'), findsOneWidget);
+      expect(find.text('Scan Now'), findsOneWidget);
+      // Old descriptive text removed per spec.
+      expect(find.text('Find and clean unnecessary files'), findsNothing);
+    });
+
+    testWidgets('recommendation state uses real recommendation data', (
+      WidgetTester tester,
+    ) async {
+      // 25 stale screenshots past the >20 rule.
+      await _pumpHome(
+        tester,
+        files: <ScannedFile>[for (int i = 0; i < 25; i++) _screenshot(i)],
+      );
+      await _scrollTo(
+        tester,
+        find.byKey(const Key('smart_scan_recommendation_screenshotReview')),
+      );
+      expect(
+        find.byKey(const Key('smart_scan_recommendation_screenshotReview')),
+        findsOneWidget,
+      );
+      expect(find.text('Review old screenshots'), findsOneWidget);
+      expect(
+        find.text('100.0 MB recoverable'),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+    });
+
+    testWidgets('tapping recommendation targets existing destination', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(
+        tester,
+        files: <ScannedFile>[for (int i = 0; i < 25; i++) _screenshot(i)],
+      );
+      await _scrollTo(
+        tester,
+        find.byKey(const Key('smart_scan_recommendation_screenshotReview')),
+      );
+      final InkWell row = tester.widget<InkWell>(
+        find.byKey(const Key('smart_scan_recommendation_screenshotReview')),
+      );
+      expect(row.onTap, isNotNull);
+      expect(find.text('Review old screenshots'), findsOneWidget);
+    });
+  });
+
+  group('Old Recommended for you card removed', () {
+    testWidgets('separate recommendations section no longer on Home', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester);
+      expect(
+        find.byKey(const Key('recommendations_section')),
+        findsNothing,
+      );
+      expect(find.text('Recommended for you'), findsNothing);
+      expect(find.byKey(const Key('recommendations_title')), findsNothing);
+      expect(find.byKey(const Key('recommendations_count')), findsNothing);
+    });
+  });
 }
