@@ -250,7 +250,11 @@ class _StorageRingState extends State<_StorageRing>
       _route = route;
       storageRouteObserver.subscribe(this, route);
     }
-    _reducedMotion = MediaQuery.disableAnimationsOf(context);
+    final bool reduced = MediaQuery.disableAnimationsOf(context);
+    if (reduced && !_reducedMotion) {
+      _controller.stop();
+    }
+    _reducedMotion = reduced;
   }
 
   @override
@@ -259,7 +263,7 @@ class _StorageRingState extends State<_StorageRing>
   }
 
   void _startAnimation() {
-    if (_reducedMotion) return;
+    if (MediaQuery.disableAnimationsOf(context) || _reducedMotion) return;
     _controller.reset();
     _animation = Tween<double>(
       begin: 0.0,
@@ -273,11 +277,14 @@ class _StorageRingState extends State<_StorageRing>
   @override
   void initState() {
     super.initState();
+    _reducedMotion = MediaQuery.disableAnimationsOf(context);
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _startAnimation();
+    if (!_reducedMotion) {
+      _startAnimation();
+    }
   }
 
   @override
