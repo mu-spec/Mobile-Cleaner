@@ -361,6 +361,9 @@ class _StorageRingState extends State<_StorageRing>
     );
 
     if (_reducedMotion) {
+      if (_controller.isAnimating) {
+        _controller.stop();
+      }
       return SizedBox.square(
         dimension: 112,
         child: CustomPaint(
