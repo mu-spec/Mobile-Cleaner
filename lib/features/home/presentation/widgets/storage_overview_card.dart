@@ -237,12 +237,17 @@ class _StorageRingState extends State<_StorageRing>
   late AnimationController _controller;
   late Animation<double> _animation;
   bool _reducedMotion = false;
+  PageRoute<dynamic>? _route;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_route != null) {
+      storageRouteObserver.unsubscribe(this);
+    }
     final PageRoute<dynamic>? route = ModalRoute.of(context) as PageRoute<dynamic>?;
     if (route != null) {
+      _route = route;
       storageRouteObserver.subscribe(this, route);
     }
     _reducedMotion = MediaQuery.disableAnimationsOf(context);
@@ -285,8 +290,7 @@ class _StorageRingState extends State<_StorageRing>
 
   @override
   void dispose() {
-    final PageRoute<dynamic>? route = ModalRoute.of(context) as PageRoute<dynamic>?;
-    if (route != null) {
+    if (_route != null) {
       storageRouteObserver.unsubscribe(this);
     }
     _controller.dispose();

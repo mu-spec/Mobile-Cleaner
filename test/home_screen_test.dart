@@ -512,7 +512,13 @@ void main() {
         find.text('100.0 MB recoverable'),
         findsOneWidget,
       );
-      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('smart_scan_recommendation_screenshotReview')),
+          matching: find.byIcon(Icons.chevron_right),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('tapping recommendation targets existing destination', (
