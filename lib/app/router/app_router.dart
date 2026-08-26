@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:mobile_cleaner/app/route_observer.dart';
 import 'package:mobile_cleaner/app/shell/app_shell.dart';
 import 'package:mobile_cleaner/features/apps/presentation/screens/apps_screen.dart';
 import 'package:mobile_cleaner/features/cleaner/presentation/screens/clean_screen.dart';
@@ -43,6 +44,7 @@ abstract final class AppRoutes {
 }
 
 final GoRouter appRouter = GoRouter(
+  observers: <NavigatorObserver>[storageRouteObserver],
   initialLocation: AppRoutes.splash,
   routes: <RouteBase>[
     GoRoute(
