@@ -111,10 +111,18 @@ class _StorageDetails extends StatelessWidget {
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                        '${info.usedPercentage}%',
-                        key: const Key('storage_percentage'),
-                        style: theme.textTheme.displaySmall?.copyWith(
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween<double>(
+                          begin: 0.0,
+                          end: info.usedPercentage.toDouble(),
+                        ),
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeOutCubic,
+                        builder: (BuildContext context, double value, Widget? child) {
+                          return Text(
+                            '${value.round()}%',
+                            key: const Key('storage_percentage'),
+                            style: theme.textTheme.displaySmall?.copyWith(
                           fontSize: 38,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -1,
@@ -123,6 +131,8 @@ class _StorageDetails extends StatelessWidget {
                               : HomeUpperStyle.primaryBlue,
                           height: 1.05,
                         ),
+                      );
+                        },
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -212,12 +222,71 @@ class _StorageDetails extends StatelessWidget {
 
 /// Two-colour donut: blue is the real used fraction and orange is the real
 /// available fraction. Together they always fill exactly 360 degrees.
-class _StorageRing extends StatelessWidget {
-  const _StorageRing({required this.info});
+class _StorageRing extends StatefulWidget {
+  const _StorageRing({required this.info, super.key});
 
   final StorageInfo info;
 
-  static const double _size = 112;
+  @override
+  State<_StorageRing> createState() => _StorageRingState();
+}
+
+class _StorageRingState extends State<_StorageRing>
+    with TickerProviderStateMixin, RouteAware {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  bool _reducedMotion = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final ModalRoute<dynamic>? route = ModalRoute.of(context);
+    if (route != null) {
+      route.subscribe(this);
+    }
+    _reducedMotion = MediaQuery.disableAnimationsOf(context);
+  }
+
+  @override
+  void didPopNext() {
+    _startAnimation();
+  }
+
+  void _startAnimation() {
+    if (_reducedMotion) return;
+    _controller.reset();
+    _animation = Tween<double>(
+      begin: 0.0,
+      end: widget.info.usedFraction.clamp(0.0, 1.0),
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _startAnimation();
+  }
+
+  @override
+  void didUpdateWidget(covariant _StorageRing oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.info.usedFraction != widget.info.usedFraction) {
+      _startAnimation();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -225,14 +294,63 @@ class _StorageRing extends StatelessWidget {
     final ColorScheme colors = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
 
-    return Semantics(
+    final Widget ring = Semantics(
       label:
-          '${ByteFormatter.format(info.freeBytes)} of storage available',
+          '${ByteFormatter.format(widget.info.freeBytes)} of storage available',
       child: SizedBox.square(
-        dimension: _size,
+        dimension: 112,
         child: CustomPaint(
           painter: _StorageRingPainter(
-            usedFraction: info.usedFraction,
+            usedFraction: _animation.value,
+            usedColor:
+                isDark ? colors.primary : HomeUpperStyle.primaryBlue,
+            availableColor: HomeUpperStyle.orange,
+          ),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xs),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: AnimatedBuilder(
+                  animation: _animation,
+                  builder: (BuildContext context, Widget? child) {
+                    final int pct = (_animation.value * 100).round();
+                    return Column(
+                      key: const Key('free_storage'),
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          ByteFormatter.format(widget.info.freeBytes),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          'Available',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 9,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (_reducedMotion) {
+      return SizedBox.square(
+        dimension: 112,
+        child: CustomPaint(
+          painter: _StorageRingPainter(
+            usedFraction: widget.info.usedFraction.clamp(0.0, 1.0),
             usedColor: isDark ? colors.primary : HomeUpperStyle.primaryBlue,
             availableColor: HomeUpperStyle.orange,
           ),
@@ -246,10 +364,14 @@ class _StorageRing extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Text(
-                      ByteFormatter.format(info.freeBytes),
-                      style: theme.textTheme.titleSmall?.copyWith(
+                      ByteFormatter.format(widget.info.freeBytes),
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontSize: 28,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: -0.2,
+                        letterSpacing: -1,
+                        color: isDark
+                            ? colors.primary
+                            : HomeUpperStyle.primaryBlue,
                       ),
                     ),
                     const SizedBox(height: 1),
@@ -266,8 +388,10 @@ class _StorageRing extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
+    }
+
+    return ring;
   }
 }
 

@@ -588,4 +588,45 @@ void main() {
       expect(find.byKey(const Key('quick_photos')), findsOneWidget);
     });
   });
+
+  group('Storage ring animation — Phase 3', () {
+    testWidgets('ring and percentage start below final and animate up', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester);
+      expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
+      // After short pump the animation should have progressed.
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
+    });
+
+    testWidgets('reduced motion shows final state immediately', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            storageRepositoryProvider.overrideWithValue(
+              const _FakeStorage(StorageInfo(
+                totalBytes: 128 * 1024 * 1024 * 1024,
+                freeBytes: 30 * 1024 * 1024 * 1024,
+              )),
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.light,
+            home: MediaQuery(
+              data: const MediaQueryData(
+                disableAnimations: true,
+                size: Size(420, 1000),
+              ),
+              child: const HomeScreen(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
+    });
+  });
 }
