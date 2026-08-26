@@ -80,14 +80,14 @@ class HomeScreen extends ConsumerWidget {
                   onScan: () => context.go(AppRoutes.clean),
                   onOpen: (RecommendationKind kind) => _openRecommendation(context, kind),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.xxs),
                 QuickToolsSection(
                   onPhotos: () => context.go(AppRoutes.photos),
                   onFiles: () => context.push(AppRoutes.largeFiles),
                   onApps: () => context.go(AppRoutes.apps),
                   onPermissions: () => context.push(AppRoutes.permissions),
                 ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.xxs),
                 const _CompactHomeSectionLabel(title: 'Cleanup Summary'),
                 CleanupHistoryCard(
                   onOpen: () => context.push(AppRoutes.history),

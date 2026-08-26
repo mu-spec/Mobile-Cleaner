@@ -58,27 +58,119 @@ class SmartScanCta extends ConsumerWidget {
           ),
           child: InkWell(
             key: const Key('smart_scan_button'),
-            onTap: hasRec ? () => onOpen(advice.value!.first.kind) : onScan,
+            onTap: () {
+              if (hasRec) {
+                onOpen(advice.value!.first.kind);
+              } else {
+                onScan();
+              }
+            },
             borderRadius: BorderRadius.circular(18),
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: 60),
+              constraints: const BoxConstraints(minHeight: 76),
               child: Padding(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
                 ),
-                child: advice.when(
-                  loading: () => const _ScanNowState(),
-                  error: (Object error, StackTrace stackTrace) => const _ScanNowState(),
-                  data: (List<Recommendation> found) {
-                    if (found.isEmpty) {
-                      return _ScanNowState(onScan: onScan);
-                    }
-                    return _RecommendationState(
-                      item: found.first,
-                      onOpen: () => onOpen(found.first.kind),
-                    );
-                  },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        const PhosphorIcon(
+                          PhosphorIconsDuotone.sparkle,
+                          size: 20,
+                          color: HomeUpperStyle.orange,
+                          duotoneSecondaryColor: HomeUpperStyle.orange,
+                          duotoneSecondaryOpacity: 0.45,
+                        ),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'Smart Scan',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                              height: 1.1,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.25),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: const Center(
+                            child: PhosphorIcon(
+                              PhosphorIconsDuotone.sparkle,
+                              size: 14,
+                              color: Colors.white70,
+                              duotoneSecondaryOpacity: 0.3,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    advice.when(
+                      loading: () => const SizedBox.shrink(),
+                      error: (Object error, StackTrace stackTrace) => const SizedBox.shrink(),
+                      data: (List<Recommendation> found) {
+                        if (found.isNotEmpty) {
+                          return InkWell(
+                            onTap: () => onOpen(found.first.kind),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 2),
+                              child: _RecommendationState(
+                                item: found.first,
+                                onOpen: () => onOpen(found.first.kind),
+                              ),
+                            ),
+                          );
+                        }
+                        return const Text(
+                          'No recommendations yet',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.bottomLeft,
+                      child: TextButton(
+                        onPressed: onScan,
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text(
+                          'Scan Now',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -92,60 +184,6 @@ class SmartScanCta extends ConsumerWidget {
 /// Left sparkle + label, right forward arrow. Height stays in the 58–64dp
 /// band while still reflowing vertically at large accessibility text
 /// scales instead of overflowing.
-class _ScanNowState extends StatelessWidget {
-  const _ScanNowState({this.onScan});
-
-  final VoidCallback? onScan;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: <Widget>[
-        const PhosphorIcon(
-          PhosphorIconsDuotone.sparkle,
-          size: 22,
-          color: HomeUpperStyle.orange,
-          duotoneSecondaryColor: HomeUpperStyle.orange,
-          duotoneSecondaryOpacity: 0.45,
-        ),
-        const SizedBox(width: 10),
-        const Expanded(
-          child: Text(
-            'Smart Scan',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.2,
-              height: 1.1,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        TextButton(
-          onPressed: onScan ?? () {},
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: const Text(
-            'Scan Now',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _RecommendationState extends StatelessWidget {
   const _RecommendationState({
     required this.item,

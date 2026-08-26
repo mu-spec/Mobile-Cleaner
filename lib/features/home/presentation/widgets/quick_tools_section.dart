@@ -30,7 +30,7 @@ class QuickToolsSection extends StatelessWidget {
         tint: AppColors.photoAccent,
         surface: AppColors.softPhoto,
         title: 'Photos',
-        subtitle: 'Duplicates,\nscreenshots,\nimages',
+        subtitle: 'Duplicates',
         onTap: onPhotos,
       ),
       _QuickToolData(
@@ -39,7 +39,7 @@ class QuickToolsSection extends StatelessWidget {
         tint: AppColors.actionBlue,
         surface: AppColors.softBlue,
         title: 'Large Files',
-        subtitle: 'Find your\nbiggest space\nusers',
+        subtitle: 'Big files',
         onTap: onFiles,
       ),
       _QuickToolData(
@@ -48,7 +48,7 @@ class QuickToolsSection extends StatelessWidget {
         tint: AppColors.indigoAccent,
         surface: AppColors.softIndigo,
         title: 'Apps',
-        subtitle: 'Check installed\napp sizes',
+        subtitle: 'App sizes',
         onTap: onApps,
       ),
       _QuickToolData(
@@ -57,7 +57,7 @@ class QuickToolsSection extends StatelessWidget {
         tint: AppColors.cleanupOrange,
         surface: AppColors.softOrange,
         title: 'Storage Access',
-        subtitle: 'Review or update\npermissions',
+        subtitle: 'Permissions',
         onTap: onPermissions,
       ),
     ];
