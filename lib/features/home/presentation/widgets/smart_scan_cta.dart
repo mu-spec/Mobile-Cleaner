@@ -20,6 +20,7 @@ class SmartScanCta extends ConsumerWidget {
   const SmartScanCta({
     required this.onScan,
     required this.onOpen,
+    super.key,
   });
 
   final VoidCallback onScan;
