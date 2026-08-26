@@ -298,80 +298,35 @@ void main() {
     });
   });
 
-  group('Recommended for you uses real data only', () {
-    testWidgets('nothing is invented when the device is clean', (
-      WidgetTester tester,
-    ) async {
+  group('Smart Scan compact flow — Phase 1', () {
+    testWidgets('Scan Now state shown when clean', (tester) async {
       await _pumpHome(tester);
-
-      // No findings, so no count badge and no fabricated rows.
-      expect(find.byKey(const Key('recommendations_section')), findsOneWidget);
-      expect(find.byKey(const Key('recommendations_count')), findsNothing);
-      expect(
-        find.byKey(const Key('recommendation_screenshotReview')),
-        findsNothing,
-      );
+      expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
+      expect(find.text('Smart Scan'), findsOneWidget);
+      expect(find.text('Scan Now'), findsOneWidget);
+      expect(find.byKey(const Key('recommendations_section')), findsNothing);
+      expect(find.text('Recommended for you'), findsNothing);
     });
 
-    testWidgets('a real finding is shown with its real numbers', (
-      WidgetTester tester,
-    ) async {
-      // 25 stale screenshots at 4 MB each: past the >20 rule.
+    testWidgets('real recommendation shown inside Smart Scan card', (tester) async {
       await _pumpHome(
         tester,
         files: <ScannedFile>[for (int i = 0; i < 25; i++) _screenshot(i)],
       );
-
-      await _scrollTo(
-        tester,
-        find.byKey(const Key('recommendation_screenshotReview')),
-      );
-
-      expect(
-        tester
-            .widget<Text>(
-              find.byKey(const Key('recommendation_detail_screenshotReview')),
-            )
-            .data,
-        '25 screenshots older than 90 days · 100.0 MB',
-      );
-      expect(
-        tester
-            .widget<Text>(find.byKey(const Key('recommendations_count')))
-            .data,
-        '1',
-      );
-    });
-
-    testWidgets('the section is headed Recommended for you', (
-      WidgetTester tester,
-    ) async {
-      await _pumpHome(
-        tester,
-        files: <ScannedFile>[for (int i = 0; i < 25; i++) _screenshot(i)],
-      );
-
-      expect(
-        tester
-            .widget<Text>(find.byKey(const Key('recommendations_title')))
-            .data,
-        'Recommended for you',
-      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('smart_scan_recommendation_screenshotReview')), findsOneWidget);
+      expect(find.text('Review old screenshots'), findsOneWidget);
     });
   });
 
   group('Home hierarchy', () {
-    testWidgets('Storage, Smart Scan, Cleanup Summary and Recommendations '
-        'appear in order without Quick Tools', (
+    testWidgets('Storage, Smart Scan, Quick Tools, Cleanup Summary appear in order', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
 
-      // Quick Tools was removed from Home.
-      expect(
-        find.byKey(const Key('quick_tools_section')),
-        findsNothing,
-      );
+      // Quick Tools restored
+      expect(find.byKey(const Key('quick_tools_section')), findsOneWidget);
 
       final double storageY = tester
           .getTopLeft(find.byKey(const Key('used_storage')))
@@ -384,13 +339,14 @@ void main() {
       final double historyY = tester
           .getTopLeft(find.byKey(const Key('home_history_empty')))
           .dy;
-      final double recommendationsY = tester
-          .getTopLeft(find.byKey(const Key('recommendations_section')))
+      // Quick Tools below Smart Scan and above Cleanup Summary
+      final double quickY = tester
+          .getTopLeft(find.byKey(const Key('quick_tools_section')))
           .dy;
 
       expect(storageY, lessThan(scanY));
-      expect(scanY, lessThan(historyY));
-      expect(historyY, lessThan(recommendationsY));
+      expect(scanY, lessThan(quickY));
+      expect(quickY, lessThan(historyY));
       expect(find.text('Cleanup Summary'), findsOneWidget);
     });
   });

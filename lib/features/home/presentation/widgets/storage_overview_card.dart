@@ -291,6 +291,7 @@ class _StorageRingState extends State<_StorageRing>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
+    _animation = Tween<double>(begin: 0.0, end: 0.0).animate(_controller);
   }
 
   @override

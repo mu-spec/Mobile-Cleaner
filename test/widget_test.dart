@@ -167,7 +167,7 @@ void main() {
     expect(find.byKey(const Key('smart_scan_button')), findsOneWidget);
 
     await tester.scrollUntilVisible(
-      find.byKey(const Key('recommendations_section')),
+      find.byKey(const Key('quick_tools_section')),
       300,
       scrollable: find
           .descendant(
@@ -176,7 +176,7 @@ void main() {
           )
           .first,
     );
-    expect(find.byKey(const Key('recommendations_section')), findsOneWidget);
+    expect(find.byKey(const Key('quick_tools_section')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
