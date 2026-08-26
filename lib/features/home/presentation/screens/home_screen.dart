@@ -9,6 +9,7 @@ import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_his
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
@@ -78,6 +79,13 @@ class HomeScreen extends ConsumerWidget {
                 SmartScanCta(
                   onScan: () => context.go(AppRoutes.clean),
                   onOpen: (RecommendationKind kind) => _openRecommendation(context, kind),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                QuickToolsSection(
+                  onPhotos: () => context.go(AppRoutes.photos),
+                  onFiles: () => context.push(AppRoutes.largeFiles),
+                  onApps: () => context.go(AppRoutes.apps),
+                  onPermissions: () => context.push(AppRoutes.permissions),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 const _CompactHomeSectionLabel(title: 'Cleanup Summary'),

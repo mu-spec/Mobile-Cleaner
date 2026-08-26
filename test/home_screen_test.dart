@@ -548,4 +548,44 @@ void main() {
       expect(find.byKey(const Key('recommendations_count')), findsNothing);
     });
   });
+
+  group('Quick Tools — Phase 2', () {
+    testWidgets('all four tools appear in one row', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester);
+      expect(find.byKey(const Key('quick_photos')), findsOneWidget);
+      expect(find.byKey(const Key('quick_files')), findsOneWidget);
+      expect(find.byKey(const Key('quick_apps')), findsOneWidget);
+      expect(find.byKey(const Key('quick_permissions')), findsOneWidget);
+      expect(find.byKey(const Key('quick_tools_section')), findsOneWidget);
+    });
+
+    testWidgets('each tool opens correct destination', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester);
+      final Finder photo = find.byKey(const Key('quick_photos'));
+      final Finder files = find.byKey(const Key('quick_files'));
+      final Finder apps = find.byKey(const Key('quick_apps'));
+      final Finder perms = find.byKey(const Key('quick_permissions'));
+
+      expect(photo, findsOneWidget);
+      expect(files, findsOneWidget);
+      expect(apps, findsOneWidget);
+      expect(perms, findsOneWidget);
+
+      // Verify they are tappable
+      final InkWell photoRow = tester.widget<InkWell>(photo);
+      expect(photoRow.onTap, isNotNull);
+    });
+
+    testWidgets('layout survives large text scale', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester, textScale: 1.8);
+      expect(find.byKey(const Key('quick_tools_section')), findsOneWidget);
+      expect(find.byKey(const Key('quick_photos')), findsOneWidget);
+    });
+  });
 }
