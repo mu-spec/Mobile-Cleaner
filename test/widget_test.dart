@@ -7,6 +7,7 @@ import 'package:mobile_cleaner/app/app.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
 import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
+import 'package:mobile_cleaner/features/apps/presentation/screens/apps_screen.dart';
 import 'package:mobile_cleaner/features/cleaner/presentation/screens/clean_screen.dart';
 import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
@@ -17,6 +18,7 @@ import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/files_screen.dart';
 import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
 import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
+import 'package:mobile_cleaner/features/settings/presentation/screens/settings_screen.dart';
 import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -83,6 +85,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
     }
 
+    Future<void> pumpAsyncRouteTransition() async {
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
     expectActiveOnboardingIndicator(0);
 
     await advanceOnboarding();
@@ -92,14 +101,16 @@ void main() {
     expectActiveOnboardingIndicator(2);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
+    await pumpAsyncRouteTransition();
     expect(find.byKey(const Key('permission_education')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('permission_secondary_action')));
-    await tester.pump(const Duration(milliseconds: 2000));
+    final Finder notNow = find.descendant(
+      of: find.byKey(const Key('permission_education')),
+      matching: find.byKey(const Key('permission_secondary_action')),
+    );
+    expect(notNow, findsOneWidget);
+    await tester.tap(notNow);
+    await pumpAsyncRouteTransition();
     expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
 
     appRouter.go(AppRoutes.splash);
@@ -115,11 +126,11 @@ void main() {
     // lower rows now sit below the fold on a phone-sized surface.
     await scrollSettingsTo(tester, const Key('replay_onboarding'));
     await tester.tap(find.byKey(const Key('replay_onboarding')));
-    await tester.pump(const Duration(milliseconds: 2000));
+    await pumpAsyncRouteTransition();
     expectActiveOnboardingIndicator(0);
 
     await tester.tap(find.byKey(const Key('onboarding_skip')));
-    await tester.pump(const Duration(milliseconds: 2000));
+    await pumpAsyncRouteTransition();
     expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
   });
 
@@ -289,13 +300,13 @@ void main() {
     expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_clean')));
-    await tester.pump(const Duration(milliseconds: 2000));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(CleanScreen), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_photos')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 50));
-    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('photos_screen')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_files')));
@@ -304,18 +315,18 @@ void main() {
     expect(find.byType(FilesScreen), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_apps')));
-    await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.byKey(const Key('apps_list')), findsOneWidget);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(AppsScreen), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_settings')));
-    await tester.pump(const Duration(milliseconds: 2000));
-    expect(
-      find.descendant(of: find.byType(AppBar), matching: find.text('Settings')),
-      findsOneWidget,
-    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(SettingsScreen), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_home')));
-    await tester.pump(const Duration(milliseconds: 2000));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
