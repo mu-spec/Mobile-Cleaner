@@ -38,7 +38,7 @@ void main() {
     WidgetTester tester,
   ) async {
     await usePhoneSurface(tester);
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(<String, Object>{'onboarding_completed': false});
     appRouter.go(AppRoutes.splash);
 
     await tester.pumpWidget(
@@ -125,7 +125,10 @@ void main() {
     expect(find.text('Permission denied'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.byKey(const Key('permission_secondary_action')));
+    await tester.tap(find.descendant(
+      of: find.byKey(const Key('permission_education')),
+      matching: find.byKey(const Key('permission_secondary_action')),
+    ));
     await tester.pump(const Duration(milliseconds: 1200));
     expect(find.text('Scan Now'), findsOneWidget);
   });
