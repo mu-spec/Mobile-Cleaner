@@ -527,6 +527,7 @@ void main() {
       expect(find.byKey(const Key('quick_apps')), findsOneWidget);
       expect(find.byKey(const Key('quick_permissions')), findsOneWidget);
       expect(find.byKey(const Key('quick_tools_section')), findsOneWidget);
+      expect(find.text('Review before removing'), findsNothing);
     });
 
     testWidgets('each tool opens correct destination', (

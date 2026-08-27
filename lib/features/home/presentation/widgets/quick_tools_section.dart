@@ -89,18 +89,6 @@ class QuickToolsSection extends StatelessWidget {
                   ),
                 ),
               ),
-              const Spacer(),
-              Flexible(
-                child: Text(
-                  'Review before removing',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
             ],
           ),
         ),
