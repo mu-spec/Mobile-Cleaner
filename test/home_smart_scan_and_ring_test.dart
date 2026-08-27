@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
-import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
 
 void main() {
   group('Storage ring animation', () {
