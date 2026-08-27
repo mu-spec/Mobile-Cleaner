@@ -11,6 +11,8 @@ class InstalledApp {
     this.cacheBytes,
     this.isSystemApp = false,
     this.canOpen = true,
+    this.versionName,
+    this.versionCode,
     this.installedAt,
     this.updatedAt,
     this.icon,
@@ -42,6 +44,12 @@ class InstalledApp {
 
   /// True when the app has a launcher intent, so Open will actually work.
   final bool canOpen;
+
+  /// Human-readable version declared by the installed package.
+  final String? versionName;
+
+  /// Monotonic package version code, when Android reports it.
+  final int? versionCode;
 
   final DateTime? installedAt;
   final DateTime? updatedAt;
@@ -94,6 +102,8 @@ class InstalledApp {
       isSystemApp: map['isSystemApp'] == true,
       // Absent means openable, matching the platform default.
       canOpen: map['canOpen'] != false,
+      versionName: _readString(map['versionName']),
+      versionCode: _readNonNegativeInt(map['versionCode']),
       installedAt: _readDate(map['installedAtMillis']),
       updatedAt: _readDate(map['updatedAtMillis']),
       icon: _readBytes(map['icon']),

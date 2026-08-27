@@ -1,34 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
-import 'package:mobile_cleaner/core/ui/responsive.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/date_formatter.dart';
 import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
 import 'package:mobile_cleaner/features/apps/domain/app_inventory.dart';
 import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
 import 'package:mobile_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
+import 'package:mobile_cleaner/features/apps/presentation/screens/app_details_screen.dart';
 import 'package:mobile_cleaner/features/apps/presentation/widgets/app_icon.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
-/// Apps: installed applications, as far as Android permits reading them.
-///
-/// ## Honest about its own limits
-///
-/// The list is apps with a **launcher icon**, because that is what the
-/// `<queries>` declaration reveals without `QUERY_ALL_PACKAGES` — a
-/// Play-restricted permission this app does not use. The count will therefore
-/// not match system Settings, and the screen says so rather than pretending
-/// to be complete.
-///
-/// Full size figures need Usage Access, which Android only grants from system
-/// Settings. Without it the APK size is shown and labelled as such.
-///
-/// ## Nothing is uninstalled by this app
-///
-/// Open, App Settings, and Uninstall are all handoffs to Android. The
-/// uninstall confirmation is the platform's own; this screen only re-reads the
-/// list afterwards to see what happened.
+/// Installed apps arranged as the supplied reference: sort controls, one
+/// honest size summary, then a compact app list. App actions live on the full
+/// detail screen opened from each row.
 class AppsScreen extends ConsumerStatefulWidget {
   const AppsScreen({super.key});
 
@@ -39,17 +26,11 @@ class AppsScreen extends ConsumerStatefulWidget {
 class _AppsScreenState extends ConsumerState<AppsScreen>
     with WidgetsBindingObserver {
   AppSort _sort = AppSort.defaultSort;
-  AppFilter _filter = AppFilter.defaultFilter;
-
-  /// Package awaiting confirmation that Android actually removed it.
   String? _pendingUninstall;
 
   @override
   void initState() {
     super.initState();
-    // The uninstall dialog belongs to Android, and leaving this app is the
-    // only signal that it was shown. Resuming is when the outcome can be
-    // checked.
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -65,10 +46,6 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
       _confirmPendingUninstall();
     }
   }
-
-  void _selectSort(AppSort sort) => setState(() => _sort = sort);
-
-  void _selectFilter(AppFilter filter) => setState(() => _filter = filter);
 
   InstalledAppsRepository get _repository =>
       ref.read(installedAppsRepositoryProvider);
@@ -98,11 +75,6 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
     }
   }
 
-  /// Hands the app to Android's uninstaller, then verifies the outcome.
-  ///
-  /// The platform dialog does not report back, so the only reliable way to
-  /// know whether the user went through with it is to ask afterwards whether
-  /// the package is still there.
   Future<void> _uninstall(InstalledApp app) async {
     final bool started = await _repository.requestUninstall(app.packageName);
     if (!started) {
@@ -113,10 +85,11 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
       );
       return;
     }
-    setState(() => _pendingUninstall = app.packageName);
+    if (mounted) {
+      setState(() => _pendingUninstall = app.packageName);
+    }
   }
 
-  /// Checks a pending uninstall once the user comes back to this screen.
   Future<void> _confirmPendingUninstall() async {
     final String? pending = _pendingUninstall;
     if (pending == null) {
@@ -128,36 +101,53 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
     }
     setState(() => _pendingUninstall = null);
     if (!stillInstalled) {
-      // Only refresh when something actually changed, so a cancelled
-      // uninstall does not cost a full re-read and icon rasterisation.
       refreshInstalledApps(ref);
       _report('Uninstalled.');
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
-  Future<void> _requestUsageAccess() async {
-    final bool opened = await _repository.openUsageAccessSettings();
-    if (!opened) {
-      _report('Usage access settings are unavailable on this device.');
-    }
+  void _showDetails(InstalledApp app) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AppDetailsScreen(
+          app: app,
+          onOpen: () => _open(app),
+          onSettings: () => _openSettings(app),
+          onUninstall: () => _uninstall(app),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final AsyncValue<AppInventory> inventory = ref.watch(
-      appInventoryProvider((_sort, _filter)),
+      appInventoryProvider((_sort, AppFilter.defaultFilter)),
     );
+    final TextTheme textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      key: const Key('apps_screen'),
       appBar: AppBar(
+        toolbarHeight: 60,
         leading: const RootBackButton(buttonKey: Key('apps_back_button')),
-        title: const Text('Apps'),
+        titleSpacing: 4,
+        title: Text(
+          'Apps',
+          style: textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
+          ),
+        ),
         actions: <Widget>[
           IconButton(
             key: const Key('apps_refresh'),
             tooltip: 'Refresh',
             onPressed: () => refreshInstalledApps(ref),
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, size: 27),
           ),
           const SizedBox(width: 8),
         ],
@@ -168,17 +158,15 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => refreshInstalledApps(ref),
-            // Reading apps needs no storage permission, so the permissions
-            // route would be a dead end. Retrying is the only real remedy.
             onPermissions: () => refreshInstalledApps(ref),
           ),
           data: (AppInventory data) => Column(
             children: <Widget>[
-              _FilterBar(
+              _SortBar(
                 sort: _sort,
-                filter: _filter,
-                onSort: _selectSort,
-                onFilter: _selectFilter,
+                onSort: (AppSort value) {
+                  setState(() => _sort = value);
+                },
               ),
               Expanded(
                 child: RefreshIndicator(
@@ -188,13 +176,7 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
                   },
                   child: data.isEmpty
                       ? const _NoApps()
-                      : _AppList(
-                          inventory: data,
-                          onOpen: _open,
-                          onSettings: _openSettings,
-                          onUninstall: _uninstall,
-                          onGrantUsageAccess: _requestUsageAccess,
-                        ),
+                      : _AppList(inventory: data, onDetails: _showDetails),
                 ),
               ),
             ],
@@ -205,33 +187,24 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
   }
 }
 
-/// Sort chips plus the system-app filter.
-class _FilterBar extends StatelessWidget {
-  const _FilterBar({
-    required this.sort,
-    required this.filter,
-    required this.onSort,
-    required this.onFilter,
-  });
+/// The four compact controls shown in the reference.
+class _SortBar extends StatelessWidget {
+  const _SortBar({required this.sort, required this.onSort});
 
   final AppSort sort;
-  final AppFilter filter;
   final ValueChanged<AppSort> onSort;
-  final ValueChanged<AppFilter> onFilter;
 
   @override
   Widget build(BuildContext context) {
-    // Horizontally scrollable: six chips overflow any phone.
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+
     return SizedBox(
-      // Grows with the user's text scale so chip labels are never clipped.
-      height: Responsive.chipBarHeight(context),
-      // The option set is small and fixed. Build every chip inside one
-      // horizontal scroller so off-screen filters retain their state and
-      // semantics instead of being lazily disposed.
+      height: 58,
       child: SingleChildScrollView(
         key: const Key('apps_filter_bar'),
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -243,19 +216,30 @@ class _FilterBar extends StatelessWidget {
                   label: Text(option.label),
                   selected: option == sort,
                   onSelected: (_) => onSort(option),
+                  showCheckmark: option == sort,
+                  checkmarkColor: Colors.white,
+                  selectedColor: isDark
+                      ? AppColors.darkPrimary
+                      : AppColors.brandBlue,
+                  backgroundColor: isDark
+                      ? AppColors.darkSurfaceElevated
+                      : AppColors.card,
+                  labelStyle: theme.textTheme.bodySmall?.copyWith(
+                    color: option == sort
+                        ? Colors.white
+                        : theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  side: BorderSide(
+                    color: option == sort
+                        ? Colors.transparent
+                        : theme.colorScheme.outlineVariant,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(9),
+                  ),
                   visualDensity: VisualDensity.compact,
-                ),
-              ),
-            const SizedBox(width: 8),
-            for (final AppFilter option in AppFilter.values)
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  key: Key('app_filter_${option.name}'),
-                  label: Text(option.label),
-                  selected: option == filter,
-                  onSelected: (_) => onFilter(option),
-                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
                 ),
               ),
           ],
@@ -266,81 +250,65 @@ class _FilterBar extends StatelessWidget {
 }
 
 class _AppList extends StatelessWidget {
-  const _AppList({
-    required this.inventory,
-    required this.onOpen,
-    required this.onSettings,
-    required this.onUninstall,
-    required this.onGrantUsageAccess,
-  });
+  const _AppList({required this.inventory, required this.onDetails});
 
   final AppInventory inventory;
-  final ValueChanged<InstalledApp> onOpen;
-  final ValueChanged<InstalledApp> onSettings;
-  final ValueChanged<InstalledApp> onUninstall;
-  final VoidCallback onGrantUsageAccess;
+  final ValueChanged<InstalledApp> onDetails;
 
   @override
   Widget build(BuildContext context) {
-    final bool showUsagePrompt = inventory.canImproveSizes;
-    final int headerCount = showUsagePrompt ? 2 : 1;
-
-    // Lazily built: each row decodes an icon, so building every row up front
-    // would stall the UI thread on a device with hundreds of apps.
     return ListView.builder(
       key: const Key('apps_list'),
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 28),
-      itemCount: inventory.appCount + headerCount,
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+      itemCount: inventory.appCount + 1,
       itemBuilder: (BuildContext context, int index) {
         if (index == 0) {
-          return _TotalCard(inventory: inventory);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _TotalCard(inventory: inventory),
+          );
         }
-        if (showUsagePrompt && index == 1) {
-          return _UsageAccessCard(onGrant: onGrantUsageAccess);
-        }
-
-        final InstalledApp app = inventory.apps[index - headerCount];
-        return _AppRow(
-          app: app,
-          onOpen: () => onOpen(app),
-          onSettings: () => onSettings(app),
-          onUninstall: () => onUninstall(app),
-        );
+        final InstalledApp app = inventory.apps[index - 1];
+        return _AppRow(app: app, onTap: () => onDetails(app));
       },
     );
   }
 }
 
-/// One app: icon, name, size, and the three actions.
 class _AppRow extends StatelessWidget {
-  const _AppRow({
-    required this.app,
-    required this.onOpen,
-    required this.onSettings,
-    required this.onUninstall,
-  });
+  const _AppRow({required this.app, required this.onTap});
 
   final InstalledApp app;
-  final VoidCallback onOpen;
-  final VoidCallback onSettings;
-  final VoidCallback onUninstall;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+    final String updated = app.updatedAt == null
+        ? 'Update date unavailable'
+        : 'Updated ${DateFormatter.format(app.updatedAt!)}';
 
-    return Card(
-      key: Key('app_card_${app.packageName}'),
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceElevated : AppColors.card,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? AppColors.darkBorder : AppColors.border,
+          ),
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: Key('app_card_${app.packageName}'),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 11, 4, 11),
+            child: Row(
               children: <Widget>[
-                AppIcon(app: app),
+                AppIcon(app: app, size: 48),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -352,252 +320,58 @@ class _AppRow extends StatelessWidget {
                         key: Key('app_name_${app.packageName}'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.1,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _sizeLabel(app),
+                        ByteFormatter.format(app.bestKnownBytes),
                         key: Key('app_size_${app.packageName}'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: colors.onSurface,
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 12,
                         ),
                       ),
+                      const SizedBox(height: 1),
                       Text(
-                        _subtitleFor(app),
+                        updated,
                         key: Key('app_detail_${app.packageName}'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall
-                            ?.copyWith(color: colors.onSurfaceVariant),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            _AppActions(
-              app: app,
-              onOpen: onOpen,
-              onSettings: onSettings,
-              onUninstall: onUninstall,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// The headline size, labelled honestly about what it covers.
-  static String _sizeLabel(InstalledApp app) {
-    final int? total = app.totalBytes;
-    if (total != null) {
-      return ByteFormatter.format(total);
-    }
-    // Not the full footprint, so do not present it as one.
-    return '${ByteFormatter.format(app.apkBytes)} app';
-  }
-
-  static String _subtitleFor(InstalledApp app) {
-    final List<String> parts = <String>[];
-    if (app.hasDetailedSize) {
-      parts.add('${ByteFormatter.format(app.dataBytes ?? 0)} data');
-      final int cache = app.cacheBytes ?? 0;
-      if (cache > 0) {
-        parts.add('${ByteFormatter.format(cache)} cache');
-      }
-    }
-    if (app.isSystemApp) {
-      parts.add('System');
-    }
-    if (parts.isEmpty && app.updatedAt != null) {
-      parts.add('Updated ${DateFormatter.relative(app.updatedAt!)}');
-    }
-    if (parts.isEmpty) {
-      parts.add(app.packageName);
-    }
-    return parts.join(' · ');
-  }
-}
-
-/// The three existing app actions, kept inside the card at every width.
-class _AppActions extends StatelessWidget {
-  const _AppActions({
-    required this.app,
-    required this.onOpen,
-    required this.onSettings,
-    required this.onUninstall,
-  });
-
-  final InstalledApp app;
-  final VoidCallback onOpen;
-  final VoidCallback onSettings;
-  final VoidCallback onUninstall;
-
-  @override
-  Widget build(BuildContext context) {
-    final double textScale = MediaQuery.textScalerOf(context).scale(1);
-
-    Widget open() => _ActionButton(
-      actionKey: Key('app_open_${app.packageName}'),
-      icon: Icons.launch_rounded,
-      label: 'Open',
-      onPressed: app.canOpen ? onOpen : null,
-    );
-    Widget settings() => _ActionButton(
-      actionKey: Key('app_settings_${app.packageName}'),
-      icon: Icons.settings_outlined,
-      label: 'App Settings',
-      onPressed: onSettings,
-    );
-    Widget uninstall() => _ActionButton(
-      actionKey: Key('app_uninstall_${app.packageName}'),
-      icon: Icons.delete_outline_rounded,
-      label: 'Uninstall',
-      // Android refuses for system apps; disable the handoff up front.
-      onPressed: app.isSystemApp ? null : onUninstall,
-      destructive: true,
-    );
-
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        final bool stacked = constraints.maxWidth < 320 || textScale > 1.3;
-        if (stacked) {
-          return Column(
-            key: Key('app_actions_${app.packageName}'),
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Expanded(child: open()),
-                  Expanded(child: settings()),
-                ],
-              ),
-              const SizedBox(height: 4),
-              SizedBox(width: double.infinity, child: uninstall()),
-            ],
-          );
-        }
-        return Row(
-          key: Key('app_actions_${app.packageName}'),
-          children: <Widget>[
-            Expanded(child: open()),
-            Expanded(child: settings()),
-            Expanded(child: uninstall()),
-          ],
-        );
-      },
-    );
-  }
-}
-
-/// One action constrained by its responsive action-cell width.
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.actionKey,
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-    this.destructive = false,
-  });
-
-  final Key actionKey;
-  final IconData icon;
-  final String label;
-  final VoidCallback? onPressed;
-  final bool destructive;
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: SizedBox(
-        width: double.infinity,
-        child: TextButton.icon(
-          key: actionKey,
-          onPressed: onPressed,
-          icon: Icon(icon, size: 17),
-          label: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(label, maxLines: 1),
-          ),
-          style: TextButton.styleFrom(
-            foregroundColor: destructive ? colors.error : colors.primary,
-            minimumSize: const Size(0, 40),
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Explains that sizes are partial, and offers the only route to fixing it.
-class _UsageAccessCard extends StatelessWidget {
-  const _UsageAccessCard({required this.onGrant});
-
-  final VoidCallback onGrant;
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
-    return Card(
-      key: const Key('apps_usage_access_card'),
-      margin: const EdgeInsets.only(top: 12),
-      color: colors.secondaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Icon(
-                  Icons.query_stats_rounded,
-                  size: 18,
-                  color: colors.onSecondaryContainer,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Showing app sizes only',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colors.onSecondaryContainer,
-                    ),
+                IconButton(
+                  key: Key('app_more_${app.packageName}'),
+                  tooltip: 'View ${app.name} details',
+                  onPressed: onTap,
+                  icon: PhosphorIcon(
+                    PhosphorIconsDuotone.dotsThreeVertical,
+                    size: 21,
+                    color: theme.colorScheme.onSurface,
+                    duotoneSecondaryColor: theme.colorScheme.onSurfaceVariant,
+                    duotoneSecondaryOpacity: 1,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Android needs Usage Access before it will report app data and '
-              'cache. It can only be granted from system settings.',
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: colors.onSecondaryContainer),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                key: const Key('apps_grant_usage_access'),
-                onPressed: onGrant,
-                child: const Text('Open settings'),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-/// Headline: how many apps and how much space.
 class _TotalCard extends StatelessWidget {
   const _TotalCard({required this.inventory});
 
@@ -605,61 +379,86 @@ class _TotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
     final int count = inventory.appCount;
 
-    return Card(
+    return Container(
       key: const Key('apps_total_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              inventory.hasUsageAccess
-                  ? 'Space used by apps'
-                  : 'App size, excluding data',
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: colors.onSurfaceVariant),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 15),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceElevated : AppColors.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.border,
+        ),
+        boxShadow: <BoxShadow>[
+          if (!isDark)
+            BoxShadow(
+              color: AppColors.navy.withValues(alpha: 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
-            const SizedBox(height: 6),
-            Text(
-              ByteFormatter.format(inventory.totalBytes),
-              key: const Key('apps_total_bytes'),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: colors.primary,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            inventory.hasUsageAccess
+                ? 'Space used by apps'
+                : 'App size, excluding data',
+            key: const Key('apps_total_label'),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            ByteFormatter.format(inventory.totalBytes),
+            key: const Key('apps_total_bytes'),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: isDark ? AppColors.darkOrange : AppColors.cleanupOrange,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '$count ${count == 1 ? 'app' : 'apps'}',
+            key: const Key('apps_count'),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              PhosphorIcon(
+                PhosphorIconsDuotone.info,
+                size: 17,
+                color: theme.colorScheme.onSurfaceVariant,
+                duotoneSecondaryColor: theme.colorScheme.onSurfaceVariant,
+                duotoneSecondaryOpacity: 0.45,
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '$count ${count == 1 ? 'app' : 'apps'}',
-              key: const Key('apps_count'),
-              style: Theme.of(context).textTheme.bodySmall
-                  ?.copyWith(color: colors.onSurfaceVariant),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: <Widget>[
-                Icon(
-                  Icons.info_outline_rounded,
-                  size: 15,
-                  color: colors.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Android only lets this app see apps with a launcher '
-                    'icon, so this list is shorter than system settings.',
-                    key: const Key('apps_visibility_note'),
-                    style: Theme.of(context).textTheme.bodySmall
-                        ?.copyWith(color: colors.onSurfaceVariant),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Android only lets this app see apps with a launcher icon, '
+                  'so this list is shorter than system settings.',
+                  key: const Key('apps_visibility_note'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.35,
+                    fontSize: 11,
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -678,7 +477,13 @@ class _NoApps extends StatelessWidget {
       padding: const EdgeInsets.all(32),
       children: <Widget>[
         const SizedBox(height: 60),
-        Icon(Icons.apps_rounded, size: 56, color: colors.primary),
+        PhosphorIcon(
+          PhosphorIconsDuotone.appWindow,
+          size: 56,
+          color: colors.primary,
+          duotoneSecondaryColor: colors.primary.withValues(alpha: 0.45),
+          duotoneSecondaryOpacity: 1,
+        ),
         const SizedBox(height: 16),
         Text(
           'No apps to show',
@@ -688,7 +493,7 @@ class _NoApps extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Android did not report any installed apps this app is allowed to '
-          'see. Try including system apps.',
+          'see.',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall
               ?.copyWith(color: colors.onSurfaceVariant),

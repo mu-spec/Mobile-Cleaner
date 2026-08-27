@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
 import 'package:mobile_cleaner/features/apps/domain/app_inventory.dart';
 import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
+import 'package:mobile_cleaner/features/apps/presentation/screens/app_details_screen.dart';
 import 'package:mobile_cleaner/features/apps/presentation/screens/apps_screen.dart';
 
 const int _mib = 1024 * 1024;
@@ -17,6 +18,8 @@ InstalledApp _app({
   int? cacheBytes,
   bool isSystemApp = false,
   bool canOpen = true,
+  String? versionName,
+  int? versionCode,
   DateTime? installedAt,
   DateTime? updatedAt,
 }) => InstalledApp(
@@ -28,6 +31,8 @@ InstalledApp _app({
   cacheBytes: cacheBytes,
   isSystemApp: isSystemApp,
   canOpen: canOpen,
+  versionName: versionName,
+  versionCode: versionCode,
   installedAt: installedAt,
   updatedAt: updatedAt,
 );
@@ -41,6 +46,8 @@ List<InstalledApp> _fixture() => <InstalledApp>[
     appBytes: 40 * _mib,
     dataBytes: 900 * _mib,
     cacheBytes: 60 * _mib,
+    versionName: '2.88.1',
+    versionCode: 28801,
     installedAt: DateTime(2024, 1, 10),
     updatedAt: DateTime(2026, 2, 1),
   ),
@@ -81,14 +88,12 @@ class _StubApps implements InstalledAppsRepository {
   _StubApps({
     List<InstalledApp>? apps,
     this.hasAccess = true,
-    this.detailSupported = true,
     this.actionsSucceed = true,
     this.stillInstalled = true,
   }) : apps = apps ?? _fixture();
 
   final List<InstalledApp> apps;
   final bool hasAccess;
-  final bool detailSupported;
   final bool actionsSucceed;
   bool stillInstalled;
 
@@ -106,7 +111,7 @@ class _StubApps implements InstalledAppsRepository {
     return InstalledAppsSnapshot(
       apps: apps,
       hasUsageAccess: hasAccess,
-      sizeDetailSupported: detailSupported,
+      sizeDetailSupported: true,
     );
   }
 
@@ -160,46 +165,40 @@ Future<_StubApps> _pumpApps(
 }
 
 List<String> _names(AppSort sort, {AppFilter filter = AppFilter.userApps}) =>
-    AppInventory.from(_fixture(), sort: sort, filter: filter)
-        .apps
-        .map((InstalledApp a) => a.name)
-        .toList();
+    AppInventory.from(
+      _fixture(),
+      sort: sort,
+      filter: filter,
+    ).apps.map((InstalledApp a) => a.name).toList();
 
-Future<void> _tapFilter(WidgetTester tester, Key key) async {
-  final Finder control = find.byKey(key);
-  final Finder bar = find
-      .descendant(
-        of: find.byKey(const Key('apps_filter_bar')),
-        matching: find.byType(Scrollable),
-      )
-      .first;
-  await tester.scrollUntilVisible(control, 120, scrollable: bar);
-  await tester.pumpAndSettle();
-  await tester.tap(control);
+Future<void> _openDetails(WidgetTester tester, String packageName) async {
+  await tester.tap(find.byKey(Key('app_card_$packageName')));
   await tester.pumpAndSettle();
 }
 
 void main() {
   group('InstalledApp parsing', () {
     test('reads a well-formed platform row', () {
-      final InstalledApp? app = InstalledApp.fromPlatformMap(
-        <Object?, Object?>{
-          'packageName': 'com.example',
-          'name': 'Example',
-          'apkBytes': 30 * _mib,
-          'appBytes': 30 * _mib,
-          'dataBytes': 70 * _mib,
-          'cacheBytes': 5 * _mib,
-          'isSystemApp': false,
-          'canOpen': true,
-          'updatedAtMillis': 1700000000000,
-        },
-      );
+      final InstalledApp? app = InstalledApp.fromPlatformMap(<Object?, Object?>{
+        'packageName': 'com.example',
+        'name': 'Example',
+        'apkBytes': 30 * _mib,
+        'appBytes': 30 * _mib,
+        'dataBytes': 70 * _mib,
+        'cacheBytes': 5 * _mib,
+        'versionName': '4.2.1',
+        'versionCode': 421,
+        'isSystemApp': false,
+        'canOpen': true,
+        'updatedAtMillis': 1700000000000,
+      });
 
       expect(app, isNotNull);
       expect(app!.name, 'Example');
       expect(app.hasDetailedSize, isTrue);
       expect(app.totalBytes, 105 * _mib);
+      expect(app.versionName, '4.2.1');
+      expect(app.versionCode, 421);
       expect(app.updatedAt, isNotNull);
     });
 
@@ -211,9 +210,10 @@ void main() {
     });
 
     test('a missing label falls back to the package name', () {
-      final InstalledApp? app = InstalledApp.fromPlatformMap(
-        <Object?, Object?>{'packageName': 'com.silent', 'apkBytes': 100},
-      );
+      final InstalledApp? app = InstalledApp.fromPlatformMap(<Object?, Object?>{
+        'packageName': 'com.silent',
+        'apkBytes': 100,
+      });
       // Listing it under its package beats hiding it.
       expect(app?.name, 'com.silent');
     });
@@ -251,10 +251,7 @@ void main() {
     });
 
     test('a null payload is empty, not an error', () {
-      expect(
-        PlatformInstalledAppsRepository.parseSnapshot(null).apps,
-        isEmpty,
-      );
+      expect(PlatformInstalledAppsRepository.parseSnapshot(null).apps, isEmpty);
     });
   });
 
@@ -282,29 +279,17 @@ void main() {
     test('largest sorts on the full footprint when it is known', () {
       // Chatter's 1 GB of data beats Arcade's 300 MB of code, even though
       // Arcade has the bigger APK.
-      expect(_names(AppSort.largest), <String>[
-        'Chatter',
-        'Arcade',
-        'Notepad',
-      ]);
+      expect(_names(AppSort.largest), <String>['Chatter', 'Arcade', 'Notepad']);
     });
 
     test('name and date orderings each differ', () {
-      expect(_names(AppSort.name), <String>[
-        'Arcade',
-        'Chatter',
-        'Notepad',
-      ]);
+      expect(_names(AppSort.name), <String>['Arcade', 'Chatter', 'Notepad']);
       expect(_names(AppSort.recentlyUpdated), <String>[
         'Chatter',
         'Notepad',
         'Arcade',
       ]);
-      expect(_names(AppSort.oldest), <String>[
-        'Arcade',
-        'Chatter',
-        'Notepad',
-      ]);
+      expect(_names(AppSort.oldest), <String>['Arcade', 'Chatter', 'Notepad']);
     });
 
     test('apps with no date sort last, never first', () {
@@ -356,14 +341,13 @@ void main() {
         AppInventory.from(_fixture(), hasUsageAccess: true).canImproveSizes,
         isFalse,
       );
-      expect(
-        AppInventory.from(_fixture()).canImproveSizes,
-        isTrue,
-      );
+      expect(AppInventory.from(_fixture()).canImproveSizes, isTrue);
       // Below Android 8 the API does not exist, so never nag.
       expect(
-        AppInventory.from(_fixture(), sizeDetailSupported: false)
-            .canImproveSizes,
+        AppInventory.from(
+          _fixture(),
+          sizeDetailSupported: false,
+        ).canImproveSizes,
         isFalse,
       );
     });
@@ -382,7 +366,7 @@ void main() {
   });
 
   group('Apps screen', () {
-    testWidgets('shows icon, name, and size for each app', (
+    testWidgets('shows the compact reference list with no inline actions', (
       WidgetTester tester,
     ) async {
       await _pumpApps(tester);
@@ -396,17 +380,78 @@ void main() {
         tester.widget<Text>(find.byKey(const Key('app_size_com.chat'))).data,
         '1000.0 MB',
       );
-      // No icon bytes in the fixture, so the lettered fallback is used.
+      expect(
+        tester.widget<Text>(find.byKey(const Key('app_detail_com.chat'))).data,
+        'Updated 01 Feb 2026',
+      );
+      expect(find.byKey(const Key('app_more_com.chat')), findsOneWidget);
+      expect(find.byKey(const Key('app_open_com.chat')), findsNothing);
+      expect(find.byKey(const Key('apps_usage_access_card')), findsNothing);
       expect(
         find.byKey(const Key('app_icon_fallback_com.chat')),
         findsOneWidget,
       );
     });
 
-    testWidgets('offers Open, App Settings, and Uninstall per app', (
+    testWidgets('tapping an app opens its complete real detail screen', (
+      WidgetTester tester,
+    ) async {
+      await _pumpApps(tester);
+      await _openDetails(tester, 'com.chat');
+
+      expect(
+        find.byKey(const Key('app_details_screen_com.chat')),
+        findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('app_details_version_com.chat')))
+            .data,
+        'Version 2.88.1',
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('app_details_package_com.chat')))
+            .data,
+        'com.chat',
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('app_details_total_com.chat')))
+            .data,
+        '1000.0 MB',
+      );
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const Key('app_details_app_bytes_com.chat')),
+            )
+            .data,
+        '40.0 MB',
+      );
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const Key('app_details_data_bytes_com.chat')),
+            )
+            .data,
+        '900.0 MB',
+      );
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const Key('app_details_cache_bytes_com.chat')),
+            )
+            .data,
+        '60.0 MB',
+      );
+    });
+
+    testWidgets('detail screen offers Open, App Settings, and Uninstall', (
       WidgetTester tester,
     ) async {
       final _StubApps repo = await _pumpApps(tester);
+      await _openDetails(tester, 'com.chat');
 
       await tester.tap(find.byKey(const Key('app_open_com.chat')));
       await tester.pumpAndSettle();
@@ -421,27 +466,26 @@ void main() {
       expect(repo.uninstallRequested, <String>['com.chat']);
     });
 
-    testWidgets('uninstall is a handoff, and the app is not removed locally', (
+    testWidgets('uninstall remains an Android handoff', (
       WidgetTester tester,
     ) async {
-      // The user backs out of Android's dialog, so the package remains.
       final _StubApps repo = _StubApps(stillInstalled: true);
       await _pumpApps(tester, repository: repo);
       final int readsBefore = repo.reads;
+      await _openDetails(tester, 'com.chat');
 
       await tester.tap(find.byKey(const Key('app_uninstall_com.chat')));
       await tester.pumpAndSettle();
 
-      // Still listed: this screen never removes an app itself.
-      expect(find.byKey(const Key('app_card_com.chat')), findsOneWidget);
-      // And a cancelled uninstall costs no re-read.
+      expect(repo.uninstallRequested, <String>['com.chat']);
       expect(repo.reads, readsBefore);
     });
 
-    testWidgets('a failed action is reported rather than silently ignored', (
+    testWidgets('a failed detail action is reported', (
       WidgetTester tester,
     ) async {
       await _pumpApps(tester, repository: _StubApps(actionsSucceed: false));
+      await _openDetails(tester, 'com.chat');
 
       await tester.tap(find.byKey(const Key('app_open_com.chat')));
       await tester.pumpAndSettle();
@@ -450,43 +494,41 @@ void main() {
       expect(find.text('Chatter could not be opened.'), findsOneWidget);
     });
 
-    testWidgets('system apps cannot be uninstalled and say so', (
+    testWidgets('system app detail disables impossible actions', (
       WidgetTester tester,
     ) async {
-      await _pumpApps(tester);
+      final InstalledApp system = _fixture().last;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: AppDetailsScreen(
+            app: system,
+            onOpen: () {},
+            onSettings: () {},
+            onUninstall: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-      await _tapFilter(tester, const Key('app_filter_all'));
-
-      final Finder uninstall = find.byKey(
-        const Key('app_uninstall_com.android.systemthing'),
-      );
-      await tester.scrollUntilVisible(
-        uninstall,
-        200,
-        scrollable: find
-            .descendant(
-              of: find.byKey(const Key('apps_list')),
-              matching: find.byType(Scrollable),
-            )
-            .first,
-      );
-      // Android refuses for system apps, so the action is disabled up front.
-      expect(
-        tester.widget<TextButton>(uninstall).onPressed,
-        isNull,
-      );
-      // Open is disabled too: it has no launcher intent.
       expect(
         tester
-            .widget<TextButton>(
+            .widget<OutlinedButton>(
               find.byKey(const Key('app_open_com.android.systemthing')),
+            )
+            .onPressed,
+        isNull,
+      );
+      expect(
+        tester
+            .widget<OutlinedButton>(
+              find.byKey(const Key('app_uninstall_com.android.systemthing')),
             )
             .onPressed,
         isNull,
       );
     });
 
-    testWidgets('sizes are labelled honestly without usage access', (
+    testWidgets('partial Android figures stay honestly labelled', (
       WidgetTester tester,
     ) async {
       await _pumpApps(
@@ -499,41 +541,24 @@ void main() {
         ),
       );
 
-      // Not presented as a full footprint.
       expect(
         tester.widget<Text>(find.byKey(const Key('app_size_com.a'))).data,
-        '25.0 MB app',
-      );
-      expect(
-        tester.widget<Text>(find.byKey(const Key('apps_total_bytes'))).data,
         '25.0 MB',
       );
-      expect(find.byKey(const Key('apps_usage_access_card')), findsOneWidget);
-    });
-
-    testWidgets('the usage-access prompt opens system settings', (
-      WidgetTester tester,
-    ) async {
-      final _StubApps repo = _StubApps(hasAccess: false);
-      await _pumpApps(tester, repository: repo);
-
-      await tester.tap(find.byKey(const Key('apps_grant_usage_access')));
-      await tester.pumpAndSettle();
-
-      expect(repo.usageSettingsOpened, 1);
-    });
-
-    testWidgets('no usage-access prompt where the API cannot exist', (
-      WidgetTester tester,
-    ) async {
-      await _pumpApps(
-        tester,
-        repository: _StubApps(hasAccess: false, detailSupported: false),
+      expect(
+        tester.widget<Text>(find.byKey(const Key('apps_total_label'))).data,
+        'App size, excluding data',
       );
-
-      // Nagging for a permission that would change nothing is worse than
-      // showing a partial figure.
       expect(find.byKey(const Key('apps_usage_access_card')), findsNothing);
+
+      await _openDetails(tester, 'com.a');
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('app_details_size_scope_com.a')))
+            .data,
+        'Excluding data',
+      );
+      expect(find.text('Not available'), findsNWidgets(2));
     });
 
     testWidgets('the list admits it is shorter than system settings', (
@@ -548,7 +573,7 @@ void main() {
       );
     });
 
-    testWidgets('all four sorts are offered and reorder the list', (
+    testWidgets('only the four reference sorts are shown and work in memory', (
       WidgetTester tester,
     ) async {
       final _StubApps repo = await _pumpApps(tester);
@@ -556,25 +581,11 @@ void main() {
       for (final AppSort sort in AppSort.values) {
         expect(find.byKey(Key('app_sort_${sort.name}')), findsOneWidget);
       }
+      expect(find.byKey(const Key('app_filter_all')), findsNothing);
+      expect(find.byKey(const Key('app_filter_userApps')), findsNothing);
 
       await tester.tap(find.byKey(const Key('app_sort_name')));
       await tester.pumpAndSettle();
-
-      // Re-sorting is done in memory, never by re-reading the package list.
-      expect(repo.reads, 1);
-    });
-
-    testWidgets('the system filter changes the visible count', (
-      WidgetTester tester,
-    ) async {
-      final _StubApps repo = await _pumpApps(tester);
-
-      await _tapFilter(tester, const Key('app_filter_all'));
-
-      expect(
-        tester.widget<Text>(find.byKey(const Key('apps_count'))).data,
-        '4 apps',
-      );
       expect(repo.reads, 1);
     });
 

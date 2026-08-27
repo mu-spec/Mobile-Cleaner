@@ -195,15 +195,18 @@ class InstalledAppsBridge(private val context: Context) :
                 }
             }
 
-            val installedAt = try {
-                packageManager.getPackageInfo(packageName, 0).firstInstallTime
+            val packageInfo = try {
+                packageManager.getPackageInfo(packageName, 0)
             } catch (missing: PackageManager.NameNotFoundException) {
-                0L
+                null
             }
-            val updatedAt = try {
-                packageManager.getPackageInfo(packageName, 0).lastUpdateTime
-            } catch (missing: PackageManager.NameNotFoundException) {
-                0L
+            val installedAt = packageInfo?.firstInstallTime ?: 0L
+            val updatedAt = packageInfo?.lastUpdateTime ?: 0L
+            val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                packageInfo?.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo?.versionCode?.toLong()
             }
 
             apps += mapOf(
@@ -214,6 +217,8 @@ class InstalledAppsBridge(private val context: Context) :
                 "dataBytes" to dataBytes,
                 "cacheBytes" to cacheBytes,
                 "isSystemApp" to isSystemApp(appInfo),
+                "versionName" to packageInfo?.versionName,
+                "versionCode" to versionCode,
                 "installedAtMillis" to installedAt,
                 "updatedAtMillis" to updatedAt,
                 // A launcher intent is how Open works, so record whether one
