@@ -66,14 +66,7 @@ class _HistorySummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         children: <Widget>[
-          HomeDuotoneIcon(
-            icon: PhosphorIconsDuotone.broom,
-            primaryColor: HomeUpperStyle.iconBluePrimary,
-            secondaryColor: HomeUpperStyle.iconBlueSecondary,
-            backgroundColor: isDark
-                ? HomeUpperStyle.iconBluePrimary.withValues(alpha: 0.22)
-                : HomeUpperStyle.softBlue,
-          ),
+          const _CleanupSummaryIllustration(),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -170,14 +163,7 @@ class _EmptyHistoryCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Row(
         children: <Widget>[
-          HomeDuotoneIcon(
-            icon: PhosphorIconsDuotone.broom,
-            primaryColor: HomeUpperStyle.iconBluePrimary,
-            secondaryColor: HomeUpperStyle.iconBlueSecondary,
-            backgroundColor: isDark
-                ? HomeUpperStyle.iconBluePrimary.withValues(alpha: 0.22)
-                : HomeUpperStyle.softBlue,
-          ),
+          const _CleanupSummaryIllustration(),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -230,6 +216,36 @@ class _LoadingHistoryCard extends StatelessWidget {
           SizedBox(width: AppSpacing.md),
           Expanded(child: Text('Loading cleanup summary…')),
         ],
+      ),
+    );
+  }
+}
+
+/// The light wastebasket artwork used by the Cleanup Summary reference design.
+///
+/// The generated asset intentionally includes transparent breathing room for
+/// its sparkle halo. Scaling it inside a clipped square keeps the bin readable
+/// at card-icon size without changing the row's existing dimensions.
+class _CleanupSummaryIllustration extends StatelessWidget {
+  const _CleanupSummaryIllustration();
+
+  static const String _assetPath = 'assets/images/cleanup_summary_bin.png';
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: HomeDuotoneIcon.containerSize,
+      child: ClipRect(
+        child: Transform.scale(
+          scale: 1.75,
+          child: Image.asset(
+            _assetPath,
+            key: const Key('cleanup_summary_illustration'),
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+            semanticLabel: 'Cleanup wastebasket',
+          ),
+        ),
       ),
     );
   }

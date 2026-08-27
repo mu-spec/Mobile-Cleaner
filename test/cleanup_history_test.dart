@@ -413,6 +413,10 @@ void main() {
 
       expect(find.byKey(const Key('home_history_card')), findsOneWidget);
       expect(
+        find.byKey(const Key('cleanup_summary_illustration')),
+        findsOneWidget,
+      );
+      expect(
         tester
             .widget<Text>(find.byKey(const Key('home_history_total')))
             .data,
@@ -431,6 +435,10 @@ void main() {
       expect(find.byKey(const Key('home_history_card')), findsNothing);
       expect(find.byKey(const Key('home_history_empty')), findsOneWidget);
       expect(find.text('No cleanups yet'), findsOneWidget);
+      expect(
+        find.byKey(const Key('cleanup_summary_illustration')),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     });
 
