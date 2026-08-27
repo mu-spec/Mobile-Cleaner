@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Icon used for a category across the Files feature.
 IconData iconForCategory(FileCategory category) {
@@ -29,6 +31,18 @@ Color colorForCategory(FileCategory category) {
   };
 }
 
+IconData _premiumIconForCategory(FileCategory category) {
+  return switch (category) {
+    FileCategory.images => PhosphorIconsDuotone.imagesSquare,
+    FileCategory.videos => PhosphorIconsDuotone.videoCamera,
+    FileCategory.audio => PhosphorIconsDuotone.musicNotes,
+    FileCategory.documents => PhosphorIconsDuotone.fileText,
+    FileCategory.downloads => PhosphorIconsDuotone.downloadSimple,
+    FileCategory.apks => PhosphorIconsDuotone.androidLogo,
+    FileCategory.other => PhosphorIconsDuotone.files,
+  };
+}
+
 /// Grid tile summarising one category on the Files tab.
 class FileCategoryCard extends StatelessWidget {
   const FileCategoryCard({
@@ -42,75 +56,114 @@ class FileCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colors = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
     final Color accent = colorForCategory(summary.category);
     final bool empty = summary.isEmpty;
 
-    return Card(
+    return Container(
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        key: Key('category_card_${summary.category.key}'),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: empty ? 0.10 : 0.16),
-                      borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceElevated : AppColors.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.border,
+        ),
+        boxShadow: <BoxShadow>[
+          if (!isDark)
+            BoxShadow(
+              color: AppColors.navy.withValues(alpha: 0.045),
+              blurRadius: 18,
+              offset: const Offset(0, 7),
+            ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          key: Key('category_card_${summary.category.key}'),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Container(
+                      key: Key('category_icon_${summary.category.key}'),
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: accent.withValues(
+                          alpha: isDark
+                              ? 0.17
+                              : empty
+                              ? 0.09
+                              : 0.14,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: accent.withValues(alpha: isDark ? 0.22 : 0.06),
+                        ),
+                      ),
+                      child: Center(
+                        child: PhosphorIcon(
+                          _premiumIconForCategory(summary.category),
+                          size: 25,
+                          color: empty ? colors.onSurfaceVariant : accent,
+                          duotoneSecondaryColor: Color.lerp(
+                            accent,
+                            Colors.white,
+                            0.58,
+                          ),
+                          duotoneSecondaryOpacity: 1,
+                        ),
+                      ),
                     ),
-                    child: Icon(
-                      iconForCategory(summary.category),
-                      size: 21,
-                      color: empty ? colors.onSurfaceVariant : accent,
+                    const Spacer(),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 20,
+                      color: colors.onSurfaceVariant,
                     ),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  summary.category.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
                   ),
-                  const Spacer(),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 20,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  empty
+                      ? 'Empty'
+                      : '${summary.fileCount} '
+                            '${summary.fileCount == 1 ? 'file' : 'files'}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: colors.onSurfaceVariant,
                   ),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                summary.category.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
                 ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                empty
-                    ? 'Empty'
-                    : '${summary.fileCount} '
-                          '${summary.fileCount == 1 ? 'file' : 'files'}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                ByteFormatter.format(summary.totalBytes),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: empty ? colors.onSurfaceVariant : accent,
-                  fontWeight: FontWeight.w800,
+                const SizedBox(height: 6),
+                Text(
+                  ByteFormatter.format(summary.totalBytes),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: empty ? colors.onSurfaceVariant : accent,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

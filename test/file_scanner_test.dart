@@ -256,6 +256,83 @@ void main() {
       );
     }
 
+    testWidgets('uses the requested folder, categories, files order', (
+      WidgetTester tester,
+    ) async {
+      final FileScanResult result = FileScanResult.fromFiles(<ScannedFile>[
+        ScannedFile.fromPlatformMap(
+          _row(
+            id: '1',
+            name: 'holiday.jpg',
+            category: 'images',
+            sizeBytes: 8 * _mib,
+          ),
+        )!,
+      ]);
+
+      await tester.binding.setSurfaceSize(const Size(420, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(wrap(const FilesScreen(), result));
+      await tester.pumpAndSettle();
+
+      final Finder folder = find.byKey(const Key('folder_access_banner'));
+      final Finder categories = find.byKey(
+        const Key('files_categories_section'),
+      );
+      final Finder firstCategory = find.byKey(
+        const Key('category_card_images'),
+      );
+      final Finder summary = find.byKey(const Key('files_summary_card'));
+      final Finder tools = find.byKey(const Key('files_tools_card'));
+
+      expect(
+        tester.getTopLeft(folder).dy,
+        lessThan(tester.getTopLeft(categories).dy),
+      );
+      expect(
+        tester.getTopLeft(categories).dy,
+        lessThan(tester.getTopLeft(firstCategory).dy),
+      );
+      expect(
+        tester.getTopLeft(firstCategory).dy,
+        lessThan(tester.getTopLeft(summary).dy),
+      );
+      expect(
+        tester.getTopLeft(summary).dy,
+        lessThan(tester.getTopLeft(tools).dy),
+      );
+      expect(find.text('Show more documents\nand downloads'), findsOneWidget);
+      expect(find.text('Choose Folder'), findsOneWidget);
+    });
+
+    testWidgets('shows a premium icon tile for every category and tool', (
+      WidgetTester tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(420, 1600));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        wrap(const FilesScreen(), FileScanResult.fromFiles(<ScannedFile>[])),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('folder_access_icon')), findsOneWidget);
+      for (final FileCategory category in FileCategory.scannable) {
+        expect(
+          find.byKey(Key('category_icon_${category.key}')),
+          findsOneWidget,
+        );
+      }
+      for (final String tool in <String>[
+        'open_large_files',
+        'open_downloads_cleaner',
+        'open_apk_cleaner',
+        'open_videos',
+        'open_duplicates',
+      ]) {
+        expect(find.byKey(Key('${tool}_icon')), findsOneWidget);
+      }
+    });
+
     testWidgets('renders discovered categories and largest files', (
       WidgetTester tester,
     ) async {
@@ -298,12 +375,16 @@ void main() {
       // lower grid rows sit below the fold, so scroll each one in first.
       for (final FileCategory category in FileCategory.scannable) {
         final Finder card = find.byKey(Key('category_card_${category.key}'));
-        await tester.scrollUntilVisible(card, 200, scrollable: find
-            .descendant(
-              of: find.byKey(const Key('files_overview')),
-              matching: find.byType(Scrollable),
-            )
-            .first);
+        await tester.scrollUntilVisible(
+          card,
+          200,
+          scrollable: find
+              .descendant(
+                of: find.byKey(const Key('files_overview')),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
         expect(
           card,
           findsOneWidget,
@@ -343,12 +424,16 @@ void main() {
       await tester.pumpAndSettle();
 
       final Finder audioCard = find.byKey(const Key('category_card_audio'));
-      await tester.scrollUntilVisible(audioCard, 200, scrollable: find
+      await tester.scrollUntilVisible(
+        audioCard,
+        200,
+        scrollable: find
             .descendant(
               of: find.byKey(const Key('files_overview')),
               matching: find.byType(Scrollable),
             )
-            .first);
+            .first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(audioCard);
       await tester.pumpAndSettle();

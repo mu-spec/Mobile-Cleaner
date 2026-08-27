@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
@@ -13,25 +14,36 @@ import 'package:mobile_cleaner/features/files/presentation/widgets/file_category
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/folder_access_banner.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
-/// Files tab: a category grid over the Phase 6 scanner.
+/// Files tab: folder access, real categories, then cleanup shortcuts.
 class FilesScreen extends ConsumerWidget {
   const FilesScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<FileScanResult> scan = ref.watch(fileScanProvider);
+    final TextTheme textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
+      key: const Key('files_screen'),
       appBar: AppBar(
+        toolbarHeight: 60,
         leading: const RootBackButton(buttonKey: Key('files_back_button')),
-        title: const Text('Files'),
+        titleSpacing: 4,
+        title: Text(
+          'Files',
+          style: textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
+          ),
+        ),
         actions: <Widget>[
           IconButton(
             key: const Key('files_rescan_button'),
             tooltip: 'Rescan',
             onPressed: () => ref.invalidate(fileScanProvider),
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, size: 27),
           ),
           const SizedBox(width: 8),
         ],
@@ -49,7 +61,7 @@ class FilesScreen extends ConsumerWidget {
               onRetry: () => ref.invalidate(fileScanProvider),
               onPermissions: () => context.push(AppRoutes.permissions),
             ),
-            data: (FileScanResult result) => _CategoryGrid(result: result),
+            data: (FileScanResult result) => _FilesOverview(result: result),
           ),
         ),
       ),
@@ -57,16 +69,12 @@ class FilesScreen extends ConsumerWidget {
   }
 }
 
-class _CategoryGrid extends StatelessWidget {
-  const _CategoryGrid({required this.result});
+class _FilesOverview extends StatelessWidget {
+  const _FilesOverview({required this.result});
 
   final FileScanResult result;
 
   void _openCategory(BuildContext context, FileCategory category) {
-    // The Videos category card deliberately still opens the generic category
-    // list. The dedicated Videos section is reached from its own shortcut
-    // above: rerouting the card would change behaviour this phase was not
-    // asked to change, and the grid is a consistent set of category lists.
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => CategoryFilesScreen(category: category),
@@ -76,142 +84,22 @@ class _CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    final ThemeData theme = Theme.of(context);
     final bool nothingFound = result.isEmpty;
 
     return ListView(
       key: const Key('files_overview'),
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: <Widget>[
-        if (result.needsFolderAccess) ...<Widget>[
-          const FolderAccessBanner(),
-          const SizedBox(height: 12),
-        ],
-        Card(
-          key: const Key('files_summary_card'),
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        nothingFound ? 'No files found' : 'Files on this phone',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        nothingFound
-                            ? 'Grant media and storage access, then pull down '
-                                  'to scan again.'
-                            : '${result.totalFiles} files · '
-                                  '${ByteFormatter.format(result.totalBytes)}',
-                        style: Theme.of(context).textTheme.bodyMedium
-                            ?.copyWith(color: colors.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  nothingFound
-                      ? Icons.folder_off_rounded
-                      : Icons.travel_explore_rounded,
-                  color: nothingFound
-                      ? colors.onSurfaceVariant
-                      : colors.primary,
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: ListTile(
-            key: const Key('open_large_files'),
-            leading: CircleAvatar(
-              backgroundColor: colors.primaryContainer,
-              child: Icon(Icons.data_usage_rounded, color: colors.primary),
-            ),
-            title: const Text('Large Files'),
-            subtitle: const Text('Find your biggest space users'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push(AppRoutes.largeFiles),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: ListTile(
-            key: const Key('open_downloads_cleaner'),
-            leading: CircleAvatar(
-              backgroundColor: colors.primaryContainer,
-              child: Icon(
-                Icons.cleaning_services_rounded,
-                color: colors.primary,
-              ),
-            ),
-            title: const Text('Downloads Cleaner'),
-            subtitle: const Text('Clear out old downloads'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push(AppRoutes.downloadsCleaner),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: ListTile(
-            key: const Key('open_apk_cleaner'),
-            leading: CircleAvatar(
-              backgroundColor: colors.primaryContainer,
-              child: Icon(Icons.android_rounded, color: colors.primary),
-            ),
-            title: const Text('APK Cleaner'),
-            subtitle: const Text('Remove leftover installers'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push(AppRoutes.apkCleaner),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: ListTile(
-            key: const Key('open_videos'),
-            leading: CircleAvatar(
-              backgroundColor: colors.primaryContainer,
-              child: Icon(Icons.movie_rounded, color: colors.primary),
-            ),
-            title: const Text('Videos'),
-            subtitle: const Text('Review by size, length, or date'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push(AppRoutes.videos),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: ListTile(
-            key: const Key('open_duplicates'),
-            leading: CircleAvatar(
-              backgroundColor: colors.primaryContainer,
-              child: Icon(Icons.copy_all_rounded, color: colors.primary),
-            ),
-            title: const Text('Duplicates'),
-            subtitle: const Text('Find byte-identical copies'),
-            trailing: const Icon(Icons.chevron_right_rounded),
-            onTap: () => context.push(AppRoutes.duplicates),
-          ),
-        ),
-        const SizedBox(height: 18),
-        Text('Categories', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 4),
-        Text(
-          'Tap a category to review its files.',
-          style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(color: colors.onSurfaceVariant),
+        // Deliberately always available: users can grant another useful
+        // folder even after Android no longer marks the grant as required.
+        const FolderAccessBanner(),
+        const SizedBox(height: 22),
+        _SectionTitle(
+          key: const Key('files_categories_section'),
+          title: 'Categories',
+          subtitle: 'Tap a category to review its files.',
         ),
         const SizedBox(height: 12),
         GridView.count(
@@ -230,10 +118,28 @@ class _CategoryGrid extends StatelessWidget {
               ),
           ],
         ),
+        const SizedBox(height: 22),
+        _DeviceFilesSummary(result: result),
+        const SizedBox(height: 12),
+        const _FileToolsCard(),
+        if (nothingFound) ...<Widget>[
+          const SizedBox(height: 14),
+          Text(
+            'Grant media or folder access, then pull down to scan again.',
+            key: const Key('files_empty_hint'),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
         if (!nothingFound) ...<Widget>[
           const SizedBox(height: 24),
-          Text('Largest files', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 6),
+          _SectionTitle(
+            title: 'Largest files',
+            subtitle: 'Review the biggest items found on this phone.',
+          ),
+          const SizedBox(height: 8),
           for (final ScannedFile file in result.largestFiles(limit: 10))
             ScannedFileTile(file: file),
         ],
@@ -242,11 +148,331 @@ class _CategoryGrid extends StatelessWidget {
           Text(
             'Showing the top results per category. Rescan after cleaning to '
             'see more.',
-            style: Theme.of(context).textTheme.bodySmall
-                ?.copyWith(color: colors.onSurfaceVariant),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ],
     );
   }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title, required this.subtitle, super.key});
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          title,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.35,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            height: 1.35,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DeviceFilesSummary extends StatelessWidget {
+  const _DeviceFilesSummary({required this.result});
+
+  final FileScanResult result;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+    final bool empty = result.isEmpty;
+
+    return Container(
+      key: const Key('files_summary_card'),
+      padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceElevated : AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.border,
+        ),
+        boxShadow: <BoxShadow>[
+          if (!isDark)
+            BoxShadow(
+              color: AppColors.navy.withValues(alpha: 0.05),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+        ],
+      ),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  empty ? 'No files found' : 'Files on this phone',
+                  key: const Key('files_summary_title'),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.15,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  empty
+                      ? 'Ready for a new scan'
+                      : '${result.totalFiles} files · '
+                            '${ByteFormatter.format(result.totalBytes)}',
+                  key: const Key('files_summary_value'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.actionBlue.withValues(alpha: 0.15)
+                  : AppColors.softBlue,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: Center(
+              child: PhosphorIcon(
+                empty
+                    ? PhosphorIconsDuotone.folderDashed
+                    : PhosphorIconsDuotone.chartDonut,
+                size: 25,
+                color: empty
+                    ? theme.colorScheme.onSurfaceVariant
+                    : AppColors.actionBlue,
+                duotoneSecondaryColor: empty
+                    ? theme.colorScheme.onSurfaceVariant
+                    : AppColors.cleanupOrange,
+                duotoneSecondaryOpacity: 1,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FileToolsCard extends StatelessWidget {
+  const _FileToolsCard();
+
+  static const List<_FileTool> _tools = <_FileTool>[
+    _FileTool(
+      keyName: 'open_large_files',
+      title: 'Large Files',
+      subtitle: 'Find your biggest space users',
+      route: AppRoutes.largeFiles,
+      icon: PhosphorIconsDuotone.gauge,
+      foreground: Color(0xFF245FCE),
+      secondary: Color(0xFF8CB8FF),
+      background: Color(0xFFEAF2FF),
+    ),
+    _FileTool(
+      keyName: 'open_downloads_cleaner',
+      title: 'Downloads Cleaner',
+      subtitle: 'Clear out old downloads',
+      route: AppRoutes.downloadsCleaner,
+      icon: PhosphorIconsDuotone.broom,
+      foreground: Color(0xFF315FC1),
+      secondary: Color(0xFF92B5FA),
+      background: Color(0xFFEDF3FF),
+    ),
+    _FileTool(
+      keyName: 'open_apk_cleaner',
+      title: 'APK Cleaner',
+      subtitle: 'Remove leftover installers',
+      route: AppRoutes.apkCleaner,
+      icon: PhosphorIconsDuotone.androidLogo,
+      foreground: Color(0xFFF07C08),
+      secondary: Color(0xFFFFC46F),
+      background: Color(0xFFFFF0DC),
+    ),
+    _FileTool(
+      keyName: 'open_videos',
+      title: 'Videos',
+      subtitle: 'Manage large videos',
+      route: AppRoutes.videos,
+      icon: PhosphorIconsDuotone.filmSlate,
+      foreground: Color(0xFFE54555),
+      secondary: Color(0xFFFFA0AD),
+      background: Color(0xFFFFEAED),
+    ),
+    _FileTool(
+      keyName: 'open_duplicates',
+      title: 'Duplicates',
+      subtitle: 'Find byte-identical copies',
+      route: AppRoutes.duplicates,
+      icon: PhosphorIconsDuotone.copy,
+      foreground: Color(0xFF6B55D9),
+      secondary: Color(0xFFB7A9FF),
+      background: Color(0xFFF0EDFF),
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color border = isDark ? AppColors.darkBorder : AppColors.border;
+
+    return Container(
+      key: const Key('files_tools_card'),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurfaceElevated : AppColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
+        boxShadow: <BoxShadow>[
+          if (!isDark)
+            BoxShadow(
+              color: AppColors.navy.withValues(alpha: 0.045),
+              blurRadius: 18,
+              offset: const Offset(0, 7),
+            ),
+        ],
+      ),
+      child: Column(
+        children: <Widget>[
+          for (int index = 0; index < _tools.length; index++) ...<Widget>[
+            _FileToolRow(tool: _tools[index]),
+            if (index != _tools.length - 1)
+              Divider(height: 1, indent: 70, endIndent: 14, color: border),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _FileToolRow extends StatelessWidget {
+  const _FileToolRow({required this.tool});
+
+  final _FileTool tool;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDark = theme.brightness == Brightness.dark;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: Key(tool.keyName),
+        onTap: () => context.push(tool.route),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 11, 10, 11),
+          child: Row(
+            children: <Widget>[
+              Container(
+                key: Key('${tool.keyName}_icon'),
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? tool.foreground.withValues(alpha: 0.16)
+                      : tool.background,
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(
+                    color: tool.foreground.withValues(
+                      alpha: isDark ? 0.25 : 0.08,
+                    ),
+                  ),
+                ),
+                child: Center(
+                  child: PhosphorIcon(
+                    tool.icon,
+                    size: 26,
+                    color: tool.foreground,
+                    duotoneSecondaryColor: tool.secondary,
+                    duotoneSecondaryOpacity: 1,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      tool.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.1,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      tool.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FileTool {
+  const _FileTool({
+    required this.keyName,
+    required this.title,
+    required this.subtitle,
+    required this.route,
+    required this.icon,
+    required this.foreground,
+    required this.secondary,
+    required this.background,
+  });
+
+  final String keyName;
+  final String title;
+  final String subtitle;
+  final String route;
+  final IconData icon;
+  final Color foreground;
+  final Color secondary;
+  final Color background;
 }
