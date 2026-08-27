@@ -90,7 +90,7 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                   vertical: AppSpacing.sm,
                 ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     // LEFT SIDE: recommendation + scan button
                     Expanded(
