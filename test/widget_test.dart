@@ -53,7 +53,7 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Understand Your Storage'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
@@ -75,7 +75,7 @@ void main() {
     appRouter.go(AppRoutes.splash);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1000));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Smart Scan'), findsOneWidget);
     expect(find.text('Understand Your Storage'), findsNothing);
 
@@ -115,7 +115,7 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.byKey(const Key('permission_education')), findsOneWidget);
     await tester.tap(find.byKey(const Key('permission_primary_action')));
@@ -157,7 +157,7 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
     expect(find.text('64%'), findsOneWidget);
@@ -207,7 +207,7 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(find.byKey(const Key('smart_scan_button')));
     await tester.pumpAndSettle();
@@ -244,7 +244,7 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Smart Scan'), findsOneWidget);
 

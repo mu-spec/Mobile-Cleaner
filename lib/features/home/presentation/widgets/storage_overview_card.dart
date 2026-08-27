@@ -286,11 +286,6 @@ class _StorageRingState extends State<_StorageRing>
       duration: const Duration(milliseconds: 800),
     );
     _animation = Tween<double>(begin: 0.0, end: 0.0).animate(_controller);
-    _controller.addListener(() {
-      if (mounted) {
-        setState(() {});
-      }
-    });
   }
 
   @override
@@ -329,6 +324,7 @@ class _StorageRingState extends State<_StorageRing>
                 isDark ? colors.primary : HomeUpperStyle.primaryBlue,
             availableColor: HomeUpperStyle.orange,
           ),
+          repaint: _animation,
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.xs),

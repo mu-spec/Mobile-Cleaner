@@ -158,16 +158,20 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                     SizedBox(
                       width: 100,
                       height: 100,
-                      child: AnimatedBuilder(
-                        animation: _radarController,
-                        builder: (BuildContext context, Widget? child) {
-                          return CustomPaint(
-                            painter: RadarPainter(
-                              rotation: _radarController.value,
-                            ),
-                            size: const Size(100, 100),
-                          );
-                        },
+                      child: IgnorePointer(
+                        child: ExcludeSemantics(
+                          child: AnimatedBuilder(
+                            animation: _radarController,
+                            builder: (BuildContext context, Widget? child) {
+                              return CustomPaint(
+                                painter: RadarPainter(
+                                  rotation: _radarController.value,
+                                ),
+                                size: const Size(100, 100),
+                              );
+                            },
+                          ),
+                        ),
                       ),
                     ),
                   ],
