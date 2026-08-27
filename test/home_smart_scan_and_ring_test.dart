@@ -28,6 +28,10 @@ void main() {
       await _pumpStorageRing(tester, info: info);
 
       expect(find.byKey(const Key('storage_database_icon')), findsOneWidget);
+      final PhosphorIcon databaseIcon = tester.widget<PhosphorIcon>(
+        find.byKey(const Key('storage_database_icon')),
+      );
+      expect(databaseIcon.size, 28);
       expect(find.byKey(const Key('storage_usage_track')), findsOneWidget);
       expect(_barFraction(tester), closeTo(0, 0.0001));
 

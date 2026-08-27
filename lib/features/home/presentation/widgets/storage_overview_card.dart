@@ -224,12 +224,12 @@ class _StorageSummaryBarState extends State<_StorageSummaryBar> {
         child: Row(
           children: <Widget>[
             SizedBox.square(
-              dimension: 32,
+              dimension: 38,
               child: Center(
                 child: PhosphorIcon(
                   key: const Key('storage_database_icon'),
                   PhosphorIconsDuotone.database,
-                  size: 24,
+                  size: 28,
                   color: isDark ? colors.primary : HomeUpperStyle.deepBlue,
                   duotoneSecondaryColor: isDark
                       ? const Color(0xFF9CC0FF)
