@@ -43,9 +43,7 @@ class StorageOverviewCard extends ConsumerWidget {
       elevation: isDark ? 0 : 2,
       shadowColor: HomeUpperStyle.navy.withValues(alpha: 0.08),
       surfaceTintColor: Colors.transparent,
-      color: isDark
-          ? theme.colorScheme.surfaceContainerHigh
-          : HomeUpperStyle.card,
+      color: isDark ? Colors.transparent : HomeUpperStyle.card,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(HomeUpperStyle.storageRadius),
@@ -55,33 +53,48 @@ class StorageOverviewCard extends ConsumerWidget {
               : HomeUpperStyle.border,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
+      child: DecoratedBox(
+        key: const Key('storage_overview_surface'),
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: <Color>[
+                    Color(0xFF152235),
+                    AppColors.darkSurfaceElevated,
+                  ],
+                )
+              : null,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Storage Overview',
-              key: const Key('storage_overview_title'),
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: isDark
-                    ? theme.colorScheme.onSurface
-                    : HomeUpperStyle.textPrimary,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                'Storage Overview',
+                key: const Key('storage_overview_title'),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? theme.colorScheme.onSurface
+                      : HomeUpperStyle.textPrimary,
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            storage.when(
-              loading: () => const _LoadingStorage(),
-              error: (Object error, StackTrace stackTrace) => _StorageError(
-                onRetry: () => ref.invalidate(storageOverviewProvider),
+              const SizedBox(height: AppSpacing.xs),
+              storage.when(
+                loading: () => const _LoadingStorage(),
+                error: (Object error, StackTrace stackTrace) => _StorageError(
+                  onRetry: () => ref.invalidate(storageOverviewProvider),
+                ),
+                data: (StorageInfo info) => _StorageDetails(info: info),
               ),
-              data: (StorageInfo info) => _StorageDetails(info: info),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

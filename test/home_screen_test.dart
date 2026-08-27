@@ -449,6 +449,36 @@ void main() {
   });
 
   group('Theme and layout robustness', () {
+    testWidgets('dark Home uses layered surfaces and restrained elevation', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester, theme: AppTheme.dark);
+
+      final DecoratedBox storageSurface = tester.widget<DecoratedBox>(
+        find.byKey(const Key('storage_overview_surface')),
+      );
+      final Ink quickToolsSurface = tester.widget<Ink>(
+        find.byKey(const Key('quick_tools_surface')),
+      );
+      final Ink smartScanSurface = tester.widget<Ink>(
+        find.byKey(const Key('smart_scan_surface')),
+      );
+
+      expect(
+        (storageSurface.decoration as BoxDecoration).gradient,
+        isNotNull,
+      );
+      expect(
+        (quickToolsSurface.decoration! as BoxDecoration).gradient,
+        isNotNull,
+      );
+      final BoxDecoration scanDecoration =
+          smartScanSurface.decoration! as BoxDecoration;
+      expect(scanDecoration.gradient, isNotNull);
+      expect(scanDecoration.border, isNotNull);
+      expect(scanDecoration.boxShadow, hasLength(2));
+    });
+
     testWidgets('renders in dark mode without throwing', (
       WidgetTester tester,
     ) async {

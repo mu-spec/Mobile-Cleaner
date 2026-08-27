@@ -65,18 +65,22 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(18),
         child: Ink(
+          key: const Key('smart_scan_surface'),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: isDark
-                  ? const <Color>[Color(0xFF1746B5), Color(0xFF2A6AF0)]
+                  ? const <Color>[Color(0xFF143B91), Color(0xFF2364D9)]
                   : const <Color>[
                       HomeUpperStyle.deepBlue,
                       HomeUpperStyle.primaryBlue,
                     ],
             ),
+            border: isDark
+                ? Border.all(color: Colors.white.withValues(alpha: 0.08))
+                : null,
             boxShadow: <BoxShadow>[
               BoxShadow(
                 color: isDark
@@ -85,6 +89,12 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                 blurRadius: isDark ? 18 : 14,
                 offset: Offset(0, isDark ? 8 : 6),
               ),
+              if (isDark)
+                BoxShadow(
+                  color: const Color(0xFF3478F6).withValues(alpha: 0.10),
+                  blurRadius: 26,
+                  offset: const Offset(0, 5),
+                ),
             ],
           ),
           child: InkWell(
