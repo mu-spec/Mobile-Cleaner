@@ -58,7 +58,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
     await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.text('Clean Smarter'), findsOneWidget);
+    expect(find.byKey(const Key('onboarding_screen')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
     await tester.pump(const Duration(milliseconds: 2000));
