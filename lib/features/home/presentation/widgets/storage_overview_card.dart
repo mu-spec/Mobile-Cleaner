@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_cleaner/app/route_observer.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
@@ -50,7 +51,7 @@ class StorageOverviewCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(HomeUpperStyle.storageRadius),
         side: BorderSide(
           color: isDark
-              ? Colors.white.withValues(alpha: 0.08)
+              ? theme.colorScheme.outlineVariant
               : HomeUpperStyle.border,
         ),
       ),
@@ -176,16 +177,13 @@ class _StorageSummaryBar extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isDark
-                ? <Color>[
-                    HomeUpperStyle.primaryBlue.withValues(alpha: 0.18),
-                    HomeUpperStyle.primaryBlue.withValues(alpha: 0.08),
-                  ]
+                ? const <Color>[AppColors.darkInfoSurface, Color(0xFF122136)]
                 : const <Color>[Color(0xFFF1F7FF), Color(0xFFEAF2FF)],
           ),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isDark
-                ? HomeUpperStyle.iconBlueSecondary.withValues(alpha: 0.16)
+                ? colors.primary.withValues(alpha: 0.24)
                 : HomeUpperStyle.primaryBlue.withValues(alpha: 0.09),
           ),
         ),
@@ -198,8 +196,10 @@ class _StorageSummaryBar extends StatelessWidget {
                   key: const Key('storage_database_icon'),
                   PhosphorIconsDuotone.database,
                   size: 24,
-                  color: HomeUpperStyle.deepBlue,
-                  duotoneSecondaryColor: HomeUpperStyle.iconBlueSecondary,
+                  color: isDark ? colors.primary : HomeUpperStyle.deepBlue,
+                  duotoneSecondaryColor: isDark
+                      ? const Color(0xFF9CC0FF)
+                      : HomeUpperStyle.iconBlueSecondary,
                   duotoneSecondaryOpacity: 0.72,
                 ),
               ),
@@ -259,7 +259,7 @@ class _StorageSummaryBar extends StatelessWidget {
                     clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.white.withValues(alpha: 0.10)
+                          ? Colors.white.withValues(alpha: 0.12)
                           : Colors.white.withValues(alpha: 0.88),
                       borderRadius: BorderRadius.circular(99),
                     ),
@@ -386,7 +386,10 @@ class _StorageRingState extends State<_StorageRing> {
             painter: _StorageRingPainter(
               usedFraction: targetFraction,
               usedColor: usedColor,
-              availableColor: HomeUpperStyle.orange,
+              availableColor: isDark
+                  ? AppColors.darkOrange
+                  : HomeUpperStyle.orange,
+              darkMode: isDark,
             ),
             child: ringContent,
           ),
@@ -414,7 +417,10 @@ class _StorageRingState extends State<_StorageRing> {
                   painter: _StorageRingPainter(
                     usedFraction: animatedFraction,
                     usedColor: usedColor,
-                    availableColor: HomeUpperStyle.orange,
+                    availableColor: isDark
+                        ? AppColors.darkOrange
+                        : HomeUpperStyle.orange,
+                    darkMode: isDark,
                   ),
                   child: child,
                 );
@@ -431,11 +437,13 @@ class _StorageRingPainter extends CustomPainter {
     required this.usedFraction,
     required this.usedColor,
     required this.availableColor,
+    required this.darkMode,
   });
 
   final double usedFraction;
   final Color usedColor;
   final Color availableColor;
+  final bool darkMode;
 
   static const double _stroke = 11.5;
   static const double _startAngle = -math.pi / 2;
@@ -462,26 +470,28 @@ class _StorageRingPainter extends CustomPainter {
     final Paint ringShadow = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = _stroke + 1.5
-      ..color = HomeUpperStyle.navy.withValues(alpha: 0.12)
+      ..color = darkMode
+          ? Colors.black.withValues(alpha: 0.34)
+          : HomeUpperStyle.navy.withValues(alpha: 0.12)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
     canvas.drawCircle(center, radius, ringShadow);
 
     final Shader availableShader = SweepGradient(
       transform: const GradientRotation(_startAngle),
       colors: <Color>[
-        Color.lerp(availableColor, Colors.white, 0.28)!,
+        Color.lerp(availableColor, Colors.white, darkMode ? 0.16 : 0.28)!,
         availableColor,
         Color.lerp(availableColor, HomeUpperStyle.navy, 0.10)!,
-        Color.lerp(availableColor, Colors.white, 0.28)!,
+        Color.lerp(availableColor, Colors.white, darkMode ? 0.16 : 0.28)!,
       ],
     ).createShader(rect);
     final Shader usedShader = SweepGradient(
       transform: const GradientRotation(_startAngle),
       colors: <Color>[
-        Color.lerp(usedColor, Colors.white, 0.24)!,
+        Color.lerp(usedColor, Colors.white, darkMode ? 0.14 : 0.24)!,
         usedColor,
         Color.lerp(usedColor, HomeUpperStyle.deepBlue, 0.34)!,
-        Color.lerp(usedColor, Colors.white, 0.24)!,
+        Color.lerp(usedColor, Colors.white, darkMode ? 0.14 : 0.24)!,
       ],
     ).createShader(rect);
 
@@ -514,7 +524,7 @@ class _StorageRingPainter extends CustomPainter {
     final Paint innerHighlight = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.8
-      ..color = Colors.white.withValues(alpha: 0.32);
+      ..color = Colors.white.withValues(alpha: darkMode ? 0.18 : 0.32);
     canvas.drawCircle(center, radius - _stroke / 2, innerHighlight);
   }
 
@@ -522,7 +532,8 @@ class _StorageRingPainter extends CustomPainter {
   bool shouldRepaint(covariant _StorageRingPainter oldDelegate) {
     return oldDelegate.usedFraction != usedFraction ||
         oldDelegate.usedColor != usedColor ||
-        oldDelegate.availableColor != availableColor;
+        oldDelegate.availableColor != availableColor ||
+        oldDelegate.darkMode != darkMode;
   }
 }
 

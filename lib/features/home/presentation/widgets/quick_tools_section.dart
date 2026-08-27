@@ -109,7 +109,7 @@ class QuickToolsSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(
               color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
+                  ? theme.colorScheme.outlineVariant
                   : AppColors.border,
             ),
           ),
@@ -164,6 +164,9 @@ class _QuickToolShortcut extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final Color iconColor = isDark
+        ? Color.lerp(data.tint, Colors.white, 0.14)!
+        : data.tint;
     final double textScale = MediaQuery.textScalerOf(context).scale(1);
     final double titleHeight = 28 * textScale.clamp(1.0, 1.5);
 
@@ -196,8 +199,16 @@ class _QuickToolShortcut extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: isDark
                         ? <Color>[
-                            data.tint.withValues(alpha: 0.30),
-                            data.tint.withValues(alpha: 0.13),
+                            Color.lerp(
+                              theme.colorScheme.surfaceContainer,
+                              data.tint,
+                              0.22,
+                            )!,
+                            Color.lerp(
+                              theme.colorScheme.surfaceContainer,
+                              data.tint,
+                              0.09,
+                            )!,
                           ]
                         : <Color>[
                             Color.lerp(data.surface, Colors.white, 0.35)!,
@@ -206,13 +217,13 @@ class _QuickToolShortcut extends StatelessWidget {
                   ),
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
-                    color: data.tint.withValues(alpha: isDark ? 0.24 : 0.13),
+                    color: iconColor.withValues(alpha: isDark ? 0.30 : 0.13),
                   ),
                   boxShadow: <BoxShadow>[
                     BoxShadow(
                       color: data.tint.withValues(alpha: isDark ? 0.08 : 0.13),
-                      blurRadius: 14,
-                      offset: const Offset(0, 5),
+                      blurRadius: isDark ? 10 : 14,
+                      offset: Offset(0, isDark ? 3 : 5),
                     ),
                   ],
                 ),
@@ -236,9 +247,9 @@ class _QuickToolShortcut extends StatelessWidget {
                     PhosphorIcon(
                       data.icon,
                       size: 24,
-                      color: data.tint,
-                      duotoneSecondaryColor: data.tint,
-                      duotoneSecondaryOpacity: 0.52,
+                      color: iconColor,
+                      duotoneSecondaryColor: iconColor,
+                      duotoneSecondaryOpacity: isDark ? 0.42 : 0.52,
                     ),
                     Positioned(
                       left: 8,
@@ -249,7 +260,7 @@ class _QuickToolShortcut extends StatelessWidget {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(2),
                           color: Colors.white.withValues(
-                            alpha: isDark ? 0.18 : 0.62,
+                            alpha: isDark ? 0.24 : 0.62,
                           ),
                         ),
                       ),

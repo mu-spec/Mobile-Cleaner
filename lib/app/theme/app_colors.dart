@@ -39,8 +39,23 @@ abstract final class AppColors {
   /// Light-mode card surface.
   static const Color card = Color(0xFFFFFFFF);
 
-  /// Dark-mode page background: cool near-black, never teal.
-  static const Color darkBackground = Color(0xFF0D1218);
+  /// Dark-mode foundation: cool navy layers instead of flat charcoal.
+  ///
+  /// The separation between these surfaces is intentionally visible without
+  /// relying on heavy shadows, so cards retain the same clean hierarchy as
+  /// they do in light mode.
+  static const Color darkBackground = Color(0xFF0A101A);
+  static const Color darkSurface = Color(0xFF111A28);
+  static const Color darkSurfaceElevated = Color(0xFF172231);
+  static const Color darkInfoSurface = Color(0xFF142844);
+  static const Color darkBorder = Color(0xFF2A384C);
+
+  /// Dark-mode content and accents tuned for contrast on the navy surfaces.
+  static const Color darkTextPrimary = Color(0xFFF5F7FB);
+  static const Color darkTextSecondary = Color(0xFFA8B4C5);
+  static const Color darkPrimary = Color(0xFF4D8DFF);
+  static const Color darkPrimaryContainer = Color(0xFF173A6B);
+  static const Color darkOrange = Color(0xFFFF9A2E);
 
   /// Primary and supporting text on light surfaces.
   static const Color textPrimary = Color(0xFF171B22);

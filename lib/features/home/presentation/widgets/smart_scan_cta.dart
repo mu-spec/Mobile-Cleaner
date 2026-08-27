@@ -51,6 +51,7 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final AsyncValue<List<Recommendation>> advice = ref.watch(
       recommendationsProvider,
     );
@@ -66,19 +67,23 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: <Color>[
-                HomeUpperStyle.deepBlue,
-                HomeUpperStyle.primaryBlue,
-              ],
+              colors: isDark
+                  ? const <Color>[Color(0xFF1746B5), Color(0xFF2A6AF0)]
+                  : const <Color>[
+                      HomeUpperStyle.deepBlue,
+                      HomeUpperStyle.primaryBlue,
+                    ],
             ),
             boxShadow: <BoxShadow>[
               BoxShadow(
-                color: HomeUpperStyle.primaryBlue.withValues(alpha: 0.28),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.30)
+                    : HomeUpperStyle.primaryBlue.withValues(alpha: 0.28),
+                blurRadius: isDark ? 18 : 14,
+                offset: Offset(0, isDark ? 8 : 6),
               ),
             ],
           ),

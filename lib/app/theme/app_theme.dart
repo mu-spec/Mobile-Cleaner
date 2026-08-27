@@ -14,9 +14,8 @@ abstract final class AppTheme {
       brightness: brightness,
     );
     if (!isDark) {
-      // Pin the exact brand tokens in light mode rather than the seed's
-      // tonal approximations. Dark mode keeps the derived tones, which stay
-      // readable on dark surfaces where the raw brand blue would not.
+      // Pin the exact approved light tokens rather than the seed's tonal
+      // approximations. The dark branch below owns its separate palette.
       colors = colors.copyWith(
         primary: AppColors.primary,
         onPrimary: Colors.white,
@@ -25,6 +24,30 @@ abstract final class AppTheme {
         onSurfaceVariant: AppColors.textSecondary,
         outlineVariant: AppColors.border,
         error: AppColors.danger,
+      );
+    } else {
+      // A purpose-built navy system keeps dark mode crisp and layered. Seed
+      // generated dark colours were too gray and turned the brand blue into
+      // a pale lavender, especially in Home's storage and navigation areas.
+      colors = colors.copyWith(
+        primary: AppColors.darkPrimary,
+        onPrimary: Colors.white,
+        primaryContainer: AppColors.darkPrimaryContainer,
+        onPrimaryContainer: const Color(0xFFDCEAFF),
+        secondary: const Color(0xFFA99AFF),
+        onSecondary: const Color(0xFF17112D),
+        surface: AppColors.darkSurface,
+        surfaceContainerLowest: AppColors.darkBackground,
+        surfaceContainerLow: const Color(0xFF0E1724),
+        surfaceContainer: AppColors.darkSurface,
+        surfaceContainerHigh: AppColors.darkSurfaceElevated,
+        surfaceContainerHighest: const Color(0xFF1D2A3C),
+        onSurface: AppColors.darkTextPrimary,
+        onSurfaceVariant: AppColors.darkTextSecondary,
+        outline: const Color(0xFF536178),
+        outlineVariant: AppColors.darkBorder,
+        error: const Color(0xFFFF6B6B),
+        onError: const Color(0xFF370008),
       );
     }
 
@@ -52,20 +75,16 @@ abstract final class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.card),
           side: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.08)
-                : AppColors.border,
+            color: isDark ? colors.outlineVariant : AppColors.border,
           ),
         ),
       ),
       dividerTheme: DividerThemeData(
-        color: isDark ? Colors.white.withValues(alpha: 0.08) : AppColors.border,
+        color: isDark ? colors.outlineVariant : AppColors.border,
       ),
       // Bottom navigation: light surface, blue selection, neutral gray rest.
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: isDark
-            ? colors.surfaceContainerHigh
-            : AppColors.card,
+        backgroundColor: isDark ? colors.surface : AppColors.card,
         selectedItemColor: colors.primary,
         unselectedItemColor: isDark
             ? colors.onSurfaceVariant

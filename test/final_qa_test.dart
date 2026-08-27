@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_theme.dart';
 import 'package:mobile_cleaner/core/errors/app_failure.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
@@ -305,6 +306,28 @@ void main() {
   });
 
   group('Dark mode', () {
+    test('uses deliberate navy layers and vivid accessible accents', () {
+      final ThemeData light = AppTheme.light;
+      final ThemeData dark = AppTheme.dark;
+
+      expect(dark.scaffoldBackgroundColor, AppColors.darkBackground);
+      expect(dark.colorScheme.surface, AppColors.darkSurface);
+      expect(
+        dark.colorScheme.surfaceContainerHigh,
+        AppColors.darkSurfaceElevated,
+      );
+      expect(dark.colorScheme.outlineVariant, AppColors.darkBorder);
+      expect(dark.colorScheme.primary, AppColors.darkPrimary);
+      expect(dark.colorScheme.onSurface, AppColors.darkTextPrimary);
+      expect(dark.colorScheme.onSurfaceVariant, AppColors.darkTextSecondary);
+
+      // The dark-only pass must never change the approved light palette.
+      expect(light.scaffoldBackgroundColor, AppColors.lightBackground);
+      expect(light.colorScheme.surface, AppColors.card);
+      expect(light.colorScheme.primary, AppColors.actionBlue);
+      expect(light.colorScheme.onSurface, AppColors.textPrimary);
+    });
+
     test('both themes build with matching structure', () {
       final ThemeData light = AppTheme.light;
       final ThemeData dark = AppTheme.dark;
