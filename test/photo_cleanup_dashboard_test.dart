@@ -266,29 +266,26 @@ void main() {
   });
 
   group('Photo Cleanup dashboard', () {
-    testWidgets('shows the Photo Cleanup heading and headline total', (
+    testWidgets('shows the reference orange photo-review hero', (
       WidgetTester tester,
     ) async {
       await _pumpPhotos(tester);
 
+      final Container hero = tester.widget<Container>(
+        find.byKey(const Key('photo_hero_card')),
+      );
+      final BoxDecoration decoration = hero.decoration! as BoxDecoration;
+
+      expect(decoration.gradient, isA<LinearGradient>());
+      expect(find.byKey(const Key('photo_hero_illustration')), findsOneWidget);
       expect(find.byKey(const Key('photo_cleanup_card')), findsOneWidget);
       expect(
-        tester
-            .widget<Text>(find.byKey(const Key('photo_cleanup_heading')))
-            .data,
-        'Photo Cleanup',
+        tester.widget<Text>(find.byKey(const Key('photo_hero_title'))).data,
+        'Review and clean\nyour photos',
       );
       expect(
-        tester
-            .widget<Text>(find.byKey(const Key('photo_cleanup_total_bytes')))
-            .data,
-        '47.0 MB',
-      );
-      expect(
-        tester
-            .widget<Text>(find.byKey(const Key('photo_cleanup_total_photos')))
-            .data,
-        'across 5 photos',
+        tester.widget<Text>(find.byKey(const Key('photo_hero_subtitle'))).data,
+        'Free up space by removing\nduplicates and clutter.',
       );
     });
 
@@ -297,9 +294,8 @@ void main() {
     ) async {
       await _pumpPhotos(tester);
 
-      String value(String tool) => tester
-          .widget<Text>(find.byKey(Key('photo_tool_value_$tool')))
-          .data!;
+      String value(String tool) =>
+          tester.widget<Text>(find.byKey(Key('photo_tool_value_$tool'))).data!;
 
       expect(value('duplicatePhotos'), '6.0 MB');
       expect(value('screenshots'), '5.0 MB');
@@ -308,21 +304,25 @@ void main() {
       expect(value('similarPhotos'), 'None');
     });
 
-    testWidgets('all four tools are named', (WidgetTester tester) async {
+    testWidgets('all four tools use distinct premium icon tiles', (
+      WidgetTester tester,
+    ) async {
       await _pumpPhotos(tester);
 
-      expect(
-        tester
-            .widget<Text>(
-              find.byKey(const Key('photo_tool_note_similarPhotos')),
-            )
-            .data,
-        'Near-identical shots of the same scene',
-      );
       expect(find.text('Duplicate Photos'), findsOneWidget);
       expect(find.text('Screenshots'), findsOneWidget);
       expect(find.text('Large Photos'), findsOneWidget);
       expect(find.text('Similar Photos'), findsOneWidget);
+      for (final String tool in <String>[
+        'duplicatePhotos',
+        'screenshots',
+        'largePhotos',
+        'similarPhotos',
+      ]) {
+        expect(find.byKey(Key('photo_tool_icon_$tool')), findsOneWidget);
+        expect(find.byKey(Key('photo_tool_review_$tool')), findsOneWidget);
+      }
+      expect(find.text('Review'), findsNWidgets(4));
     });
 
     testWidgets('overlap is disclosed rather than hidden', (
@@ -336,9 +336,7 @@ void main() {
       );
     });
 
-    testWidgets('every tool row is tappable', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('every tool row is tappable', (WidgetTester tester) async {
       await _pumpPhotos(tester);
 
       for (final String tool in <String>[
@@ -354,18 +352,16 @@ void main() {
       }
     });
 
-    testWidgets('Review Photos is enabled when something was found', (
+    testWidgets('uses compact Review actions instead of a separate CTA', (
       WidgetTester tester,
     ) async {
       await _pumpPhotos(tester);
 
-      final FilledButton button = tester.widget<FilledButton>(
-        find.byKey(const Key('photo_review_button')),
-      );
-      expect(button.onPressed, isNotNull);
+      expect(find.byKey(const Key('photo_review_button')), findsNothing);
+      expect(find.text('Review'), findsNWidgets(4));
     });
 
-    testWidgets('a tidy library disables Review and says so', (
+    testWidgets('a tidy library keeps every review row and says so', (
       WidgetTester tester,
     ) async {
       await _pumpPhotos(
@@ -376,12 +372,9 @@ void main() {
       );
 
       expect(find.byKey(const Key('photo_cleanup_clean')), findsOneWidget);
-      final FilledButton button = tester.widget<FilledButton>(
-        find.byKey(const Key('photo_review_button')),
-      );
-      expect(button.onPressed, isNull);
       // The tools are still listed, so the tab is never blank.
       expect(find.byKey(const Key('photo_tool_screenshots')), findsOneWidget);
+      expect(find.text('Review'), findsNWidgets(4));
       expect(
         tester
             .widget<Text>(find.byKey(const Key('photo_tool_value_screenshots')))
