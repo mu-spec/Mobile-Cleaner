@@ -153,22 +153,56 @@ class _StorageDetails extends StatelessWidget {
 }
 
 /// Reference-style compact storage strip with a real usage indicator.
-class _StorageSummaryBar extends StatelessWidget {
+class _StorageSummaryBar extends StatefulWidget {
   const _StorageSummaryBar({required this.info});
 
   final StorageInfo info;
+
+  @override
+  State<_StorageSummaryBar> createState() => _StorageSummaryBarState();
+}
+
+class _StorageSummaryBarState extends State<_StorageSummaryBar> {
+  int _replayEpoch = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    storageRingReplay.addListener(_replay);
+  }
+
+  @override
+  void didUpdateWidget(covariant _StorageSummaryBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.info.usedFraction != widget.info.usedFraction) {
+      _replayEpoch++;
+    }
+  }
+
+  void _replay() {
+    if (mounted) {
+      setState(() => _replayEpoch++);
+    }
+  }
+
+  @override
+  void dispose() {
+    storageRingReplay.removeListener(_replay);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
-    final double usedFraction = info.usedFraction.clamp(0.0, 1.0);
+    final bool reducedMotion = MediaQuery.disableAnimationsOf(context);
+    final double usedFraction = widget.info.usedFraction.clamp(0.0, 1.0);
 
     return Semantics(
       label: 'Internal storage usage',
       value:
-          '${ByteFormatter.format(info.usedBytes)} of ${ByteFormatter.format(info.totalBytes)} used',
+          '${ByteFormatter.format(widget.info.usedBytes)} of ${ByteFormatter.format(widget.info.totalBytes)} used',
       child: Container(
         key: const Key('total_storage'),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
@@ -217,7 +251,7 @@ class _StorageSummaryBar extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
                         Text(
-                          ByteFormatter.format(info.usedBytes),
+                          ByteFormatter.format(widget.info.usedBytes),
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 11,
                             color: colors.onSurface,
@@ -232,7 +266,7 @@ class _StorageSummaryBar extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          ByteFormatter.format(info.totalBytes),
+                          ByteFormatter.format(widget.info.totalBytes),
                           style: theme.textTheme.bodySmall?.copyWith(
                             fontSize: 11,
                             color: colors.onSurfaceVariant,
@@ -264,26 +298,49 @@ class _StorageSummaryBar extends StatelessWidget {
                       borderRadius: BorderRadius.circular(99),
                     ),
                     alignment: Alignment.centerLeft,
-                    child: FractionallySizedBox(
-                      key: const Key('storage_usage_fill'),
-                      widthFactor: usedFraction,
-                      heightFactor: 1,
-                      child: const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: <Color>[
-                              HomeUpperStyle.primaryBlue,
-                              HomeUpperStyle.deepBlue,
-                            ],
+                    child: reducedMotion
+                        ? _StorageUsageFill(fraction: usedFraction)
+                        : TweenAnimationBuilder<double>(
+                            key: ValueKey<int>(_replayEpoch),
+                            tween: Tween<double>(begin: 0, end: usedFraction),
+                            duration: const Duration(milliseconds: 2400),
+                            curve: Curves.easeInOutCubic,
+                            builder: (
+                              BuildContext context,
+                              double animatedFraction,
+                              Widget? child,
+                            ) => _StorageUsageFill(fraction: animatedFraction),
                           ),
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StorageUsageFill extends StatelessWidget {
+  const _StorageUsageFill({required this.fraction});
+
+  final double fraction;
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      key: const Key('storage_usage_fill'),
+      widthFactor: fraction,
+      heightFactor: 1,
+      child: const DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: <Color>[
+              HomeUpperStyle.primaryBlue,
+              HomeUpperStyle.deepBlue,
+            ],
+          ),
         ),
       ),
     );

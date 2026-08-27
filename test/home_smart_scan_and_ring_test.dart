@@ -22,17 +22,21 @@ void main() {
       expect(info.usedPercentage, 73);
     });
 
-    testWidgets('summary icon and bar use the same real storage fraction', (
+    testWidgets('summary bar animates to the same real storage fraction', (
       WidgetTester tester,
     ) async {
       await _pumpStorageRing(tester, info: info);
 
       expect(find.byKey(const Key('storage_database_icon')), findsOneWidget);
       expect(find.byKey(const Key('storage_usage_track')), findsOneWidget);
-      final FractionallySizedBox fill = tester.widget<FractionallySizedBox>(
-        find.byKey(const Key('storage_usage_fill')),
-      );
-      expect(fill.widthFactor, closeTo(info.usedFraction, 0.0001));
+      expect(_barFraction(tester), closeTo(0, 0.0001));
+
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(_barFraction(tester), greaterThan(0));
+      expect(_barFraction(tester), lessThan(info.usedFraction * 0.25));
+
+      await tester.pump(const Duration(milliseconds: 1800));
+      expect(_barFraction(tester), closeTo(info.usedFraction, 0.0001));
       expect(find.text('Internal storage'), findsOneWidget);
     });
 
@@ -83,6 +87,7 @@ void main() {
         painter.usedFraction as double,
         closeTo(info.usedFraction, 0.0001),
       );
+      expect(_barFraction(tester), closeTo(info.usedFraction, 0.0001));
       expect(find.text('73%'), findsOneWidget);
     });
 
@@ -100,6 +105,7 @@ void main() {
       setStorageHomeVisible(true);
       await tester.pump();
       expect((_ringPainter(tester).usedFraction as double), closeTo(0, 0.0001));
+      expect(_barFraction(tester), closeTo(0, 0.0001));
       expect(find.text('73%'), findsOneWidget);
 
       await tester.pump(const Duration(milliseconds: 2400));
@@ -107,6 +113,7 @@ void main() {
         (_ringPainter(tester).usedFraction as double),
         closeTo(info.usedFraction, 0.0001),
       );
+      expect(_barFraction(tester), closeTo(info.usedFraction, 0.0001));
     });
 
     testWidgets('popping a pushed screen restarts the finite animation', (
@@ -134,6 +141,7 @@ void main() {
       Navigator.of(homeContext).pop();
       await tester.pump();
       expect((_ringPainter(tester).usedFraction as double), closeTo(0, 0.0001));
+      expect(_barFraction(tester), closeTo(0, 0.0001));
       expect(find.text('73%'), findsOneWidget);
 
       await tester.pump(const Duration(milliseconds: 2400));
@@ -141,6 +149,7 @@ void main() {
         (_ringPainter(tester).usedFraction as double),
         closeTo(info.usedFraction, 0.0001),
       );
+      expect(_barFraction(tester), closeTo(info.usedFraction, 0.0001));
     });
   });
 
@@ -375,4 +384,11 @@ dynamic _ringPainter(WidgetTester tester) {
     find.byKey(const Key('storage_ring_paint')),
   );
   return paint.painter;
+}
+
+double _barFraction(WidgetTester tester) {
+  final FractionallySizedBox fill = tester.widget<FractionallySizedBox>(
+    find.byKey(const Key('storage_usage_fill')),
+  );
+  return fill.widthFactor!;
 }

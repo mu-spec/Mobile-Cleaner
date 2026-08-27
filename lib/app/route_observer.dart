@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Increments whenever the Home storage ring should replay its finite
-/// entrance animation.
+/// Increments whenever Home's storage indicators should replay their finite
+/// entrance animations.
 final ValueNotifier<int> storageRingReplay = ValueNotifier<int>(0);
 
 bool _isHomeVisible = true;
@@ -24,7 +24,8 @@ void replayStorageRing() {
   }
 }
 
-/// Observes pushed-screen returns without coupling the ring to the router.
+/// Observes pushed-screen returns without coupling the indicators to the
+/// router.
 final RouteObserver<PageRoute<dynamic>> storageRouteObserver =
     _StorageRouteObserver();
 
