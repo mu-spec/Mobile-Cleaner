@@ -108,11 +108,16 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: <Widget>[
-                          advice.when(
-                            loading: () => const SizedBox.shrink(),
-                            error: (_, _) => const SizedBox.shrink(),
-                            data: (List<Recommendation> found) {
-                              if (found.isNotEmpty) {
+                          SizedBox(
+                            key: const Key('smart_scan_recommendation_slot'),
+                            height: 40,
+                            child: advice.when(
+                              loading: () => const _NoRecommendationState(),
+                              error: (_, _) => const _NoRecommendationState(),
+                              data: (List<Recommendation> found) {
+                                if (found.isEmpty) {
+                                  return const _NoRecommendationState();
+                                }
                                 return InkWell(
                                   onTap: () => widget.onOpen(found.first.kind),
                                   borderRadius: BorderRadius.circular(10),
@@ -127,9 +132,8 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                                     ),
                                   ),
                                 );
-                              }
-                              return const SizedBox.shrink();
-                            },
+                              },
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Align(
@@ -141,12 +145,13 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                                 backgroundColor: Colors.white,
                                 foregroundColor: HomeUpperStyle.primaryBlue,
                                 elevation: 0,
+                                minimumSize: const Size(0, 38),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 14,
                                   vertical: 7,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                                 textStyle: const TextStyle(
                                   fontWeight: FontWeight.w800,
@@ -199,6 +204,45 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _NoRecommendationState extends StatelessWidget {
+  const _NoRecommendationState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'No Recommendation Yet',
+      child: Row(
+        key: const Key('smart_scan_no_recommendation'),
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          PhosphorIcon(
+            PhosphorIconsDuotone.lightbulb,
+            size: 20,
+            color: Colors.white.withValues(alpha: 0.92),
+            duotoneSecondaryColor: Colors.white,
+            duotoneSecondaryOpacity: 0.38,
+          ),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'No Recommendation Yet',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.15,
+                height: 1.1,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

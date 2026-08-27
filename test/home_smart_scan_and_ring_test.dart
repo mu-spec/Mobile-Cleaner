@@ -174,6 +174,53 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 2000));
       expect(find.text('Scan Now'), findsOneWidget);
+      expect(find.text('No Recommendation Yet'), findsOneWidget);
+      expect(
+        tester
+            .getSize(find.byKey(const Key('smart_scan_recommendation_slot')))
+            .height,
+        40,
+      );
+
+      final ElevatedButton scanButton = tester.widget<ElevatedButton>(
+        find.byKey(const Key('home_scan_now_button')),
+      );
+      final OutlinedBorder? shape = scanButton.style?.shape?.resolve(
+        <WidgetState>{},
+      );
+      expect(shape, isA<RoundedRectangleBorder>());
+      expect(
+        (shape! as RoundedRectangleBorder).borderRadius,
+        BorderRadius.circular(10),
+      );
+    });
+
+    testWidgets('loading keeps the empty recommendation slot occupied', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            recommendationsProvider.overrideWithValue(
+              const AsyncValue<List<Recommendation>>.loading(),
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: SmartScanCta(onScan: () {}, onOpen: (_) {}),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('No Recommendation Yet'), findsOneWidget);
+      expect(
+        tester
+            .getSize(find.byKey(const Key('smart_scan_recommendation_slot')))
+            .height,
+        40,
+      );
+      expect(find.text('Scan Now'), findsOneWidget);
     });
 
     testWidgets('recommendation remains visible when present', (
@@ -204,7 +251,14 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 2000));
       expect(find.text('Clean up duplicates'), findsOneWidget);
+      expect(find.text('No Recommendation Yet'), findsNothing);
       expect(find.text('Scan Now'), findsOneWidget);
+      expect(
+        tester
+            .getSize(find.byKey(const Key('smart_scan_recommendation_slot')))
+            .height,
+        40,
+      );
     });
 
     testWidgets('Scan Now triggers scan', (WidgetTester tester) async {

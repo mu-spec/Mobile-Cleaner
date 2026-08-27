@@ -311,6 +311,7 @@ void main() {
       expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
+      expect(find.text('No Recommendation Yet'), findsOneWidget);
       expect(find.byKey(const Key('recommendations_section')), findsNothing);
       expect(find.text('Recommended for you'), findsNothing);
     });
@@ -323,6 +324,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 2000));
       expect(find.byKey(const Key('smart_scan_recommendation_screenshotReview')), findsOneWidget);
       expect(find.text('Review old screenshots'), findsOneWidget);
+      expect(find.text('No Recommendation Yet'), findsNothing);
     });
   });
 
@@ -450,6 +452,7 @@ void main() {
       expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
+      expect(find.text('No Recommendation Yet'), findsOneWidget);
       // Old descriptive text removed per spec.
       expect(find.text('Find and clean unnecessary files'), findsNothing);
     });
@@ -471,6 +474,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Review old screenshots'), findsOneWidget);
+      expect(find.text('No Recommendation Yet'), findsNothing);
       expect(
         find.text('100.0 MB recoverable'),
         findsOneWidget,
