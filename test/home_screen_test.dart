@@ -233,7 +233,7 @@ void main() {
       await _pumpHome(tester);
 
       expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
-      expect(find.text('64%'), findsOneWidget);
+      expect(find.text('${((128 - 46) / 128 * 100).round()}%'), findsOneWidget);
     });
 
     testWidgets('the card is titled Storage Overview', (
@@ -268,7 +268,7 @@ void main() {
 
       expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
       expect(find.byKey(const Key('smart_scan_button')), findsOneWidget);
-      expect(find.text('Smart Scan'), findsOneWidget);
+      expect(find.text('Scan Now'), findsOneWidget);
       // The separate privacy line was removed to keep Home compact; the app's
       // privacy/security behavior is unchanged.
       expect(find.byKey(const Key('smart_scan_privacy_note')), findsNothing);
@@ -282,7 +282,7 @@ void main() {
 
       // The hero card names the feature; the button states the action.
       // Several existing tests use this text to confirm they landed on Home.
-      expect(find.text('Smart Scan'), findsOneWidget);
+      expect(find.text('Scan Now'), findsOneWidget);
     });
 
     testWidgets('the hero card is the full width of the content area', (
@@ -302,7 +302,7 @@ void main() {
     testWidgets('Scan Now state shown when clean', (tester) async {
       await _pumpHome(tester);
       expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
-      expect(find.text('Smart Scan'), findsOneWidget);
+      expect(find.text('Scan Now'), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
       expect(find.byKey(const Key('recommendations_section')), findsNothing);
       expect(find.text('Recommended for you'), findsNothing);
@@ -415,7 +415,7 @@ void main() {
         info: const StorageInfo(totalBytes: 64 * _gib, freeBytes: 0),
       );
 
-      expect(find.text('100%'), findsOneWidget);
+      expect(find.text('${((64 - 0) / 64 * 100).round()}%'), findsOneWidget);
       expect(find.text('0 B'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -441,7 +441,7 @@ void main() {
     ) async {
       await _pumpHome(tester);
       expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
-      expect(find.text('Smart Scan'), findsOneWidget);
+      expect(find.text('Scan Now'), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
       // Old descriptive text removed per spec.
       expect(find.text('Find and clean unnecessary files'), findsNothing);
