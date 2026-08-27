@@ -14,6 +14,7 @@ import 'package:mobile_cleaner/features/files/domain/large_file_filter.dart';
 import 'package:mobile_cleaner/features/files/domain/large_file_summary.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/domain/smart_scan_result.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
 const int _mib = 1024 * 1024;
 const String _apkMime = 'application/vnd.android.package-archive';
@@ -21,8 +22,12 @@ const String _apkMime = 'application/vnd.android.package-archive';
 /// Midday so a daylight-saving shift cannot move a fixture across a day.
 DateTime _daysAgo(int days) {
   final DateTime now = DateTime.now();
-  return DateTime(now.year, now.month, now.day, 12)
-      .subtract(Duration(days: days));
+  return DateTime(
+    now.year,
+    now.month,
+    now.day,
+    12,
+  ).subtract(Duration(days: days));
 }
 
 ScannedFile _file({
@@ -228,7 +233,10 @@ void main() {
 
     test('ranks non-empty groups by size', () {
       final SmartScanResult result = _resultFrom(_fixture());
-      expect(result.nonEmptyGroups.first.category, SmartScanCategory.largeFiles);
+      expect(
+        result.nonEmptyGroups.first.category,
+        SmartScanCategory.largeFiles,
+      );
       expect(result.nonEmptyGroups, hasLength(3));
     });
 
@@ -263,6 +271,17 @@ void main() {
         tester.widget<Text>(find.byKey(const Key('smart_scan_heading'))).data,
         'Potentially Recoverable',
       );
+    });
+
+    testWidgets('uses Home orange for the recoverable total', (
+      WidgetTester tester,
+    ) async {
+      await _pumpSmartScan(tester);
+
+      final Text total = tester.widget<Text>(
+        find.byKey(const Key('smart_scan_total_bytes')),
+      );
+      expect(total.style?.color, HomeUpperStyle.orange);
     });
 
     testWidgets('lists each check with its label and size', (
@@ -411,7 +430,9 @@ void main() {
       expect(apkRow.onTap, isNull);
       expect(
         tester
-            .widget<Text>(find.byKey(const Key('smart_group_size_apkInstallers')))
+            .widget<Text>(
+              find.byKey(const Key('smart_group_size_apkInstallers')),
+            )
             .data,
         'None',
       );
@@ -437,7 +458,9 @@ void main() {
       // Old downloads: invoice.pdf 2 MB + old-game.apk 500 MB.
       expect(
         tester
-            .widget<Text>(find.byKey(const Key('smart_group_size_oldDownloads')))
+            .widget<Text>(
+              find.byKey(const Key('smart_group_size_oldDownloads')),
+            )
             .data,
         '502.0 MB',
       );

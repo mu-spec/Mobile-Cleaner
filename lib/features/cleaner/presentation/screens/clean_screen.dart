@@ -9,6 +9,7 @@ import 'package:mobile_cleaner/features/files/domain/smart_scan_result.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
 /// Smart Scan: runs the large files, old downloads, and APK checks together.
 ///
@@ -145,7 +146,7 @@ class _RecoverableCard extends StatelessWidget {
               key: const Key('smart_scan_total_bytes'),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: colors.primary,
+                color: HomeUpperStyle.orange,
               ),
             ),
             const SizedBox(height: 2),
