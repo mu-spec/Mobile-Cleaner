@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_cleaner/app/route_observer.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
@@ -11,56 +12,120 @@ import 'package:phosphor_icons/phosphor_icons.dart';
 
 void main() {
   group('Storage ring animation', () {
-    testWidgets('ring starts at 0 and reaches usedFraction', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            storageOverviewProvider.overrideWithValue(
-              AsyncValue<StorageInfo>.data(
-                StorageInfo(
-                  totalBytes: 1024 * 1024 * 1024,
-                  freeBytes: 1024 * 1024 * (1024 - 150),
-                ),
-              ),
-            ),
-          ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: StorageOverviewCard(),
-            ),
-          ),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 1000));
-      await tester.pump(const Duration(milliseconds: 500));
-      expect(find.byKey(const Key('free_storage')), findsOneWidget);
+    const StorageInfo info = StorageInfo(totalBytes: 1000, freeBytes: 270);
+
+    setUp(() => setStorageHomeVisible(true));
+
+    test('usedFraction is normalized', () {
+      expect(info.usedFraction, closeTo(0.73, 0.0001));
+      expect(info.usedPercentage, 73);
     });
 
-    testWidgets('reduced motion shows final state', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            storageOverviewProvider.overrideWithValue(
-              AsyncValue<StorageInfo>.data(
-                StorageInfo(
-                  totalBytes: 1000,
-                  freeBytes: 900,
-                ),
-              ),
-            ),
-          ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: MediaQuery(
-                data: const MediaQueryData(disableAnimations: true),
-                child: StorageOverviewCard(),
-              ),
-            ),
-          ),
+    testWidgets('painter starts at zero and reaches usedFraction', (
+      WidgetTester tester,
+    ) async {
+      await _pumpStorageRing(tester, info: info);
+
+      final dynamic initialPainter = _ringPainter(tester);
+      expect(initialPainter.usedFraction as double, closeTo(0, 0.0001));
+      expect(find.text('73%'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 450));
+      final dynamic middlePainter = _ringPainter(tester);
+      final double middleFraction = middlePainter.usedFraction as double;
+      expect(middleFraction, greaterThan(0));
+      expect(middleFraction, lessThan(info.usedFraction));
+      expect(find.text('73%'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 450));
+      final dynamic finalPainter = _ringPainter(tester);
+      expect(
+        finalPainter.usedFraction as double,
+        closeTo(info.usedFraction, 0.0001),
+      );
+      expect(find.text('73%'), findsOneWidget);
+    });
+
+    testWidgets('painter repaints when the animated fraction changes', (
+      WidgetTester tester,
+    ) async {
+      await _pumpStorageRing(tester, info: info);
+      final dynamic initialPainter = _ringPainter(tester);
+
+      await tester.pump(const Duration(milliseconds: 450));
+      final dynamic progressedPainter = _ringPainter(tester);
+
+      expect(progressedPainter.shouldRepaint(initialPainter) as bool, isTrue);
+    });
+
+    testWidgets('reduced motion paints the final fraction immediately', (
+      WidgetTester tester,
+    ) async {
+      await _pumpStorageRing(tester, info: info, disableAnimations: true);
+
+      final dynamic painter = _ringPainter(tester);
+      expect(
+        painter.usedFraction as double,
+        closeTo(info.usedFraction, 0.0001),
+      );
+      expect(find.text('73%'), findsOneWidget);
+    });
+
+    testWidgets('returning to Home restarts the finite animation', (
+      WidgetTester tester,
+    ) async {
+      await _pumpStorageRing(tester, info: info);
+      await tester.pump(const Duration(milliseconds: 900));
+      expect(
+        (_ringPainter(tester).usedFraction as double),
+        closeTo(info.usedFraction, 0.0001),
+      );
+
+      setStorageHomeVisible(false);
+      setStorageHomeVisible(true);
+      await tester.pump();
+      expect((_ringPainter(tester).usedFraction as double), closeTo(0, 0.0001));
+      expect(find.text('73%'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 900));
+      expect(
+        (_ringPainter(tester).usedFraction as double),
+        closeTo(info.usedFraction, 0.0001),
+      );
+    });
+
+    testWidgets('popping a pushed screen restarts the finite animation', (
+      WidgetTester tester,
+    ) async {
+      await _pumpStorageRing(
+        tester,
+        info: info,
+        navigatorObservers: <NavigatorObserver>[storageRouteObserver],
+      );
+      await tester.pump(const Duration(milliseconds: 900));
+
+      final BuildContext homeContext = tester.element(
+        find.byType(StorageOverviewCard),
+      );
+      Navigator.of(homeContext).push(
+        MaterialPageRoute<void>(
+          builder: (BuildContext context) =>
+              const Scaffold(body: Center(child: Text('Pushed screen'))),
         ),
       );
       await tester.pump();
-      expect(find.byKey(const Key('free_storage')), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      Navigator.of(homeContext).pop();
+      await tester.pump();
+      expect((_ringPainter(tester).usedFraction as double), closeTo(0, 0.0001));
+      expect(find.text('73%'), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 900));
+      expect(
+        (_ringPainter(tester).usedFraction as double),
+        closeTo(info.usedFraction, 0.0001),
+      );
     });
   });
 
@@ -169,4 +234,37 @@ void main() {
       expect(find.byType(CustomPaint), findsWidgets);
     });
   });
+}
+
+Future<void> _pumpStorageRing(
+  WidgetTester tester, {
+  required StorageInfo info,
+  bool disableAnimations = false,
+  List<NavigatorObserver> navigatorObservers = const <NavigatorObserver>[],
+}) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        storageOverviewProvider.overrideWithValue(
+          AsyncValue<StorageInfo>.data(info),
+        ),
+      ],
+      child: MaterialApp(
+        navigatorObservers: navigatorObservers,
+        home: Scaffold(
+          body: MediaQuery(
+            data: MediaQueryData(disableAnimations: disableAnimations),
+            child: const StorageOverviewCard(),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+dynamic _ringPainter(WidgetTester tester) {
+  final CustomPaint paint = tester.widget<CustomPaint>(
+    find.byKey(const Key('storage_ring_paint')),
+  );
+  return paint.painter;
 }

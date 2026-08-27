@@ -218,83 +218,32 @@ class _StorageRing extends StatefulWidget {
   State<_StorageRing> createState() => _StorageRingState();
 }
 
-class _StorageRingState extends State<_StorageRing>
-    with TickerProviderStateMixin, RouteAware {
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  bool _reducedMotion = false;
-  PageRoute<dynamic>? _route;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_route != null) {
-      storageRouteObserver.unsubscribe(this);
-    }
-    final PageRoute<dynamic>? route = ModalRoute.of(context) as PageRoute<dynamic>?;
-    if (route != null) {
-      _route = route;
-      storageRouteObserver.subscribe(this, route);
-    }
-    final bool reduced = MediaQuery.disableAnimationsOf(context);
-    if (reduced && !_reducedMotion) {
-      if (_controller.isAnimating) {
-        _controller.stop();
-      }
-    }
-    _reducedMotion = reduced;
-    if (!_reducedMotion && !_animationStarted) {
-      _animationStarted = true;
-      _startAnimation();
-    }
-  }
-
-  @override
-  void didPopNext() {
-    _animationStarted = false;
-    _startAnimation();
-  }
-
-  void _startAnimation() {
-    if (MediaQuery.disableAnimationsOf(context) || _reducedMotion) return;
-    _animationStarted = true;
-    _controller.reset();
-    _animation = Tween<double>(
-      begin: 0.0,
-      end: widget.info.usedFraction.clamp(0.0, 1.0),
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-    _controller.forward();
-  }
-
-  bool _animationStarted = false;
+class _StorageRingState extends State<_StorageRing> {
+  int _replayEpoch = 0;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _animation = Tween<double>(begin: 0.0, end: 0.0).animate(_controller);
+    storageRingReplay.addListener(_replay);
   }
 
   @override
   void didUpdateWidget(covariant _StorageRing oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.info.usedFraction != widget.info.usedFraction) {
-      _animationStarted = false;
-      _startAnimation();
+      _replayEpoch++;
+    }
+  }
+
+  void _replay() {
+    if (mounted) {
+      setState(() => _replayEpoch++);
     }
   }
 
   @override
   void dispose() {
-    if (_route != null) {
-      storageRouteObserver.unsubscribe(this);
-    }
-    _controller.dispose();
+    storageRingReplay.removeListener(_replay);
     super.dispose();
   }
 
@@ -303,68 +252,52 @@ class _StorageRingState extends State<_StorageRing>
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
+    final bool reducedMotion = MediaQuery.disableAnimationsOf(context);
+    final double targetFraction = widget.info.usedFraction
+        .clamp(0.0, 1.0)
+        .toDouble();
+    final Color usedColor = isDark
+        ? colors.primary
+        : HomeUpperStyle.primaryBlue;
 
-    final Widget ring = Semantics(
-      label:
-          '${ByteFormatter.format(widget.info.freeBytes)} of storage available',
-      child: SizedBox.square(
-        dimension: 112,
-        child: CustomPaint(
-          painter: _StorageRingPainter(
-            usedFraction: _animation.value,
-            usedColor:
-                isDark ? colors.primary : HomeUpperStyle.primaryBlue,
-            availableColor: HomeUpperStyle.orange,
-            repaint: _animation,
-          ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xs),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: AnimatedBuilder(
-                  animation: _animation,
-                  builder: (BuildContext context, Widget? child) {
-                    return Column(
-                      key: const Key('free_storage'),
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Text(
-                          ByteFormatter.format(widget.info.freeBytes),
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          'Available',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 9,
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+    final Widget ringContent = Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xs),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            key: const Key('free_storage'),
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                ByteFormatter.format(widget.info.freeBytes),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.2,
                 ),
               ),
-            ),
+              const SizedBox(height: 1),
+              Text(
+                'Available',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 9,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
 
-    if (_reducedMotion) {
-      if (_controller.isAnimating) {
-        _controller.stop();
-      }
+    if (reducedMotion) {
       return SizedBox.square(
         dimension: 112,
         child: CustomPaint(
+          key: const Key('storage_ring_paint'),
           painter: _StorageRingPainter(
-            usedFraction: widget.info.usedFraction.clamp(0.0, 1.0),
-            usedColor: isDark ? colors.primary : HomeUpperStyle.primaryBlue,
+            usedFraction: targetFraction,
+            usedColor: usedColor,
             availableColor: HomeUpperStyle.orange,
           ),
           child: Center(
@@ -382,9 +315,7 @@ class _StorageRingState extends State<_StorageRing>
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -1,
-                        color: isDark
-                            ? colors.primary
-                            : HomeUpperStyle.primaryBlue,
+                        color: usedColor,
                       ),
                     ),
                     const SizedBox(height: 1),
@@ -404,7 +335,32 @@ class _StorageRingState extends State<_StorageRing>
       );
     }
 
-    return ring;
+    return Semantics(
+      label:
+          '${ByteFormatter.format(widget.info.freeBytes)} of storage available',
+      child: SizedBox.square(
+        dimension: 112,
+        child: TweenAnimationBuilder<double>(
+          key: ValueKey<int>(_replayEpoch),
+          tween: Tween<double>(begin: 0, end: targetFraction),
+          duration: const Duration(milliseconds: 900),
+          curve: Curves.easeOutCubic,
+          builder:
+              (BuildContext context, double animatedFraction, Widget? child) {
+                return CustomPaint(
+                  key: const Key('storage_ring_paint'),
+                  painter: _StorageRingPainter(
+                    usedFraction: animatedFraction,
+                    usedColor: usedColor,
+                    availableColor: HomeUpperStyle.orange,
+                  ),
+                  child: child,
+                );
+              },
+          child: ringContent,
+        ),
+      ),
+    );
   }
 }
 
@@ -413,7 +369,6 @@ class _StorageRingPainter extends CustomPainter {
     required this.usedFraction,
     required this.usedColor,
     required this.availableColor,
-    super.repaint,
   });
 
   final double usedFraction;
@@ -459,7 +414,7 @@ class _StorageRingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_StorageRingPainter oldDelegate) {
+  bool shouldRepaint(covariant _StorageRingPainter oldDelegate) {
     return oldDelegate.usedFraction != usedFraction ||
         oldDelegate.usedColor != usedColor ||
         oldDelegate.availableColor != availableColor;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_cleaner/app/route_observer.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({required this.navigationShell, super.key});
@@ -98,6 +99,7 @@ class AppShell extends StatelessWidget {
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
+    setStorageHomeVisible(index == 0);
   }
 }
 
