@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
+import 'package:mobile_cleaner/features/cleaner/domain/scan_launch_target.dart';
 import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
 import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
@@ -13,6 +14,8 @@ import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_sty
 import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
+import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
+import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 
 /// UI V2.1 Home.
@@ -25,16 +28,32 @@ import 'package:mobile_cleaner/features/storage/presentation/providers/storage_o
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  static void _openRecommendation(
+  static Future<void> _launchScan(
     BuildContext context,
-    RecommendationKind kind,
-  ) {
-    final String route = switch (kind) {
-      RecommendationKind.screenshotReview => AppRoutes.screenshotCleaner,
-      RecommendationKind.duplicateCleanup => AppRoutes.duplicates,
-      RecommendationKind.largeVideoReview => AppRoutes.videos,
-    };
+    WidgetRef ref,
+    ScanLaunchTarget target,
+  ) async {
+    AppPermissionStatus status;
+    try {
+      status = await ref.read(permissionGatewayProvider).checkMediaAndStorage();
+    } catch (_) {
+      status = AppPermissionStatus.denied;
+    }
+    if (!context.mounted) {
+      return;
+    }
+    final String route = status == AppPermissionStatus.granted
+        ? AppRoutes.progressForScan(target)
+        : AppRoutes.permissionsForScan(target);
     context.push(route);
+  }
+
+  static ScanLaunchTarget _targetForRecommendation(RecommendationKind kind) {
+    return switch (kind) {
+      RecommendationKind.screenshotReview => ScanLaunchTarget.screenshots,
+      RecommendationKind.duplicateCleanup => ScanLaunchTarget.duplicates,
+      RecommendationKind.largeVideoReview => ScanLaunchTarget.largeVideos,
+    };
   }
 
   @override
@@ -78,9 +97,12 @@ class HomeScreen extends ConsumerWidget {
                 const StorageOverviewCard(),
                 const SizedBox(height: HomeMetrics.sectionGap),
                 SmartScanCta(
-                  onScan: () => context.go(AppRoutes.clean),
-                  onOpen: (RecommendationKind kind) =>
-                      _openRecommendation(context, kind),
+                  onScan: () {
+                    _launchScan(context, ref, ScanLaunchTarget.smartScan);
+                  },
+                  onOpen: (RecommendationKind kind) {
+                    _launchScan(context, ref, _targetForRecommendation(kind));
+                  },
                 ),
                 const SizedBox(height: HomeMetrics.sectionGap),
                 QuickToolsSection(

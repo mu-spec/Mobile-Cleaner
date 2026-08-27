@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -42,7 +43,9 @@ void main() {
     WidgetTester tester,
   ) async {
     await usePhoneSurface(tester);
-    SharedPreferences.setMockInitialValues(<String, Object>{'onboarding_completed': false});
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'onboarding_completed': false,
+    });
     appRouter.go(AppRoutes.splash);
 
     await tester.pumpWidget(
@@ -70,9 +73,7 @@ void main() {
         );
         expect(
           indicator.constraints?.maxWidth,
-          index == activeIndex
-              ? activeIndicatorWidth
-              : inactiveIndicatorWidth,
+          index == activeIndex ? activeIndicatorWidth : inactiveIndicatorWidth,
         );
       }
     }
@@ -102,16 +103,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
     await pumpAsyncRouteTransition();
-    expect(find.byKey(const Key('permission_education')), findsOneWidget);
-
-    final Finder notNow = find.descendant(
-      of: find.byKey(const Key('permission_education')),
-      matching: find.byKey(const Key('permission_secondary_action')),
-    );
-    expect(notNow, findsOneWidget);
-    await tester.tap(notNow);
-    await pumpAsyncRouteTransition();
     expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
+    expect(find.byKey(const Key('permission_education')), findsNothing);
 
     appRouter.go(AppRoutes.splash);
     await tester.pump();
@@ -158,6 +151,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pump(const Duration(milliseconds: 500));
 
+    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
+    expect(find.byKey(const Key('permission_education')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('home_scan_now_button')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byKey(const Key('permission_education')), findsOneWidget);
     await tester.tap(find.byKey(const Key('permission_primary_action')));
     await tester.pump(const Duration(milliseconds: 2000));
@@ -179,6 +178,121 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
+  });
+
+  testWidgets('granting deferred access starts a real premium scan', (
+    WidgetTester tester,
+  ) async {
+    await usePhoneSurface(tester);
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'onboarding_completed': true,
+    });
+    appRouter.go(AppRoutes.splash);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          permissionGatewayProvider.overrideWithValue(
+            _FakePermissionGateway(
+              AppPermissionStatus.denied,
+              requestStatus: AppPermissionStatus.granted,
+            ),
+          ),
+          ..._offlineDataOverrides,
+        ],
+        child: const MobileCleanerApp(),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 1000));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('home_scan_now_button')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byKey(const Key('permission_education')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_ring')), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_percent')), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 1600));
+    final Text progressText = tester.widget<Text>(
+      find.byKey(const Key('scan_progress_percent')),
+    );
+    expect(progressText.data, isNot('0%'));
+
+    await tester.pump(const Duration(milliseconds: 1500));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(CleanScreen), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('scan waits at 90 percent until the device scan finishes', (
+    WidgetTester tester,
+  ) async {
+    await usePhoneSurface(tester);
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'onboarding_completed': true,
+    });
+    final _DelayedFileScannerRepository scanner =
+        _DelayedFileScannerRepository();
+    appRouter.go(AppRoutes.splash);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          permissionGatewayProvider.overrideWithValue(
+            _FakePermissionGateway(AppPermissionStatus.granted),
+          ),
+          fileScannerRepositoryProvider.overrideWithValue(scanner),
+          storageRepositoryProvider.overrideWithValue(
+            const _FakeStorageRepository(
+              StorageInfo(
+                totalBytes: 64 * 1024 * 1024 * 1024,
+                freeBytes: 20 * 1024 * 1024 * 1024,
+              ),
+            ),
+          ),
+          thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
+          fileHashRepositoryProvider.overrideWithValue(const _NoHashes()),
+          perceptualHashRepositoryProvider.overrideWithValue(
+            const _NoFingerprints(),
+          ),
+          installedAppsRepositoryProvider.overrideWithValue(
+            const _OneFakeApp(),
+          ),
+        ],
+        child: const MobileCleanerApp(),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 1000));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.byKey(const Key('home_scan_now_button')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 3000));
+
+    expect(find.text('90%'), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    expect(find.byType(CleanScreen), findsNothing);
+
+    scanner.complete();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(find.byKey(const Key('scan_complete_icon')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(CleanScreen), findsOneWidget);
   });
 
   testWidgets('home displays real storage values from the repository', (
@@ -253,6 +367,9 @@ void main() {
           fileScannerRepositoryProvider.overrideWithValue(
             _EmptyFileScannerRepository(),
           ),
+          permissionGatewayProvider.overrideWithValue(
+            _FakePermissionGateway(AppPermissionStatus.granted),
+          ),
         ],
         child: const MobileCleanerApp(),
       ),
@@ -261,7 +378,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(find.byKey(const Key('home_scan_now_button')));
-    await tester.pump(const Duration(milliseconds: 2000));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 2900));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(CleanScreen), findsOneWidget);
 
     appRouter.go(AppRoutes.home);
@@ -445,6 +567,19 @@ class _EmptyFileScannerRepository implements FileScannerRepository {
   ]) async => FileScanResult.fromFiles(const []);
 }
 
+class _DelayedFileScannerRepository implements FileScannerRepository {
+  final Completer<FileScanResult> _completer = Completer<FileScanResult>();
+
+  void complete() {
+    _completer.complete(FileScanResult.fromFiles(const []));
+  }
+
+  @override
+  Future<FileScanResult> scan([
+    FileScanRequest request = const FileScanRequest(),
+  ]) => _completer.future;
+}
+
 class _FakeStorageRepository implements StorageRepository {
   const _FakeStorageRepository(this.info);
 
@@ -455,9 +590,11 @@ class _FakeStorageRepository implements StorageRepository {
 }
 
 class _FakePermissionGateway implements AppPermissionGateway {
-  _FakePermissionGateway(this.status);
+  _FakePermissionGateway(this.status, {AppPermissionStatus? requestStatus})
+    : requestStatus = requestStatus ?? status;
 
   final AppPermissionStatus status;
+  final AppPermissionStatus requestStatus;
 
   @override
   Future<AppPermissionStatus> checkMediaAndStorage() async => status;
@@ -466,5 +603,5 @@ class _FakePermissionGateway implements AppPermissionGateway {
   Future<bool> openSettings() async => true;
 
   @override
-  Future<AppPermissionStatus> requestMediaAndStorage() async => status;
+  Future<AppPermissionStatus> requestMediaAndStorage() async => requestStatus;
 }

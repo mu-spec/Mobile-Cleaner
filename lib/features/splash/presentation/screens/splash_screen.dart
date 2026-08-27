@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/core/constants/app_constants.dart';
 import 'package:mobile_cleaner/features/onboarding/data/onboarding_preferences.dart';
-import 'package:mobile_cleaner/features/permissions/data/permission_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,17 +22,13 @@ class _SplashScreenState extends State<SplashScreen> {
     final List<Object> results = await Future.wait(<Future<Object>>[
       Future<bool>.delayed(const Duration(milliseconds: 900), () => true),
       OnboardingPreferences.isCompleted(),
-      PermissionPreferences.isEducationSeen(),
     ]);
     final bool hasCompletedOnboarding = results[1] as bool;
-    final bool hasSeenPermissionEducation = results[2] as bool;
     if (!mounted) {
       return;
     }
     if (!hasCompletedOnboarding) {
       context.go(AppRoutes.onboarding);
-    } else if (!hasSeenPermissionEducation) {
-      context.go(AppRoutes.permissions);
     } else {
       context.go(AppRoutes.home);
     }

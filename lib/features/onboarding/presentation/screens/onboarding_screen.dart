@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/features/onboarding/data/onboarding_preferences.dart';
-import 'package:mobile_cleaner/features/permissions/data/permission_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -59,12 +58,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
     setState(() => _isFinishing = true);
     await OnboardingPreferences.markCompleted();
-    final bool hasSeenPermissionEducation =
-        await PermissionPreferences.isEducationSeen();
     if (mounted) {
-      context.go(
-        hasSeenPermissionEducation ? AppRoutes.home : AppRoutes.permissions,
-      );
+      context.go(AppRoutes.home);
     }
   }
 

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/features/cleaner/domain/scan_launch_target.dart';
 import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
 import 'package:mobile_cleaner/features/permissions/data/permission_preferences.dart';
 import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
 
 class PermissionEducationScreen extends ConsumerStatefulWidget {
-  const PermissionEducationScreen({super.key});
+  const PermissionEducationScreen({this.scanTarget, super.key});
+
+  final ScanLaunchTarget? scanTarget;
 
   @override
   ConsumerState<PermissionEducationScreen> createState() =>
@@ -88,6 +91,19 @@ class _PermissionEducationScreenState
     }
   }
 
+  Future<void> _continueAfterGrant() async {
+    await PermissionPreferences.markEducationSeen();
+    if (!mounted) {
+      return;
+    }
+    final ScanLaunchTarget? target = widget.scanTarget;
+    if (target == null) {
+      await _leaveScreen();
+      return;
+    }
+    context.replace(AppRoutes.progressForScan(target));
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -109,50 +125,46 @@ class _PermissionEducationScreenState
 
   Widget _buildContent(BuildContext context) {
     return switch (_state) {
-      _PermissionViewState.checking || _PermissionViewState.requesting =>
-        const _LoadingView(),
+      _PermissionViewState.checking ||
+      _PermissionViewState.requesting => const _LoadingView(),
       _PermissionViewState.education => _PermissionMessage(
-          key: const Key('permission_education'),
-          icon: Icons.folder_copy_rounded,
-          title: 'Allow access to your media',
-          description:
-              'Mobile Cleaner needs access to photos, videos, audio, and storage so it can show what is using space. Nothing is deleted without your approval.',
-          primaryLabel: 'Allow access',
-          onPrimary: _requestPermission,
-          secondaryLabel: 'Not now',
-          onSecondary: _leaveScreen,
-        ),
+        key: const Key('permission_education'),
+        icon: Icons.folder_copy_rounded,
+        title: 'Allow access to your media',
+        description: 'Mobile Cleaner needs access to photos, videos, audio, and storage so it can show what is using space. Nothing is deleted without your approval.',
+        primaryLabel: 'Allow access',
+        onPrimary: _requestPermission,
+        secondaryLabel: 'Not now',
+        onSecondary: _leaveScreen,
+      ),
       _PermissionViewState.granted => _PermissionMessage(
-          key: const Key('permission_granted'),
-          icon: Icons.verified_user_rounded,
-          title: 'Access granted',
-          description:
-              'Mobile Cleaner can now analyze supported media and storage categories on this device.',
-          primaryLabel: 'Continue',
-          onPrimary: _leaveScreen,
-        ),
+        key: const Key('permission_granted'),
+        icon: Icons.verified_user_rounded,
+        title: 'Access granted',
+        description: 'Mobile Cleaner can now analyze supported media and storage categories on this device.',
+        primaryLabel: 'Continue',
+        onPrimary: _continueAfterGrant,
+      ),
       _PermissionViewState.denied => _PermissionMessage(
-          key: const Key('permission_denied'),
-          icon: Icons.info_rounded,
-          title: 'Permission denied',
-          description:
-              'You can still use the app, but storage results will be limited. You can try again whenever you are ready.',
-          primaryLabel: 'Try again',
-          onPrimary: _requestPermission,
-          secondaryLabel: 'Continue without access',
-          onSecondary: _leaveScreen,
-        ),
+        key: const Key('permission_denied'),
+        icon: Icons.info_rounded,
+        title: 'Permission denied',
+        description: 'You can still use the app, but storage results will be limited. You can try again whenever you are ready.',
+        primaryLabel: 'Try again',
+        onPrimary: _requestPermission,
+        secondaryLabel: 'Continue without access',
+        onSecondary: _leaveScreen,
+      ),
       _PermissionViewState.permanentlyDenied => _PermissionMessage(
-          key: const Key('permission_permanently_denied'),
-          icon: Icons.settings_rounded,
-          title: 'Permission blocked',
-          description:
-              'Android will no longer show the permission prompt. Open system settings to allow media and storage access.',
-          primaryLabel: 'Open settings',
-          onPrimary: _openSettings,
-          secondaryLabel: 'Continue without access',
-          onSecondary: _leaveScreen,
-        ),
+        key: const Key('permission_permanently_denied'),
+        icon: Icons.settings_rounded,
+        title: 'Permission blocked',
+        description: 'Android will no longer show the permission prompt. Open system settings to allow media and storage access.',
+        primaryLabel: 'Open settings',
+        onPrimary: _openSettings,
+        secondaryLabel: 'Continue without access',
+        onSecondary: _leaveScreen,
+      ),
     };
   }
 }
@@ -213,9 +225,8 @@ class _PermissionMessage extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               description,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
+              style: Theme.of(context).textTheme.bodyLarge
+                  ?.copyWith(color: colors.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),

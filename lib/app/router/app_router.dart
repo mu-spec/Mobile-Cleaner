@@ -3,7 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/route_observer.dart';
 import 'package:mobile_cleaner/app/shell/app_shell.dart';
 import 'package:mobile_cleaner/features/apps/presentation/screens/apps_screen.dart';
+import 'package:mobile_cleaner/features/cleaner/domain/scan_launch_target.dart';
 import 'package:mobile_cleaner/features/cleaner/presentation/screens/clean_screen.dart';
+import 'package:mobile_cleaner/features/cleaner/presentation/screens/scan_progress_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/apk_cleaner_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/downloads_cleaner_screen.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/duplicates_screen.dart';
@@ -26,6 +28,7 @@ abstract final class AppRoutes {
   static const String splash = '/splash';
   static const String onboarding = '/onboarding';
   static const String permissions = '/permissions';
+  static const String scanProgress = '/scan-progress';
   static const String home = '/home';
   static const String clean = '/clean';
   static const String photos = '/photos';
@@ -42,6 +45,20 @@ abstract final class AppRoutes {
   static const String history = '/history';
   static const String apps = '/apps';
   static const String settings = '/settings';
+
+  static String permissionsForScan(ScanLaunchTarget target) {
+    return Uri(
+      path: permissions,
+      queryParameters: <String, String>{'scan': target.routeValue},
+    ).toString();
+  }
+
+  static String progressForScan(ScanLaunchTarget target) {
+    return Uri(
+      path: scanProgress,
+      queryParameters: <String, String>{'scan': target.routeValue},
+    ).toString();
+  }
 }
 
 final GoRouter appRouter = GoRouter(
@@ -58,7 +75,21 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.permissions,
-      builder: (context, state) => const PermissionEducationScreen(),
+      builder: (context, state) => PermissionEducationScreen(
+        scanTarget: ScanLaunchTarget.fromRouteValue(
+          state.uri.queryParameters['scan'],
+        ),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.scanProgress,
+      builder: (context, state) => ScanProgressScreen(
+        target:
+            ScanLaunchTarget.fromRouteValue(
+              state.uri.queryParameters['scan'],
+            ) ??
+            ScanLaunchTarget.smartScan,
+      ),
     ),
     GoRoute(
       path: AppRoutes.largeFiles,
