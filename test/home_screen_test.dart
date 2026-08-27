@@ -169,7 +169,7 @@ Future<void> _pumpHome(
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 50));
-  await tester.pump(const Duration(milliseconds: 900));
+  await tester.pump(const Duration(milliseconds: 2400));
 }
 
 Future<void> _scrollTo(WidgetTester tester, Finder target) async {

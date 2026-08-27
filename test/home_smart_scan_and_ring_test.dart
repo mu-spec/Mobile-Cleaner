@@ -30,14 +30,14 @@ void main() {
       expect(initialPainter.usedFraction as double, closeTo(0, 0.0001));
       expect(find.text('73%'), findsOneWidget);
 
-      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump(const Duration(milliseconds: 600));
       final dynamic middlePainter = _ringPainter(tester);
       final double middleFraction = middlePainter.usedFraction as double;
       expect(middleFraction, greaterThan(0));
-      expect(middleFraction, lessThan(info.usedFraction));
+      expect(middleFraction, lessThan(info.usedFraction * 0.25));
       expect(find.text('73%'), findsOneWidget);
 
-      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump(const Duration(milliseconds: 1800));
       final dynamic finalPainter = _ringPainter(tester);
       expect(
         finalPainter.usedFraction as double,
@@ -52,7 +52,7 @@ void main() {
       await _pumpStorageRing(tester, info: info);
       final dynamic initialPainter = _ringPainter(tester);
 
-      await tester.pump(const Duration(milliseconds: 450));
+      await tester.pump(const Duration(milliseconds: 600));
       final dynamic progressedPainter = _ringPainter(tester);
 
       expect(progressedPainter.shouldRepaint(initialPainter) as bool, isTrue);
@@ -75,7 +75,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await _pumpStorageRing(tester, info: info);
-      await tester.pump(const Duration(milliseconds: 900));
+      await tester.pump(const Duration(milliseconds: 2400));
       expect(
         (_ringPainter(tester).usedFraction as double),
         closeTo(info.usedFraction, 0.0001),
@@ -87,7 +87,7 @@ void main() {
       expect((_ringPainter(tester).usedFraction as double), closeTo(0, 0.0001));
       expect(find.text('73%'), findsOneWidget);
 
-      await tester.pump(const Duration(milliseconds: 900));
+      await tester.pump(const Duration(milliseconds: 2400));
       expect(
         (_ringPainter(tester).usedFraction as double),
         closeTo(info.usedFraction, 0.0001),
@@ -102,7 +102,7 @@ void main() {
         info: info,
         navigatorObservers: <NavigatorObserver>[storageRouteObserver],
       );
-      await tester.pump(const Duration(milliseconds: 900));
+      await tester.pump(const Duration(milliseconds: 2400));
 
       final BuildContext homeContext = tester.element(
         find.byType(StorageOverviewCard),
@@ -121,7 +121,7 @@ void main() {
       expect((_ringPainter(tester).usedFraction as double), closeTo(0, 0.0001));
       expect(find.text('73%'), findsOneWidget);
 
-      await tester.pump(const Duration(milliseconds: 900));
+      await tester.pump(const Duration(milliseconds: 2400));
       expect(
         (_ringPainter(tester).usedFraction as double),
         closeTo(info.usedFraction, 0.0001),

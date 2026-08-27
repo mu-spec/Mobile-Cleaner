@@ -343,8 +343,11 @@ class _StorageRingState extends State<_StorageRing> {
         child: TweenAnimationBuilder<double>(
           key: ValueKey<int>(_replayEpoch),
           tween: Tween<double>(begin: 0, end: targetFraction),
-          duration: const Duration(milliseconds: 900),
-          curve: Curves.easeOutCubic,
+          // Keep the fill visible long enough to read on a physical device.
+          // Ease in and out so it grows gently instead of jumping ahead in
+          // the first few frames like the old ease-out curve did.
+          duration: const Duration(milliseconds: 2400),
+          curve: Curves.easeInOutCubic,
           builder:
               (BuildContext context, double animatedFraction, Widget? child) {
                 return CustomPaint(
