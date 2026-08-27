@@ -95,104 +95,123 @@ class _StorageDetails extends StatelessWidget {
     final ColorScheme colors = theme.colorScheme;
     final bool isDark = theme.brightness == Brightness.dark;
 
-    Widget ringContent() {
-      return SizedBox.square(
-        dimension: 112,
-        child: CustomPaint(
-          painter: _StorageRingPainter(
-            usedFraction: _animation.value,
-            usedColor: isDark ? colors.primary : HomeUpperStyle.primaryBlue,
-            availableColor: HomeUpperStyle.orange,
-          ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xs),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: AnimatedBuilder(
-                  animation: _animation,
-                  builder: (BuildContext context, Widget? child) {
-                    return Column(
-                      key: const Key('free_storage'),
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Text(
-                          ByteFormatter.format(widget.info.freeBytes),
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.2,
-                          ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Semantics(
+                label: '${info.usedPercentage} percent of storage used',
+                child: Column(
+                  key: const Key('used_storage'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: TweenAnimationBuilder<double>(
+                        tween: Tween<double>(
+                          begin: 0.0,
+                          end: info.usedPercentage.toDouble(),
                         ),
-                        const SizedBox(height: 1),
-                        Text(
-                          'Available',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 9,
-                            color: colors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                        duration: const Duration(milliseconds: 800),
+                        curve: Curves.easeOutCubic,
+                        builder: (BuildContext context, double value, Widget? child) {
+                          return Text(
+                            '${value.round()}%',
+                            key: const Key('storage_percentage'),
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              fontSize: 38,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -1,
+                              color: isDark ? colors.primary : HomeUpperStyle.primaryBlue,
+                              height: 1.05,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Storage used',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 10.5,
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
+            const SizedBox(width: AppSpacing.xs),
+            _StorageRing(info: info),
+          ],
         ),
-      );
-    }
-
-    Widget staticRing = SizedBox.square(
-      dimension: 112,
-      child: CustomPaint(
-        painter: _StorageRingPainter(
-          usedFraction: widget.info.usedFraction.clamp(0.0, 1.0),
-          usedColor: isDark ? colors.primary : HomeUpperStyle.primaryBlue,
-          availableColor: HomeUpperStyle.orange,
-        ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xs),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Column(
-                key: const Key('free_storage'),
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    ByteFormatter.format(widget.info.freeBytes),
-                    style: theme.textTheme.displaySmall?.copyWith(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -1,
-                      color: isDark ? colors.primary : HomeUpperStyle.primaryBlue,
+        const SizedBox(height: 6),
+        const Divider(height: 1),
+        const SizedBox(height: 6),
+        Row(
+          key: const Key('total_storage'),
+          children: <Widget>[
+            HomeDuotoneIcon(
+              icon: PhosphorIconsDuotone.database,
+              primaryColor: HomeUpperStyle.iconBluePrimary,
+              secondaryColor: HomeUpperStyle.iconBlueSecondary,
+              backgroundColor: isDark ? HomeUpperStyle.iconBluePrimary.withValues(alpha: 0.22) : HomeUpperStyle.softViolet,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      ByteFormatter.format(info.usedBytes),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: colors.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 1),
-                  Text(
-                    'Available',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 9,
-                      color: colors.onSurfaceVariant,
+                    Text(
+                      ' of ',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: colors.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ],
+                    Text(
+                      ByteFormatter.format(info.totalBytes),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontSize: 11,
+                        color: colors.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(
+              child: Text(
+                'Internal storage',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 10,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
         ),
-      ),
+      ],
     );
-
-    final Widget ring = Semantics(
-      label: '${ByteFormatter.format(widget.info.freeBytes)} of storage available',
-      child: _reducedMotion ? staticRing : AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) => ringContent(),
-      ),
-    );
-
-    return ring;
   }
 }
 
