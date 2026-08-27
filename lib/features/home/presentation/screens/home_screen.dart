@@ -8,6 +8,7 @@ import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_h
 import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
@@ -75,24 +76,24 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: <Widget>[
                 const StorageOverviewCard(),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: HomeMetrics.sectionGap),
                 SmartScanCta(
                   onScan: () => context.go(AppRoutes.clean),
-                  onOpen: (RecommendationKind kind) => _openRecommendation(context, kind),
+                  onOpen: (RecommendationKind kind) =>
+                      _openRecommendation(context, kind),
                 ),
-                const SizedBox(height: AppSpacing.xxs),
+                const SizedBox(height: HomeMetrics.sectionGap),
                 QuickToolsSection(
                   onPhotos: () => context.go(AppRoutes.photos),
                   onFiles: () => context.push(AppRoutes.largeFiles),
                   onApps: () => context.go(AppRoutes.apps),
                   onPermissions: () => context.push(AppRoutes.permissions),
                 ),
-                const SizedBox(height: AppSpacing.xxs),
+                const SizedBox(height: HomeMetrics.sectionGap),
                 const _CompactHomeSectionLabel(title: 'Cleanup Summary'),
                 CleanupHistoryCard(
                   onOpen: () => context.push(AppRoutes.history),
                 ),
-
               ],
             ),
           ),
@@ -113,13 +114,11 @@ class _CompactHomeSectionLabel extends StatelessWidget {
     final bool isDark = theme.brightness == Brightness.dark;
 
     return Padding(
-      padding: const EdgeInsets.only(
-        left: AppSpacing.xxs,
-        bottom: AppSpacing.xxs,
-      ),
+      padding: const EdgeInsets.only(bottom: HomeMetrics.headingGap),
       child: Semantics(
         header: true,
         child: Text(
+          key: const Key('cleanup_summary_title'),
           title,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w700,

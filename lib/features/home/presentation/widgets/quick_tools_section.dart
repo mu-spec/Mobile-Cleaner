@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Four equal Phosphor-Duotone shortcut tiles in one compact premium row.
@@ -73,17 +74,14 @@ class QuickToolsSection extends StatelessWidget {
       children: <Widget>[
         // Header
         Padding(
-          padding: const EdgeInsets.only(
-            left: AppSpacing.xxs,
-            right: AppSpacing.xxs,
-            bottom: AppSpacing.xs,
-          ),
+          padding: const EdgeInsets.only(bottom: HomeMetrics.headingGap),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Semantics(
                 header: true,
                 child: Text(
+                  key: const Key('quick_tools_title'),
                   'Quick Tools',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
@@ -98,6 +96,7 @@ class QuickToolsSection extends StatelessWidget {
         ),
         // Four-across card
         Card(
+          key: const Key('quick_tools_card'),
           elevation: isDark ? 0 : 2,
           shadowColor: AppColors.navy.withValues(alpha: 0.07),
           surfaceTintColor: Colors.transparent,

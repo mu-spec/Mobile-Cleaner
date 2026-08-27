@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/app/theme/app_theme.dart';
+import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
 import 'package:mobile_cleaner/features/files/data/delete_repository.dart';
 import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
@@ -18,6 +19,7 @@ import 'package:mobile_cleaner/features/history/data/cleanup_history_repository.
 import 'package:mobile_cleaner/features/history/domain/cleanup_entry.dart';
 import 'package:mobile_cleaner/features/history/domain/cleanup_history.dart';
 import 'package:mobile_cleaner/features/home/presentation/screens/home_screen.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 
@@ -329,6 +331,61 @@ void main() {
   });
 
   group('Home hierarchy', () {
+    testWidgets('uses equal page padding and a consistent section rhythm', (
+      WidgetTester tester,
+    ) async {
+      await _pumpHome(tester);
+
+      final Rect storage = tester.getRect(
+        find.byKey(const Key('storage_overview_card')),
+      );
+      final Rect scan = tester.getRect(find.byKey(const Key('smart_scan_hero')));
+      final Rect quick = tester.getRect(
+        find.byKey(const Key('quick_tools_card')),
+      );
+      final Rect history = tester.getRect(
+        find.byKey(const Key('home_history_empty')),
+      );
+
+      for (final Rect section in <Rect>[storage, scan, quick, history]) {
+        expect(section.left, closeTo(AppSpacing.md, 0.01));
+        expect(section.right, closeTo(420 - AppSpacing.md, 0.01));
+      }
+
+      final Rect quickSection = tester.getRect(
+        find.byKey(const Key('quick_tools_section')),
+      );
+      final Rect cleanupTitle = tester.getRect(
+        find.byKey(const Key('cleanup_summary_title')),
+      );
+      expect(
+        scan.top - storage.bottom,
+        closeTo(HomeMetrics.sectionGap, 0.01),
+      );
+      expect(
+        quickSection.top - scan.bottom,
+        closeTo(HomeMetrics.sectionGap, 0.01),
+      );
+      expect(
+        cleanupTitle.top - quickSection.bottom,
+        closeTo(HomeMetrics.sectionGap, 0.01),
+      );
+
+      final Rect quickTitle = tester.getRect(
+        find.byKey(const Key('quick_tools_title')),
+      );
+      expect(quickTitle.left, closeTo(quick.left, 0.01));
+      expect(cleanupTitle.left, closeTo(history.left, 0.01));
+      expect(
+        quick.top - quickTitle.bottom,
+        closeTo(HomeMetrics.headingGap, 0.01),
+      );
+      expect(
+        history.top - cleanupTitle.bottom,
+        closeTo(HomeMetrics.headingGap, 0.01),
+      );
+    });
+
     testWidgets('Storage, Smart Scan, Quick Tools, Cleanup Summary appear in order', (
       WidgetTester tester,
     ) async {
