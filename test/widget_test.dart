@@ -7,6 +7,7 @@ import 'package:mobile_cleaner/app/app.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
 import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
+import 'package:mobile_cleaner/features/cleaner/presentation/screens/clean_screen.dart';
 import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:mobile_cleaner/features/files/data/perceptual_hash_repository.dart';
@@ -55,27 +56,38 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pump(const Duration(milliseconds: 500));
 
+    const double activeIndicatorWidth = 28;
+    const double inactiveIndicatorWidth = 8;
+
     void expectActiveOnboardingIndicator(int activeIndex) {
       expect(find.byKey(const Key('onboarding_screen')), findsOneWidget);
       for (int index = 0; index < 3; index++) {
-        final AnimatedContainer indicator = tester.widget<AnimatedContainer>(
-          find.byKey(Key('onboarding_indicator_$index')),
-        );
+        final double width = tester
+            .getSize(find.byKey(Key('onboarding_indicator_$index')))
+            .width;
         expect(
-          indicator.constraints?.maxWidth,
-          index == activeIndex ? 28 : 8,
+          width,
+          index == activeIndex
+              ? activeIndicatorWidth
+              : inactiveIndicatorWidth,
         );
       }
     }
 
+    Future<void> advanceOnboarding() async {
+      await tester.tap(find.byKey(const Key('onboarding_next')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+    }
+
     expectActiveOnboardingIndicator(0);
 
-    await tester.tap(find.byKey(const Key('onboarding_next')));
-    await tester.pump(const Duration(milliseconds: 350));
+    await advanceOnboarding();
     expectActiveOnboardingIndicator(1);
 
-    await tester.tap(find.byKey(const Key('onboarding_next')));
-    await tester.pump(const Duration(milliseconds: 350));
+    await advanceOnboarding();
     expectActiveOnboardingIndicator(2);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
@@ -235,7 +247,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('home_scan_now_button')));
     await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.byKey(const Key('smart_scan_clean')), findsOneWidget);
+    expect(find.byType(CleanScreen), findsOneWidget);
 
     appRouter.go(AppRoutes.home);
     await tester.pump(const Duration(milliseconds: 2000));
@@ -270,11 +282,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('Scan Now'), findsOneWidget);
+    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_clean')));
     await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.byKey(const Key('smart_scan_clean')), findsOneWidget);
+    expect(find.byType(CleanScreen), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_photos')));
     await tester.pump(const Duration(milliseconds: 2000));
