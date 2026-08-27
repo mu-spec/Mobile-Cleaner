@@ -212,6 +212,7 @@ class _RecommendationState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           PhosphorIcon(
+            key: const Key('smart_scan_recommendation_icon'),
             _icon,
             size: 20,
             color: Colors.white,

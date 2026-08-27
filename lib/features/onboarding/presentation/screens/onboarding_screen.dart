@@ -74,6 +74,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
+        key: const Key('onboarding_screen'),
         body: SafeArea(
           child: Column(
             children: <Widget>[
