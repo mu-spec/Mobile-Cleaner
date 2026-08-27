@@ -421,8 +421,8 @@ class _StorageRingPainter extends CustomPainter {
     required this.usedFraction,
     required this.usedColor,
     required this.availableColor,
-    Listenable? repaint,
-  }) : super(repaint: repaint);
+    super.repaint,
+  });
 
   final double usedFraction;
   final Color usedColor;
