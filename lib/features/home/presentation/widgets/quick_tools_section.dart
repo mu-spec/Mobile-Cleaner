@@ -26,6 +26,7 @@ class QuickToolsSection extends StatelessWidget {
     final List<_QuickToolData> tools = <_QuickToolData>[
       _QuickToolData(
         key: const Key('quick_photos'),
+        iconKey: const Key('quick_photos_icon_tile'),
         icon: PhosphorIconsDuotone.image,
         tint: AppColors.photoAccent,
         surface: AppColors.softPhoto,
@@ -35,6 +36,7 @@ class QuickToolsSection extends StatelessWidget {
       ),
       _QuickToolData(
         key: const Key('quick_files'),
+        iconKey: const Key('quick_files_icon_tile'),
         icon: PhosphorIconsDuotone.folder,
         tint: AppColors.actionBlue,
         surface: AppColors.softBlue,
@@ -44,6 +46,7 @@ class QuickToolsSection extends StatelessWidget {
       ),
       _QuickToolData(
         key: const Key('quick_apps'),
+        iconKey: const Key('quick_apps_icon_tile'),
         icon: PhosphorIconsDuotone.squaresFour,
         tint: AppColors.indigoAccent,
         surface: AppColors.softIndigo,
@@ -53,6 +56,7 @@ class QuickToolsSection extends StatelessWidget {
       ),
       _QuickToolData(
         key: const Key('quick_permissions'),
+        iconKey: const Key('quick_permissions_icon_tile'),
         icon: PhosphorIconsDuotone.lock,
         tint: AppColors.cleanupOrange,
         surface: AppColors.softOrange,
@@ -94,14 +98,15 @@ class QuickToolsSection extends StatelessWidget {
         ),
         // Four-across card
         Card(
-          elevation: isDark ? 0 : 1,
-          shadowColor: AppColors.navy.withValues(alpha: 0.045),
+          elevation: isDark ? 0 : 2,
+          shadowColor: AppColors.navy.withValues(alpha: 0.07),
+          surfaceTintColor: Colors.transparent,
           color: isDark
               ? theme.colorScheme.surfaceContainerHigh
               : AppColors.card,
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
             side: BorderSide(
               color: isDark
                   ? Colors.white.withValues(alpha: 0.08)
@@ -109,20 +114,14 @@ class QuickToolsSection extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xxs,
-              vertical: AppSpacing.sm,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 14),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 for (int i = 0; i < tools.length; i++) ...<Widget>[
                   if (i > 0) const SizedBox(width: AppSpacing.xxs),
                   Expanded(
-                    child: _QuickToolShortcut(
-                      data: tools[i],
-                      isDark: isDark,
-                    ),
+                    child: _QuickToolShortcut(data: tools[i], isDark: isDark),
                   ),
                 ],
               ],
@@ -137,6 +136,7 @@ class QuickToolsSection extends StatelessWidget {
 class _QuickToolData {
   const _QuickToolData({
     required this.key,
+    required this.iconKey,
     required this.icon,
     required this.tint,
     required this.surface,
@@ -146,6 +146,7 @@ class _QuickToolData {
   });
 
   final Key key;
+  final Key iconKey;
   final IconData icon;
   final Color tint;
   final Color surface;
@@ -163,6 +164,8 @@ class _QuickToolShortcut extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final double textScale = MediaQuery.textScalerOf(context).scale(1);
+    final double titleHeight = 28 * textScale.clamp(1.0, 1.5);
 
     return Semantics(
       button: true,
@@ -170,59 +173,119 @@ class _QuickToolShortcut extends StatelessWidget {
       child: InkWell(
         key: data.key,
         onTap: data.onTap,
-        borderRadius: BorderRadius.circular(AppRadius.tile),
+        borderRadius: BorderRadius.circular(16),
+        splashColor: data.tint.withValues(alpha: 0.12),
+        highlightColor: data.tint.withValues(alpha: 0.06),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xxs,
+            horizontal: 2,
             vertical: AppSpacing.xxs,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              // Phosphor Duotone icon container
+              // Layered, lightly elevated icon tile. Every shortcut uses the
+              // same geometry while retaining its own feature colour.
               Container(
-                width: 42,
-                height: 42,
+                key: data.iconKey,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? data.tint.withValues(alpha: 0.22)
-                      : data.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.tile),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: isDark
+                        ? <Color>[
+                            data.tint.withValues(alpha: 0.30),
+                            data.tint.withValues(alpha: 0.13),
+                          ]
+                        : <Color>[
+                            Color.lerp(data.surface, Colors.white, 0.35)!,
+                            data.surface,
+                          ],
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: data.tint.withValues(alpha: isDark ? 0.24 : 0.13),
+                  ),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: data.tint.withValues(alpha: isDark ? 0.08 : 0.13),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
                 ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: <Widget>[
+                    Positioned(
+                      right: -7,
+                      top: -7,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: data.tint.withValues(
+                            alpha: isDark ? 0.12 : 0.07,
+                          ),
+                        ),
+                      ),
+                    ),
+                    PhosphorIcon(
+                      data.icon,
+                      size: 24,
+                      color: data.tint,
+                      duotoneSecondaryColor: data.tint,
+                      duotoneSecondaryOpacity: 0.52,
+                    ),
+                    Positioned(
+                      left: 8,
+                      top: 7,
+                      child: Container(
+                        width: 12,
+                        height: 2,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(2),
+                          color: Colors.white.withValues(
+                            alpha: isDark ? 0.18 : 0.62,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 9),
+              SizedBox(
+                height: titleHeight,
                 child: Center(
-                  child: PhosphorIcon(
-                    data.icon,
-                    size: 21,
-                    color: data.tint,
-                    duotoneSecondaryColor: data.tint.withValues(alpha: 0.55),
-                    duotoneSecondaryOpacity: 0.45,
+                  child: Text(
+                    data.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                      letterSpacing: -0.15,
+                      color: isDark
+                          ? theme.colorScheme.onSurface
+                          : AppColors.navy,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                data.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  height: 1.15,
-                  letterSpacing: -0.1,
-                  color: isDark
-                      ? theme.colorScheme.onSurface
-                      : AppColors.navy,
-                ),
-              ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 1),
               Text(
                 data.subtitle,
-                maxLines: 3,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
+                  fontSize: 9.75,
                   fontWeight: FontWeight.w500,
                   height: 1.1,
                   color: theme.colorScheme.onSurfaceVariant,

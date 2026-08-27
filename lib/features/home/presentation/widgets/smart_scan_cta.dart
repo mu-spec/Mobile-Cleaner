@@ -9,11 +9,7 @@ import 'package:mobile_cleaner/features/home/presentation/widgets/radar_painter.
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 class SmartScanCta extends ConsumerStatefulWidget {
-  const SmartScanCta({
-    required this.onScan,
-    required this.onOpen,
-    super.key,
-  });
+  const SmartScanCta({required this.onScan, required this.onOpen, super.key});
 
   final VoidCallback onScan;
   final ValueChanged<RecommendationKind> onOpen;
@@ -26,13 +22,25 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
     with SingleTickerProviderStateMixin {
   late final AnimationController _radarController = AnimationController(
     vsync: this,
-    duration: const Duration(seconds: 4),
+    duration: const Duration(milliseconds: 5600),
   );
+  bool? _reduceMotion;
 
   @override
-  void initState() {
-    super.initState();
-    _radarController.repeat();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final bool reduceMotion = MediaQuery.disableAnimationsOf(context);
+    if (_reduceMotion == reduceMotion) {
+      return;
+    }
+    _reduceMotion = reduceMotion;
+    if (reduceMotion) {
+      _radarController
+        ..stop()
+        ..value = 0.125;
+    } else {
+      _radarController.repeat();
+    }
   }
 
   @override
@@ -43,7 +51,9 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
 
   @override
   Widget build(BuildContext context) {
-    final AsyncValue<List<Recommendation>> advice = ref.watch(recommendationsProvider);
+    final AsyncValue<List<Recommendation>> advice = ref.watch(
+      recommendationsProvider,
+    );
     final bool hasRec = advice.hasValue && advice.value!.isNotEmpty;
 
     return Semantics(
@@ -107,10 +117,13 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                                   onTap: () => widget.onOpen(found.first.kind),
                                   borderRadius: BorderRadius.circular(10),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 2,
+                                    ),
                                     child: _RecommendationState(
                                       item: found.first,
-                                      onOpen: () => widget.onOpen(found.first.kind),
+                                      onOpen: () =>
+                                          widget.onOpen(found.first.kind),
                                     ),
                                   ),
                                 );
@@ -145,7 +158,8 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                                 PhosphorIconsDuotone.magnifyingGlass,
                                 size: 15,
                                 color: HomeUpperStyle.primaryBlue,
-                                duotoneSecondaryColor: HomeUpperStyle.primaryBlue,
+                                duotoneSecondaryColor:
+                                    HomeUpperStyle.primaryBlue,
                                 duotoneSecondaryOpacity: 0.35,
                               ),
                               label: const Text('Scan Now'),
@@ -157,20 +171,24 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                     const SizedBox(width: AppSpacing.md),
                     // RIGHT SIDE: radar / scanning visual
                     SizedBox(
-                      width: 100,
-                      height: 100,
+                      key: const Key('premium_radar_visual'),
+                      width: 104,
+                      height: 104,
                       child: IgnorePointer(
                         child: ExcludeSemantics(
-                          child: AnimatedBuilder(
-                            animation: _radarController,
-                            builder: (BuildContext context, Widget? child) {
-                              return CustomPaint(
-                                painter: RadarPainter(
-                                  rotation: _radarController.value,
-                                ),
-                                size: const Size(100, 100),
-                              );
-                            },
+                          child: RepaintBoundary(
+                            child: AnimatedBuilder(
+                              animation: _radarController,
+                              builder: (BuildContext context, Widget? child) {
+                                return CustomPaint(
+                                  key: const Key('premium_radar_paint'),
+                                  painter: RadarPainter(
+                                    rotation: _radarController.value,
+                                  ),
+                                  size: const Size(104, 104),
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ),
@@ -187,19 +205,16 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
 }
 
 class _RecommendationState extends StatelessWidget {
-  const _RecommendationState({
-    required this.item,
-    required this.onOpen,
-  });
+  const _RecommendationState({required this.item, required this.onOpen});
 
   final Recommendation item;
   final VoidCallback onOpen;
 
   IconData get _icon => switch (item.kind) {
-        RecommendationKind.screenshotReview => PhosphorIconsDuotone.image,
-        RecommendationKind.duplicateCleanup => PhosphorIconsDuotone.files,
-        RecommendationKind.largeVideoReview => PhosphorIconsDuotone.playCircle,
-      };
+    RecommendationKind.screenshotReview => PhosphorIconsDuotone.image,
+    RecommendationKind.duplicateCleanup => PhosphorIconsDuotone.files,
+    RecommendationKind.largeVideoReview => PhosphorIconsDuotone.playCircle,
+  };
 
   @override
   Widget build(BuildContext context) {

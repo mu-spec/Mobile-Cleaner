@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/app/route_observer.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/radar_painter.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
@@ -130,15 +131,14 @@ void main() {
   });
 
   group('Smart Scan card redesign', () {
-    testWidgets('Smart Scan title and sparkle removed', (WidgetTester tester) async {
+    testWidgets('Smart Scan title and sparkle removed', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
             home: Scaffold(
-              body: SmartScanCta(
-                onScan: () {},
-                onOpen: (_) {},
-              ),
+              body: SmartScanCta(onScan: () {}, onOpen: (_) {}),
             ),
           ),
         ),
@@ -153,10 +153,7 @@ void main() {
         ProviderScope(
           child: MaterialApp(
             home: Scaffold(
-              body: SmartScanCta(
-                onScan: () {},
-                onOpen: (_) {},
-              ),
+              body: SmartScanCta(onScan: () {}, onOpen: (_) {}),
             ),
           ),
         ),
@@ -165,7 +162,9 @@ void main() {
       expect(find.text('Scan Now'), findsOneWidget);
     });
 
-    testWidgets('recommendation remains visible when present', (WidgetTester tester) async {
+    testWidgets('recommendation remains visible when present', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -184,10 +183,7 @@ void main() {
           ],
           child: MaterialApp(
             home: Scaffold(
-              body: SmartScanCta(
-                onScan: () {},
-                onOpen: (_) {},
-              ),
+              body: SmartScanCta(onScan: () {}, onOpen: (_) {}),
             ),
           ),
         ),
@@ -203,10 +199,7 @@ void main() {
         ProviderScope(
           child: MaterialApp(
             home: Scaffold(
-              body: SmartScanCta(
-                onScan: () => scanned = true,
-                onOpen: (_) {},
-              ),
+              body: SmartScanCta(onScan: () => scanned = true, onOpen: (_) {}),
             ),
           ),
         ),
@@ -222,16 +215,63 @@ void main() {
         ProviderScope(
           child: MaterialApp(
             home: Scaffold(
-              body: SmartScanCta(
-                onScan: () {},
-                onOpen: (_) {},
-              ),
+              body: SmartScanCta(onScan: () {}, onOpen: (_) {}),
             ),
           ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 2000));
-      expect(find.byType(CustomPaint), findsWidgets);
+      expect(find.byKey(const Key('premium_radar_visual')), findsOneWidget);
+      expect(find.byKey(const Key('premium_radar_paint')), findsOneWidget);
+
+      final CustomPaint initial = tester.widget<CustomPaint>(
+        find.byKey(const Key('premium_radar_paint')),
+      );
+      final RadarPainter initialPainter = initial.painter! as RadarPainter;
+      await tester.pump(const Duration(milliseconds: 500));
+      final CustomPaint progressed = tester.widget<CustomPaint>(
+        find.byKey(const Key('premium_radar_paint')),
+      );
+      final RadarPainter progressedPainter =
+          progressed.painter! as RadarPainter;
+      expect(progressedPainter.rotation, isNot(initialPainter.rotation));
+      expect(progressedPainter.shouldRepaint(initialPainter), isTrue);
+    });
+
+    testWidgets('radar is static when reduced motion is requested', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: MediaQuery(
+              data: const MediaQueryData(disableAnimations: true),
+              child: Scaffold(
+                body: SmartScanCta(onScan: () {}, onOpen: (_) {}),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      final RadarPainter initial =
+          tester
+                  .widget<CustomPaint>(
+                    find.byKey(const Key('premium_radar_paint')),
+                  )
+                  .painter!
+              as RadarPainter;
+
+      await tester.pump(const Duration(seconds: 2));
+      final RadarPainter afterDelay =
+          tester
+                  .widget<CustomPaint>(
+                    find.byKey(const Key('premium_radar_paint')),
+                  )
+                  .painter!
+              as RadarPainter;
+
+      expect(afterDelay.rotation, initial.rotation);
     });
   });
 }

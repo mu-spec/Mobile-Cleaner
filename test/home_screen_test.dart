@@ -528,6 +528,26 @@ void main() {
       expect(find.byKey(const Key('quick_permissions')), findsOneWidget);
       expect(find.byKey(const Key('quick_tools_section')), findsOneWidget);
       expect(find.text('Review before removing'), findsNothing);
+      expect(find.byKey(const Key('quick_photos_icon_tile')), findsOneWidget);
+      expect(find.byKey(const Key('quick_files_icon_tile')), findsOneWidget);
+      expect(find.byKey(const Key('quick_apps_icon_tile')), findsOneWidget);
+      expect(
+        find.byKey(const Key('quick_permissions_icon_tile')),
+        findsOneWidget,
+      );
+
+      final Text storageAccess = tester.widget<Text>(
+        find.text('Storage Access'),
+      );
+      expect(storageAccess.maxLines, 2);
+
+      final Container photoIcon = tester.widget<Container>(
+        find.byKey(const Key('quick_photos_icon_tile')),
+      );
+      final BoxDecoration decoration = photoIcon.decoration! as BoxDecoration;
+      expect(decoration.gradient, isNotNull);
+      expect(decoration.border, isNotNull);
+      expect(decoration.boxShadow, isNotEmpty);
     });
 
     testWidgets('each tool opens correct destination', (
