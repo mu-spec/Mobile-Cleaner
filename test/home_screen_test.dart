@@ -236,6 +236,11 @@ void main() {
 
       expect(find.byKey(const Key('storage_used_percentage')), findsOneWidget);
       expect(find.text('${((128 - 46) / 128 * 100).round()}%'), findsOneWidget);
+      final Text percentage = tester.widget<Text>(
+        find.byKey(const Key('storage_used_percentage')),
+      );
+      expect(percentage.style?.fontFamily, 'Inter');
+      expect(percentage.style?.fontWeight, FontWeight.w800);
     });
 
     testWidgets('the card is titled Storage Overview', (

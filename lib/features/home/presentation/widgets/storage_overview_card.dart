@@ -120,7 +120,7 @@ class _StorageDetails extends StatelessWidget {
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontSize: 38,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: -1,
+                          letterSpacing: -1.4,
                           color: isDark
                               ? colors.primary
                               : HomeUpperStyle.primaryBlue,

@@ -313,6 +313,10 @@ void main() {
       expect(dark.brightness, Brightness.dark);
       expect(light.useMaterial3, isTrue);
       expect(dark.useMaterial3, isTrue);
+      expect(light.textTheme.bodyMedium?.fontFamily, 'Inter');
+      expect(dark.textTheme.bodyMedium?.fontFamily, 'Inter');
+      expect(light.textTheme.headlineSmall?.fontFamily, 'Inter');
+      expect(dark.textTheme.headlineSmall?.fontFamily, 'Inter');
     });
 
     test('the infinite-width button regression stays fixed in both', () {

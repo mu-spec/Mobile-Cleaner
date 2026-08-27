@@ -31,6 +31,7 @@ abstract final class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
+      fontFamily: 'Inter',
       colorScheme: colors,
       scaffoldBackgroundColor: isDark
           ? AppColors.darkBackground
@@ -94,16 +95,18 @@ abstract final class AppTheme {
       // which gives the system back-gesture preview and falls back to the
       // fade-forwards animation otherwise. Naming a builder explicitly here
       // would *disable* predictive back — a downgrade, not polish.
-      textTheme: ThemeData(brightness: brightness).textTheme.copyWith(
-        headlineSmall: const TextStyle(
-          fontSize: 26,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.5,
-        ),
-        titleLarge: const TextStyle(fontWeight: FontWeight.w700),
-        titleMedium: const TextStyle(fontWeight: FontWeight.w600),
-        bodyLarge: const TextStyle(height: 1.45),
-      ),
+      textTheme: ThemeData(brightness: brightness).textTheme
+          .copyWith(
+            headlineSmall: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.5,
+            ),
+            titleLarge: const TextStyle(fontWeight: FontWeight.w700),
+            titleMedium: const TextStyle(fontWeight: FontWeight.w600),
+            bodyLarge: const TextStyle(height: 1.45),
+          )
+          .apply(fontFamily: 'Inter'),
     );
   }
 }
