@@ -167,7 +167,9 @@ Future<void> _pumpHome(
       ),
     ),
   );
-  await tester.pump(const Duration(milliseconds: 2000));
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 50));
+  await tester.pump(const Duration(milliseconds: 900));
 }
 
 Future<void> _scrollTo(WidgetTester tester, Finder target) async {
@@ -470,8 +472,12 @@ void main() {
       );
       expect(
         find.descendant(
-          of: find.byKey(const Key('smart_scan_recommendation_screenshotReview')),
-          matching: find.byIcon(Icons.chevron_right),
+          of: find.byKey(
+            const Key('smart_scan_recommendation_screenshotReview'),
+          ),
+          matching: find.byKey(
+            const Key('smart_scan_recommendation_icon'),
+          ),
         ),
         findsOneWidget,
       );
@@ -552,7 +558,7 @@ void main() {
   });
 
   group('Storage ring animation — Phase 3', () {
-    testWidgets('ring and percentage start below final and animate up', (
+    testWidgets('ring animates while percentage shows the final value', (
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);

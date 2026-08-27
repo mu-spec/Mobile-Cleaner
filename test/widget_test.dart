@@ -54,30 +54,44 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Understand Your Storage'), findsOneWidget);
+
+    void expectActiveOnboardingIndicator(int activeIndex) {
+      expect(find.byKey(const Key('onboarding_screen')), findsOneWidget);
+      for (int index = 0; index < 3; index++) {
+        final AnimatedContainer indicator = tester.widget<AnimatedContainer>(
+          find.byKey(Key('onboarding_indicator_$index')),
+        );
+        expect(
+          indicator.constraints?.maxWidth,
+          index == activeIndex ? 28 : 8,
+        );
+      }
+    }
+
+    expectActiveOnboardingIndicator(0);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
-    await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.byKey(const Key('onboarding_screen')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 350));
+    expectActiveOnboardingIndicator(1);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
-    await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.text('Private by Design'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 350));
+    expectActiveOnboardingIndicator(2);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
-    await tester.pump(const Duration(milliseconds: 2000));
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byKey(const Key('permission_education')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('permission_secondary_action')));
     await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.text('Scan Now'), findsOneWidget);
+    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
 
     appRouter.go(AppRoutes.splash);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('Scan Now'), findsOneWidget);
-    expect(find.text('Understand Your Storage'), findsNothing);
+    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
+    expect(find.byKey(const Key('onboarding_screen')), findsNothing);
 
     await tester.tap(find.byKey(const Key('nav_settings')));
     await tester.pump(const Duration(milliseconds: 2000));
@@ -86,11 +100,11 @@ void main() {
     await scrollSettingsTo(tester, const Key('replay_onboarding'));
     await tester.tap(find.byKey(const Key('replay_onboarding')));
     await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.text('Understand Your Storage'), findsOneWidget);
+    expectActiveOnboardingIndicator(0);
 
     await tester.tap(find.byKey(const Key('onboarding_skip')));
     await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.text('Scan Now'), findsOneWidget);
+    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
   });
 
   testWidgets('denied permission is handled without a crash', (
@@ -125,12 +139,19 @@ void main() {
     expect(find.text('Permission denied'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.descendant(
-      of: find.byKey(const Key('permission_education')),
+    final Finder secondaryAction = find.descendant(
+      of: find.byKey(const Key('permission_denied')),
       matching: find.byKey(const Key('permission_secondary_action')),
-    ));
-    await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.text('Scan Now'), findsOneWidget);
+    );
+    expect(secondaryAction, findsOneWidget);
+
+    await tester.ensureVisible(secondaryAction);
+    await tester.pump();
+
+    await tester.tap(secondaryAction);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
   });
 
   testWidgets('home displays real storage values from the repository', (
@@ -162,7 +183,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
+    expect(find.byKey(const Key('storage_used_percentage')), findsOneWidget);
     expect(find.text('${((128 - 46) / 128 * 100).round()}%'), findsOneWidget);
     expect(find.text('128.0 GB'), findsOneWidget);
     expect(find.text('82.0 GB'), findsOneWidget);
@@ -212,9 +233,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1000));
     await tester.pump(const Duration(milliseconds: 500));
 
-    await tester.tap(find.byKey(const Key('smart_scan_button')));
+    await tester.tap(find.byKey(const Key('home_scan_now_button')));
     await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
+    expect(find.byKey(const Key('smart_scan_clean')), findsOneWidget);
 
     appRouter.go(AppRoutes.home);
     await tester.pump(const Duration(milliseconds: 2000));
@@ -253,7 +274,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_clean')));
     await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
+    expect(find.byKey(const Key('smart_scan_clean')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_photos')));
     await tester.pump(const Duration(milliseconds: 2000));
@@ -272,8 +293,14 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav_settings')));
     await tester.pump(const Duration(milliseconds: 2000));
-    await scrollSettingsTo(tester, const Key('setting_app_version'));
-    expect(find.text('App version'), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: find.text('Settings')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('nav_home')));
+    await tester.pump(const Duration(milliseconds: 2000));
+    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
