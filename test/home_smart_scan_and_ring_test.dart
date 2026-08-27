@@ -22,6 +22,20 @@ void main() {
       expect(info.usedPercentage, 73);
     });
 
+    testWidgets('summary icon and bar use the same real storage fraction', (
+      WidgetTester tester,
+    ) async {
+      await _pumpStorageRing(tester, info: info);
+
+      expect(find.byKey(const Key('storage_database_icon')), findsOneWidget);
+      expect(find.byKey(const Key('storage_usage_track')), findsOneWidget);
+      final FractionallySizedBox fill = tester.widget<FractionallySizedBox>(
+        find.byKey(const Key('storage_usage_fill')),
+      );
+      expect(fill.widthFactor, closeTo(info.usedFraction, 0.0001));
+      expect(find.text('Internal storage'), findsOneWidget);
+    });
+
     testWidgets('painter starts at zero and reaches usedFraction', (
       WidgetTester tester,
     ) async {

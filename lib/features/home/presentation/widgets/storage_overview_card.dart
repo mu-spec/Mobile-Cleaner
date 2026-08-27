@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_cleaner/app/route_observer.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_duotone_icon.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
@@ -40,8 +39,9 @@ class StorageOverviewCard extends ConsumerWidget {
 
     return Card(
       key: const Key('storage_overview_card'),
-      elevation: isDark ? 0 : 1,
-      shadowColor: HomeUpperStyle.navy.withValues(alpha: 0.06),
+      elevation: isDark ? 0 : 2,
+      shadowColor: HomeUpperStyle.navy.withValues(alpha: 0.08),
+      surfaceTintColor: Colors.transparent,
       color: isDark
           ? theme.colorScheme.surfaceContainerHigh
           : HomeUpperStyle.card,
@@ -55,7 +55,10 @@ class StorageOverviewCard extends ConsumerWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -141,68 +144,148 @@ class _StorageDetails extends StatelessWidget {
             _StorageRing(info: info),
           ],
         ),
-        const SizedBox(height: 6),
-        const Divider(height: 1),
-        const SizedBox(height: 6),
-        Row(
-          key: const Key('total_storage'),
+        const SizedBox(height: AppSpacing.xs),
+        _StorageSummaryBar(info: info),
+      ],
+    );
+  }
+}
+
+/// Reference-style compact storage strip with a real usage indicator.
+class _StorageSummaryBar extends StatelessWidget {
+  const _StorageSummaryBar({required this.info});
+
+  final StorageInfo info;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme colors = theme.colorScheme;
+    final bool isDark = theme.brightness == Brightness.dark;
+    final double usedFraction = info.usedFraction.clamp(0.0, 1.0);
+
+    return Semantics(
+      label: 'Internal storage usage',
+      value:
+          '${ByteFormatter.format(info.usedBytes)} of ${ByteFormatter.format(info.totalBytes)} used',
+      child: Container(
+        key: const Key('total_storage'),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? <Color>[
+                    HomeUpperStyle.primaryBlue.withValues(alpha: 0.18),
+                    HomeUpperStyle.primaryBlue.withValues(alpha: 0.08),
+                  ]
+                : const <Color>[Color(0xFFF1F7FF), Color(0xFFEAF2FF)],
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isDark
+                ? HomeUpperStyle.iconBlueSecondary.withValues(alpha: 0.16)
+                : HomeUpperStyle.primaryBlue.withValues(alpha: 0.09),
+          ),
+        ),
+        child: Row(
           children: <Widget>[
-            HomeDuotoneIcon(
-              icon: PhosphorIconsDuotone.database,
-              primaryColor: HomeUpperStyle.iconBluePrimary,
-              secondaryColor: HomeUpperStyle.iconBlueSecondary,
-              backgroundColor: isDark ? HomeUpperStyle.iconBluePrimary.withValues(alpha: 0.22) : HomeUpperStyle.softViolet,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      ByteFormatter.format(info.usedBytes),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 11,
-                        color: colors.onSurface,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      ' of ',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 11,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                    Text(
-                      ByteFormatter.format(info.totalBytes),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 11,
-                        color: colors.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+            SizedBox.square(
+              dimension: 32,
+              child: Center(
+                child: PhosphorIcon(
+                  key: const Key('storage_database_icon'),
+                  PhosphorIconsDuotone.database,
+                  size: 24,
+                  color: HomeUpperStyle.deepBlue,
+                  duotoneSecondaryColor: HomeUpperStyle.iconBlueSecondary,
+                  duotoneSecondaryOpacity: 0.72,
                 ),
               ),
             ),
-            const SizedBox(width: AppSpacing.xs),
-            Flexible(
-              child: Text(
-                'Internal storage',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 10,
-                  color: colors.onSurfaceVariant,
-                ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(
+                          ByteFormatter.format(info.usedBytes),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: colors.onSurface,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        Text(
+                          ' / ',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                        Text(
+                          ByteFormatter.format(info.totalBytes),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: colors.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    'Internal storage',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 9.5,
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    key: const Key('storage_usage_track'),
+                    height: 5,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.10)
+                          : Colors.white.withValues(alpha: 0.88),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    alignment: Alignment.centerLeft,
+                    child: FractionallySizedBox(
+                      key: const Key('storage_usage_fill'),
+                      widthFactor: usedFraction,
+                      heightFactor: 1,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: <Color>[
+                              HomeUpperStyle.primaryBlue,
+                              HomeUpperStyle.deepBlue,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -272,8 +355,10 @@ class _StorageRingState extends State<_StorageRing> {
               Text(
                 ByteFormatter.format(widget.info.freeBytes),
                 style: theme.textTheme.titleSmall?.copyWith(
+                  fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -0.2,
+                  letterSpacing: -0.35,
+                  color: usedColor,
                 ),
               ),
               const SizedBox(height: 1),
@@ -291,45 +376,19 @@ class _StorageRingState extends State<_StorageRing> {
     );
 
     if (reducedMotion) {
-      return SizedBox.square(
-        dimension: 112,
-        child: CustomPaint(
-          key: const Key('storage_ring_paint'),
-          painter: _StorageRingPainter(
-            usedFraction: targetFraction,
-            usedColor: usedColor,
-            availableColor: HomeUpperStyle.orange,
-          ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xs),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Column(
-                  key: const Key('free_storage'),
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Text(
-                      ByteFormatter.format(widget.info.freeBytes),
-                      style: theme.textTheme.displaySmall?.copyWith(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -1,
-                        color: usedColor,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      'Available',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 9,
-                        color: colors.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+      return Semantics(
+        label:
+            '${ByteFormatter.format(widget.info.freeBytes)} of storage available',
+        child: SizedBox.square(
+          dimension: 112,
+          child: CustomPaint(
+            key: const Key('storage_ring_paint'),
+            painter: _StorageRingPainter(
+              usedFraction: targetFraction,
+              usedColor: usedColor,
+              availableColor: HomeUpperStyle.orange,
             ),
+            child: ringContent,
           ),
         ),
       );
@@ -378,23 +437,60 @@ class _StorageRingPainter extends CustomPainter {
   final Color usedColor;
   final Color availableColor;
 
-  static const double _stroke = 11;
+  static const double _stroke = 11.5;
   static const double _startAngle = -math.pi / 2;
 
   @override
   void paint(Canvas canvas, Size size) {
     final Offset center = size.center(Offset.zero);
-    final double radius = (math.min(size.width, size.height) - _stroke) / 2;
+    final double radius = (math.min(size.width, size.height) - _stroke - 6) / 2;
     final Rect rect = Rect.fromCircle(center: center, radius: radius);
+    final double used = usedFraction.clamp(0.0, 1.0);
 
-    Paint stroke(Color color) => Paint()
-      ..color = color
+    final Paint innerGlass = Paint()
+      ..shader =
+          RadialGradient(
+            colors: <Color>[
+              usedColor.withValues(alpha: 0.018),
+              usedColor.withValues(alpha: 0.055),
+            ],
+          ).createShader(
+            Rect.fromCircle(center: center, radius: radius - _stroke / 2 - 1),
+          );
+    canvas.drawCircle(center, radius - _stroke / 2 - 1, innerGlass);
+
+    final Paint ringShadow = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _stroke + 1.5
+      ..color = HomeUpperStyle.navy.withValues(alpha: 0.12)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    canvas.drawCircle(center, radius, ringShadow);
+
+    final Shader availableShader = SweepGradient(
+      transform: const GradientRotation(_startAngle),
+      colors: <Color>[
+        Color.lerp(availableColor, Colors.white, 0.28)!,
+        availableColor,
+        Color.lerp(availableColor, HomeUpperStyle.navy, 0.10)!,
+        Color.lerp(availableColor, Colors.white, 0.28)!,
+      ],
+    ).createShader(rect);
+    final Shader usedShader = SweepGradient(
+      transform: const GradientRotation(_startAngle),
+      colors: <Color>[
+        Color.lerp(usedColor, Colors.white, 0.24)!,
+        usedColor,
+        Color.lerp(usedColor, HomeUpperStyle.deepBlue, 0.34)!,
+        Color.lerp(usedColor, Colors.white, 0.24)!,
+      ],
+    ).createShader(rect);
+
+    Paint stroke(Shader shader) => Paint()
+      ..shader = shader
       ..style = PaintingStyle.stroke
       ..strokeWidth = _stroke
-      // Butt caps keep blue + orange equal to exactly one full circle.
+      // Butt caps preserve the exact blue/orange data boundary.
       ..strokeCap = StrokeCap.butt;
-
-    final double used = usedFraction.clamp(0.0, 1.0);
 
     // Orange owns the complete circle first; blue replaces exactly the real
     // used fraction. No gray/white track or decorative third segment exists.
@@ -403,7 +499,7 @@ class _StorageRingPainter extends CustomPainter {
       _startAngle,
       math.pi * 2,
       false,
-      stroke(availableColor),
+      stroke(availableShader),
     );
     if (used > 0) {
       canvas.drawArc(
@@ -411,9 +507,15 @@ class _StorageRingPainter extends CustomPainter {
         _startAngle,
         math.pi * 2 * used,
         false,
-        stroke(usedColor),
+        stroke(usedShader),
       );
     }
+
+    final Paint innerHighlight = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8
+      ..color = Colors.white.withValues(alpha: 0.32);
+    canvas.drawCircle(center, radius - _stroke / 2, innerHighlight);
   }
 
   @override
