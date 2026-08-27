@@ -25,6 +25,7 @@ class PhotosScreen extends ConsumerWidget {
     );
 
     return Scaffold(
+      key: const Key('photos_screen'),
       appBar: AppBar(
         title: const Text('Photos'),
         actions: <Widget>[

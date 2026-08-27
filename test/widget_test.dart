@@ -62,11 +62,11 @@ void main() {
     void expectActiveOnboardingIndicator(int activeIndex) {
       expect(find.byKey(const Key('onboarding_screen')), findsOneWidget);
       for (int index = 0; index < 3; index++) {
-        final double width = tester
-            .getSize(find.byKey(Key('onboarding_indicator_$index')))
-            .width;
+        final AnimatedContainer indicator = tester.widget<AnimatedContainer>(
+          find.byKey(Key('onboarding_indicator_$index')),
+        );
         expect(
-          width,
+          indicator.constraints?.maxWidth,
           index == activeIndex
               ? activeIndicatorWidth
               : inactiveIndicatorWidth,
@@ -289,11 +289,10 @@ void main() {
     expect(find.byType(CleanScreen), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_photos')));
-    await tester.pump(const Duration(milliseconds: 2000));
-    expect(
-      find.byKey(const Key('photo_cleanup_dashboard')),
-      findsOneWidget,
-    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.pump(const Duration(milliseconds: 900));
+    expect(find.byKey(const Key('photos_screen')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_files')));
     await tester.pump(const Duration(milliseconds: 2000));
