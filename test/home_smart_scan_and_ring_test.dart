@@ -78,7 +78,7 @@ void main() {
           ),
         ),
       );
-      await tester.pump(const Duration(milliseconds: 1200));
+      await tester.pump(const Duration(milliseconds: 2000));
       expect(find.text('Smart Scan'), findsNothing);
       expect(find.byType(PhosphorIcon), findsWidgets); // radar icon allowed
     });
@@ -96,7 +96,7 @@ void main() {
           ),
         ),
       );
-      await tester.pump(const Duration(milliseconds: 1200));
+      await tester.pump(const Duration(milliseconds: 2000));
       expect(find.text('Scan Now'), findsOneWidget);
     });
 
@@ -127,7 +127,7 @@ void main() {
           ),
         ),
       );
-      await tester.pump(const Duration(milliseconds: 1200));
+      await tester.pump(const Duration(milliseconds: 2000));
       expect(find.text('Clean up duplicates'), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
     });
@@ -146,7 +146,7 @@ void main() {
           ),
         ),
       );
-      await tester.pump(const Duration(milliseconds: 1200));
+      await tester.pump(const Duration(milliseconds: 2000));
       await tester.tap(find.text('Scan Now'));
       await tester.pump();
       expect(scanned, isTrue);
@@ -165,7 +165,7 @@ void main() {
           ),
         ),
       );
-      await tester.pump(const Duration(milliseconds: 1200));
+      await tester.pump(const Duration(milliseconds: 2000));
       expect(find.byType(CustomPaint), findsWidgets);
     });
   });

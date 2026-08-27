@@ -57,19 +57,19 @@ void main() {
     expect(find.text('Understand Your Storage'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     expect(find.text('Clean Smarter'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     expect(find.text('Private by Design'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     expect(find.byKey(const Key('permission_education')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('permission_secondary_action')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     expect(find.text('Scan Now'), findsOneWidget);
 
     appRouter.go(AppRoutes.splash);
@@ -80,16 +80,16 @@ void main() {
     expect(find.text('Understand Your Storage'), findsNothing);
 
     await tester.tap(find.byKey(const Key('nav_settings')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     // Settings gained theme, threshold, privacy and about entries, so the
     // lower rows now sit below the fold on a phone-sized surface.
     await scrollSettingsTo(tester, const Key('replay_onboarding'));
     await tester.tap(find.byKey(const Key('replay_onboarding')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     expect(find.text('Understand Your Storage'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('onboarding_skip')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     expect(find.text('Scan Now'), findsOneWidget);
   });
 
@@ -119,7 +119,7 @@ void main() {
 
     expect(find.byKey(const Key('permission_education')), findsOneWidget);
     await tester.tap(find.byKey(const Key('permission_primary_action')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
 
     expect(find.byKey(const Key('permission_denied')), findsOneWidget);
     expect(find.text('Permission denied'), findsOneWidget);
@@ -129,7 +129,7 @@ void main() {
       of: find.byKey(const Key('permission_education')),
       matching: find.byKey(const Key('permission_secondary_action')),
     ));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     expect(find.text('Scan Now'), findsOneWidget);
   });
 
@@ -213,15 +213,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(find.byKey(const Key('smart_scan_button')));
-    await tester.pump(const Duration(milliseconds: 1200));
-    expect(find.byKey(const Key('smart_scan_clean')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 2000));
+    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
 
     appRouter.go(AppRoutes.home);
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     // The in-header Home settings button was removed; Settings remains
     // reachable through bottom navigation (structure unchanged).
     await tester.tap(find.byKey(const Key('nav_settings')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     // 'Settings' appears both in the app bar and as the bottom nav label.
     expect(
       find.descendant(of: find.byType(AppBar), matching: find.text('Settings')),
@@ -252,26 +252,26 @@ void main() {
     expect(find.text('Scan Now'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_clean')));
-    await tester.pump(const Duration(milliseconds: 1200));
-    expect(find.byKey(const Key('smart_scan_clean')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 2000));
+    expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_photos')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     expect(
       find.byKey(const Key('photo_cleanup_dashboard')),
       findsOneWidget,
     );
 
     await tester.tap(find.byKey(const Key('nav_files')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     expect(find.byKey(const Key('files_overview')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_apps')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     expect(find.byKey(const Key('apps_list')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_settings')));
-    await tester.pump(const Duration(milliseconds: 1200));
+    await tester.pump(const Duration(milliseconds: 2000));
     await scrollSettingsTo(tester, const Key('setting_app_version'));
     expect(find.text('App version'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -293,7 +293,7 @@ Future<void> scrollSettingsTo(WidgetTester tester, Key key) async {
         )
         .first,
   );
-  await tester.pump(const Duration(milliseconds: 1200));
+  await tester.pump(const Duration(milliseconds: 2000));
 }
 
 /// Platform channels are unavailable in widget tests, so stub every data

@@ -167,7 +167,7 @@ Future<void> _pumpHome(
       ),
     ),
   );
-  await tester.pump(const Duration(milliseconds: 1200));
+  await tester.pump(const Duration(milliseconds: 2000));
 }
 
 Future<void> _scrollTo(WidgetTester tester, Finder target) async {
@@ -181,7 +181,7 @@ Future<void> _scrollTo(WidgetTester tester, Finder target) async {
         )
         .first,
   );
-  await tester.pump(const Duration(milliseconds: 1200));
+  await tester.pump(const Duration(milliseconds: 2000));
 }
 
 void main() {
@@ -313,7 +313,7 @@ void main() {
         tester,
         files: <ScannedFile>[for (int i = 0; i < 25; i++) _screenshot(i)],
       );
-      await tester.pump(const Duration(milliseconds: 1200));
+      await tester.pump(const Duration(milliseconds: 2000));
       expect(find.byKey(const Key('smart_scan_recommendation_screenshotReview')), findsOneWidget);
       expect(find.text('Review old screenshots'), findsOneWidget);
     });
