@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_cleaner/app/navigation/exit_confirmation.dart';
 import 'package:mobile_cleaner/app/route_observer.dart';
 
-class AppShell extends StatelessWidget {
+class AppShell extends StatefulWidget {
   const AppShell({required this.navigationShell, super.key});
 
   final StatefulNavigationShell navigationShell;
 
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
   static const List<_DestinationData> _destinations = <_DestinationData>[
     _DestinationData(
       key: Key('nav_home'),
@@ -59,33 +65,42 @@ class AppShell extends StatelessWidget {
     final Color backgroundColor =
         navigationTheme.backgroundColor ?? theme.colorScheme.surface;
 
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: Material(
-        color: backgroundColor,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(color: theme.colorScheme.outlineVariant),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (!didPop) {
+          _handleSystemBack();
+        }
+      },
+      child: Scaffold(
+        body: widget.navigationShell,
+        bottomNavigationBar: Material(
+          color: backgroundColor,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(color: theme.colorScheme.outlineVariant),
+              ),
             ),
-          ),
-          child: SafeArea(
-            top: false,
-            child: SizedBox(
-              height: 58,
-              child: Row(
-                children: <Widget>[
-                  for (int index = 0; index < _destinations.length; index++)
-                    Expanded(
-                      child: _BottomDestination(
-                        data: _destinations[index],
-                        selected: navigationShell.currentIndex == index,
-                        selectedColor: selectedColor,
-                        unselectedColor: unselectedColor,
-                        onTap: () => _onDestinationSelected(index),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 58,
+                child: Row(
+                  children: <Widget>[
+                    for (int index = 0; index < _destinations.length; index++)
+                      Expanded(
+                        child: _BottomDestination(
+                          data: _destinations[index],
+                          selected:
+                              widget.navigationShell.currentIndex == index,
+                          selectedColor: selectedColor,
+                          unselectedColor: unselectedColor,
+                          onTap: () => _onDestinationSelected(index),
+                        ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -94,10 +109,18 @@ class AppShell extends StatelessWidget {
     );
   }
 
+  void _handleSystemBack() {
+    if (widget.navigationShell.currentIndex != 0) {
+      _onDestinationSelected(0);
+      return;
+    }
+    showExitConfirmation(context);
+  }
+
   void _onDestinationSelected(int index) {
-    navigationShell.goBranch(
+    widget.navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
     setStorageHomeVisible(index == 0);
   }

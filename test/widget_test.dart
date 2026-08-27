@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/app/app.dart';
@@ -14,6 +14,7 @@ import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:mobile_cleaner/features/files/data/perceptual_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
+import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/files_screen.dart';
@@ -237,6 +238,60 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('a Home recommendation also opens storage access first', (
+    WidgetTester tester,
+  ) async {
+    await usePhoneSurface(tester);
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'onboarding_completed': true,
+    });
+    appRouter.go(AppRoutes.splash);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          permissionGatewayProvider.overrideWithValue(
+            _FakePermissionGateway(AppPermissionStatus.denied),
+          ),
+          fileScannerRepositoryProvider.overrideWithValue(
+            _RecommendationFileScannerRepository(),
+          ),
+          storageRepositoryProvider.overrideWithValue(
+            const _FakeStorageRepository(
+              StorageInfo(
+                totalBytes: 64 * 1024 * 1024 * 1024,
+                freeBytes: 20 * 1024 * 1024 * 1024,
+              ),
+            ),
+          ),
+          thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
+          fileHashRepositoryProvider.overrideWithValue(const _NoHashes()),
+          perceptualHashRepositoryProvider.overrideWithValue(
+            const _NoFingerprints(),
+          ),
+          installedAppsRepositoryProvider.overrideWithValue(
+            const _OneFakeApp(),
+          ),
+        ],
+        child: const MobileCleanerApp(),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 1000));
+    await tester.pump(const Duration(milliseconds: 700));
+
+    final Finder recommendation = find.byKey(
+      const Key('smart_scan_recommendation_screenshotReview'),
+    );
+    expect(recommendation, findsOneWidget);
+    await tester.tap(recommendation);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const Key('permission_education')), findsOneWidget);
+    expect(find.byKey(const Key('permission_back_button')), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_screen')), findsNothing);
+  });
+
   testWidgets('scan waits at 90 percent until the device scan finishes', (
     WidgetTester tester,
   ) async {
@@ -279,6 +334,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(find.byKey(const Key('home_scan_now_button')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('permission_primary_action')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump(const Duration(milliseconds: 3000));
@@ -345,6 +404,63 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('Home back shows a dismissible exit confirmation', (
+    WidgetTester tester,
+  ) async {
+    await usePhoneSurface(tester);
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'onboarding_completed': true,
+    });
+    appRouter.go(AppRoutes.splash);
+    MethodCall? platformCall;
+    final TestDefaultBinaryMessenger messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (
+      MethodCall call,
+    ) async {
+      if (call.method == 'SystemNavigator.pop') {
+        platformCall = call;
+      }
+      return null;
+    });
+    addTearDown(
+      () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: _offlineDataOverrides,
+        child: const MobileCleanerApp(),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 1000));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.byKey(const Key('home_back_button')));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const Key('exit_confirmation_dialog')), findsOneWidget);
+    expect(find.text('Exit'), findsOneWidget);
+    expect(find.text('Are you sure you want to exit?'), findsOneWidget);
+
+    await tester.tapAt(const Offset(4, 4));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const Key('exit_confirmation_dialog')), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const Key('exit_confirmation_dialog')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('exit_no_button')));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(const Key('exit_confirmation_dialog')), findsNothing);
+    expect(platformCall, isNull);
+
+    await tester.tap(find.byKey(const Key('home_back_button')));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.byKey(const Key('exit_yes_button')));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(platformCall?.method, 'SystemNavigator.pop');
+  });
+
   testWidgets('Smart Scan and Settings actions open their screens', (
     WidgetTester tester,
   ) async {
@@ -378,6 +494,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
 
     await tester.tap(find.byKey(const Key('home_scan_now_button')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('permission_primary_action')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
@@ -425,28 +545,33 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(CleanScreen), findsOneWidget);
+    expect(find.byKey(const Key('clean_back_button')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_photos')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('photos_screen')), findsOneWidget);
+    expect(find.byKey(const Key('photos_back_button')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_files')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(FilesScreen), findsOneWidget);
+    expect(find.byKey(const Key('files_back_button')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_apps')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(AppsScreen), findsOneWidget);
+    expect(find.byKey(const Key('apps_back_button')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_settings')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(SettingsScreen), findsOneWidget);
+    expect(find.byKey(const Key('settings_back_button')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('nav_home')));
+    await tester.tap(find.byKey(const Key('settings_back_button')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('home_scan_now_button')), findsOneWidget);
@@ -578,6 +703,34 @@ class _DelayedFileScannerRepository implements FileScannerRepository {
   Future<FileScanResult> scan([
     FileScanRequest request = const FileScanRequest(),
   ]) => _completer.future;
+}
+
+class _RecommendationFileScannerRepository implements FileScannerRepository {
+  final List<ScannedFile> _screenshots = List<ScannedFile>.generate(
+    25,
+    (int index) => ScannedFile(
+      id: 'screenshot-$index',
+      name: 'Screenshot_$index.png',
+      path: '/storage/emulated/0/Pictures/Screenshots/Screenshot_$index.png',
+      uri: 'content://media/external/images/media/$index',
+      sizeBytes: 4 * 1024 * 1024,
+      category: FileCategory.images,
+      dateModified: DateTime(2025, 1, 1),
+      mimeType: 'image/png',
+      relativePath: 'Pictures/Screenshots/',
+    ),
+  );
+
+  @override
+  Future<FileScanResult> scan([
+    FileScanRequest request = const FileScanRequest(),
+  ]) async {
+    final List<ScannedFile> files =
+        request.categories.contains(FileCategory.images)
+        ? _screenshots
+        : const <ScannedFile>[];
+    return FileScanResult.fromFiles(files, categories: request.categories);
+  }
 }
 
 class _FakeStorageRepository implements StorageRepository {

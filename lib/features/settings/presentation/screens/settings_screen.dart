@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/core/constants/app_constants.dart';
 import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';
@@ -26,7 +27,10 @@ class SettingsScreen extends ConsumerWidget {
         ref.watch(settingsProvider).value ?? AppSettings.defaults;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        leading: const RootBackButton(buttonKey: Key('settings_back_button')),
+        title: const Text('Settings'),
+      ),
       body: SafeArea(
         child: ListView(
           key: const Key('settings_list'),
@@ -46,10 +50,8 @@ class SettingsScreen extends ConsumerWidget {
               value: settings.largeFileFilter,
               options: LargeFileFilter.values,
               labelOf: (LargeFileFilter v) => v.label,
-              onChanged: (LargeFileFilter v) => saveSettings(
-                ref,
-                settings.copyWith(largeFileFilter: v),
-              ),
+              onChanged: (LargeFileFilter v) =>
+                  saveSettings(ref, settings.copyWith(largeFileFilter: v)),
             ),
             _ChoiceTile<ScreenshotGroup>(
               tileKey: const Key('setting_screenshot_age'),
@@ -60,10 +62,8 @@ class SettingsScreen extends ConsumerWidget {
               value: settings.screenshotGroup,
               options: ScreenshotGroup.values,
               labelOf: (ScreenshotGroup v) => v.label,
-              onChanged: (ScreenshotGroup v) => saveSettings(
-                ref,
-                settings.copyWith(screenshotGroup: v),
-              ),
+              onChanged: (ScreenshotGroup v) =>
+                  saveSettings(ref, settings.copyWith(screenshotGroup: v)),
             ),
             _ChoiceTile<DownloadAgeFilter>(
               tileKey: const Key('setting_download_age'),
@@ -76,10 +76,8 @@ class SettingsScreen extends ConsumerWidget {
               value: settings.downloadAgeFilter,
               options: DownloadAgeFilter.values,
               labelOf: (DownloadAgeFilter v) => v.label,
-              onChanged: (DownloadAgeFilter v) => saveSettings(
-                ref,
-                settings.copyWith(downloadAgeFilter: v),
-              ),
+              onChanged: (DownloadAgeFilter v) =>
+                  saveSettings(ref, settings.copyWith(downloadAgeFilter: v)),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
@@ -231,10 +229,7 @@ class _ThemeTile extends ConsumerWidget {
               if (selection.isEmpty) {
                 return;
               }
-              saveSettings(
-                ref,
-                settings.copyWith(themeMode: selection.first),
-              );
+              saveSettings(ref, settings.copyWith(themeMode: selection.first));
             },
           ),
         ],
@@ -284,9 +279,8 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
               child: Text(
                 title,
-                style: Theme.of(sheetContext).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(sheetContext).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
             // Plain ListTiles with a check mark rather than RadioListTile:
@@ -352,56 +346,55 @@ void showPrivacyPolicy(BuildContext context) {
       expand: false,
       initialChildSize: 0.8,
       maxChildSize: 0.95,
-      builder: (BuildContext context, ScrollController controller) =>
-          ListView(
-            key: const Key('privacy_policy_sheet'),
-            controller: controller,
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-            children: const <Widget>[
-              _PolicyTitle('Privacy Policy'),
-              _PolicySection(
-                heading: 'Nothing leaves your device',
-                body:
-                    'Mobile Cleaner has no internet permission. Your files, '
-                    'file names, photos, thumbnails, and the results of every '
-                    'scan stay on this phone. Nothing is uploaded, shared, or '
-                    'sent to any server.',
-              ),
-              _PolicySection(
-                heading: 'No accounts, no tracking',
-                body:
-                    'There is no sign-in, no analytics, no advertising, and '
-                    'no third-party tracking. The app does not collect a '
-                    'device identifier.',
-              ),
-              _PolicySection(
-                heading: 'What is stored on this phone',
-                body:
-                    'Your settings, and a cleanup history holding only a '
-                    'date, a file count, and a size for each cleanup. No file '
-                    'names are recorded. Clearing the history in Cleanup '
-                    'History removes it.',
-              ),
-              _PolicySection(
-                heading: 'Why permissions are requested',
-                body:
-                    'Media and storage access is what lets the app list your '
-                    'files and calculate their sizes. Usage Access, if you '
-                    'grant it, is used only to read app sizes. Both are '
-                    'optional, and the app tells you what it cannot do '
-                    'without them.',
-              ),
-              _PolicySection(
-                heading: 'Deleting is always your decision',
-                body:
-                    'Nothing is deleted automatically. Every removal is shown '
-                    'to you first, requires an explicit confirmation, and may '
-                    'ask for a second confirmation from Android itself. '
-                    'Deletion is permanent and is not recoverable from this '
-                    'app.',
-              ),
-            ],
+      builder: (BuildContext context, ScrollController controller) => ListView(
+        key: const Key('privacy_policy_sheet'),
+        controller: controller,
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+        children: const <Widget>[
+          _PolicyTitle('Privacy Policy'),
+          _PolicySection(
+            heading: 'Nothing leaves your device',
+            body:
+                'Mobile Cleaner has no internet permission. Your files, '
+                'file names, photos, thumbnails, and the results of every '
+                'scan stay on this phone. Nothing is uploaded, shared, or '
+                'sent to any server.',
           ),
+          _PolicySection(
+            heading: 'No accounts, no tracking',
+            body:
+                'There is no sign-in, no analytics, no advertising, and '
+                'no third-party tracking. The app does not collect a '
+                'device identifier.',
+          ),
+          _PolicySection(
+            heading: 'What is stored on this phone',
+            body:
+                'Your settings, and a cleanup history holding only a '
+                'date, a file count, and a size for each cleanup. No file '
+                'names are recorded. Clearing the history in Cleanup '
+                'History removes it.',
+          ),
+          _PolicySection(
+            heading: 'Why permissions are requested',
+            body:
+                'Media and storage access is what lets the app list your '
+                'files and calculate their sizes. Usage Access, if you '
+                'grant it, is used only to read app sizes. Both are '
+                'optional, and the app tells you what it cannot do '
+                'without them.',
+          ),
+          _PolicySection(
+            heading: 'Deleting is always your decision',
+            body:
+                'Nothing is deleted automatically. Every removal is shown '
+                'to you first, requires an explicit confirmation, and may '
+                'ask for a second confirmation from Android itself. '
+                'Deletion is permanent and is not recoverable from this '
+                'app.',
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -416,43 +409,39 @@ void showAboutSheet(BuildContext context) {
       expand: false,
       initialChildSize: 0.7,
       maxChildSize: 0.95,
-      builder: (BuildContext context, ScrollController controller) =>
-          ListView(
-            key: const Key('about_sheet'),
-            controller: controller,
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-            children: const <Widget>[
-              _PolicyTitle(AppConstants.appName),
-              _PolicySection(
-                heading: 'What it does',
-                body:
-                    'Finds what is using space on your phone — large files, '
-                    'old downloads, leftover installers, screenshots, '
-                    'duplicate and similar photos, big videos, and installed '
-                    'apps — and helps you review it.',
-              ),
-              _PolicySection(
-                heading: 'What it will not do',
-                body:
-                    'It will not delete anything on its own, will not promise '
-                    'space it cannot actually free, and will not claim to '
-                    'clean things Android does not let any app touch, such as '
-                    'other apps\u2019 private data.',
-              ),
-              _PolicySection(
-                heading: 'How suggestions work',
-                body:
-                    'Recommendations come from fixed rules over your real '
-                    'scan results, and each one shows the numbers it is based '
-                    'on. Duplicate and similar photo detection runs entirely '
-                    'on this device.',
-              ),
-              _PolicySection(
-                heading: 'Version',
-                body: AppConstants.appVersion,
-              ),
-            ],
+      builder: (BuildContext context, ScrollController controller) => ListView(
+        key: const Key('about_sheet'),
+        controller: controller,
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+        children: const <Widget>[
+          _PolicyTitle(AppConstants.appName),
+          _PolicySection(
+            heading: 'What it does',
+            body:
+                'Finds what is using space on your phone — large files, '
+                'old downloads, leftover installers, screenshots, '
+                'duplicate and similar photos, big videos, and installed '
+                'apps — and helps you review it.',
           ),
+          _PolicySection(
+            heading: 'What it will not do',
+            body:
+                'It will not delete anything on its own, will not promise '
+                'space it cannot actually free, and will not claim to '
+                'clean things Android does not let any app touch, such as '
+                'other apps\u2019 private data.',
+          ),
+          _PolicySection(
+            heading: 'How suggestions work',
+            body:
+                'Recommendations come from fixed rules over your real '
+                'scan results, and each one shows the numbers it is based '
+                'on. Duplicate and similar photo detection runs entirely '
+                'on this device.',
+          ),
+          _PolicySection(heading: 'Version', body: AppConstants.appVersion),
+        ],
+      ),
     ),
   );
 }
@@ -488,16 +477,14 @@ class _PolicySection extends StatelessWidget {
         children: <Widget>[
           Text(
             heading,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(context).textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Text(
             body,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: colors.onSurfaceVariant),
           ),
         ],
       ),

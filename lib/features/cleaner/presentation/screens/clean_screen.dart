@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
@@ -22,6 +23,7 @@ class CleanScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RootBackButton(buttonKey: Key('clean_back_button')),
         title: const Text('Smart Scan'),
         actions: <Widget>[
           IconButton(
@@ -134,9 +136,8 @@ class _RecoverableCard extends StatelessWidget {
             Text(
               'Potentially Recoverable',
               key: const Key('smart_scan_heading'),
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Text(
@@ -152,9 +153,8 @@ class _RecoverableCard extends StatelessWidget {
               'across ${result.totalFiles} '
               '${result.totalFiles == 1 ? 'file' : 'files'}',
               key: const Key('smart_scan_total_files'),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colors.onSurfaceVariant),
             ),
             const SizedBox(height: 12),
             const Divider(height: 1),
@@ -169,9 +169,8 @@ class _RecoverableCard extends StatelessWidget {
                 'Some files match more than one check and are counted once '
                 'in the total.',
                 key: const Key('smart_scan_overlap_note'),
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: colors.onSurfaceVariant),
               ),
               const SizedBox(height: 8),
             ],
@@ -272,9 +271,8 @@ class _NothingFound extends StatelessWidget {
         Text(
           'No large files, old downloads, or leftover installers were found.',
           textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: colors.onSurfaceVariant),
         ),
       ],
     );

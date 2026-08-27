@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_cleaner/app/navigation/exit_confirmation.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/features/onboarding/data/onboarding_preferences.dart';
 
@@ -52,6 +53,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
+  Future<void> _back() async {
+    if (_currentPage == 0) {
+      await showExitConfirmation(context);
+      return;
+    }
+    await _pageController.previousPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   Future<void> _finish() async {
     if (_isFinishing) {
       return;
@@ -68,18 +80,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return PopScope(
       canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (!didPop && !_isFinishing) {
+          _back();
+        }
+      },
       child: Scaffold(
         key: const Key('onboarding_screen'),
         body: SafeArea(
           child: Column(
             children: <Widget>[
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  key: const Key('onboarding_skip'),
-                  onPressed: _isFinishing ? null : _finish,
-                  child: const Text('Skip'),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  IconButton(
+                    key: const Key('onboarding_back_button'),
+                    tooltip: 'Back',
+                    onPressed: _isFinishing ? null : _back,
+                    icon: const Icon(Icons.arrow_back_rounded),
+                  ),
+                  TextButton(
+                    key: const Key('onboarding_skip'),
+                    onPressed: _isFinishing ? null : _finish,
+                    child: const Text('Skip'),
+                  ),
+                ],
               ),
               Expanded(
                 child: PageView.builder(

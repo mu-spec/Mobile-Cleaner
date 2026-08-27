@@ -25,6 +25,12 @@ class CleanupCompleteScreen extends ConsumerWidget {
 
     return Scaffold(
       key: const Key('cleanup_complete_screen'),
+      appBar: AppBar(
+        leading: BackButton(
+          key: const Key('cleanup_complete_back_button'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: <Widget>[
@@ -38,17 +44,15 @@ class CleanupCompleteScreen extends ConsumerWidget {
                     'Cleanup Complete',
                     key: const Key('cleanup_title'),
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Your phone has a little more room.',
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: colors.onSurfaceVariant),
                   ),
                   const SizedBox(height: 28),
                   _StatCard(
@@ -175,16 +179,14 @@ class _FreeStorageCard extends StatelessWidget {
               error: (Object error, StackTrace stackTrace) => Text(
                 'Unavailable',
                 key: const Key('cleanup_free_storage'),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: colors.onSurfaceVariant),
               ),
               data: (StorageInfo info) => Text(
                 ByteFormatter.format(info.freeBytes),
                 key: const Key('cleanup_free_storage'),
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
           ],
@@ -236,9 +238,8 @@ class _PartialNotice extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   result.failures.first.reason,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.onErrorContainer,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: colors.onErrorContainer),
                 ),
               ],
             ),

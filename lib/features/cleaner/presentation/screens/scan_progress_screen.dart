@@ -11,6 +11,7 @@ import 'package:mobile_cleaner/features/files/presentation/providers/duplicates_
 import 'package:mobile_cleaner/features/files/presentation/providers/screenshot_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/videos_provider.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
 /// Runs a real storage scan behind a deliberately paced premium progress UI.
 ///
@@ -149,6 +150,14 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
     }
   }
 
+  void _goBack() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.home);
+    }
+  }
+
   String get _scanTitle => switch (widget.target) {
     ScanLaunchTarget.smartScan => 'Scanning your storage',
     ScanLaunchTarget.screenshots => 'Finding screenshots',
@@ -182,78 +191,85 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
       _rotationController,
     ]);
 
-    return PopScope(
-      canPop: !_running,
-      child: Scaffold(
-        key: const Key('scan_progress_screen'),
-        backgroundColor: isDark
-            ? AppColors.darkBackground
-            : AppColors.lightBackground,
-        appBar: AppBar(
-          automaticallyImplyLeading: !_running,
-          backgroundColor: Colors.transparent,
-          title: const Text('Smart Scan'),
+    return Scaffold(
+      key: const Key('scan_progress_screen'),
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : HomeUpperStyle.background,
+      appBar: AppBar(
+        leading: IconButton(
+          key: const Key('scan_progress_back_button'),
+          tooltip: 'Back',
+          onPressed: _goBack,
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
-        body: SafeArea(
-          child: AnimatedBuilder(
-            animation: animation,
-            builder: (BuildContext context, Widget? child) {
-              final double progress = _progress.clamp(0, 1);
-              return SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  AppSpacing.lg,
-                  AppSpacing.xl,
-                  AppSpacing.xl,
-                ),
-                child: Column(
-                  children: <Widget>[
-                    _PrivacyBadge(isDark: isDark),
-                    const SizedBox(height: AppSpacing.xl),
-                    Text(
-                      _scanTitle,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.5,
-                      ),
+        backgroundColor: Colors.transparent,
+        title: const Text('Smart Scan'),
+      ),
+      body: SafeArea(
+        child: AnimatedBuilder(
+          animation: animation,
+          builder: (BuildContext context, Widget? child) {
+            final double progress = _progress.clamp(0, 1);
+            return SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.lg,
+                AppSpacing.xl,
+                AppSpacing.xl,
+              ),
+              child: Column(
+                children: <Widget>[
+                  _PrivacyBadge(isDark: isDark),
+                  const SizedBox(height: AppSpacing.xl),
+                  Text(
+                    _scanTitle,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                      color: isDark
+                          ? theme.colorScheme.onSurface
+                          : HomeUpperStyle.textPrimary,
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Reviewing files safely on this device.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Reviewing files safely on this device.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: isDark
+                          ? theme.colorScheme.onSurfaceVariant
+                          : HomeUpperStyle.textSecondary,
                     ),
-                    const SizedBox(height: AppSpacing.xxl),
-                    _PremiumScanRing(
-                      key: const Key('scan_progress_ring'),
-                      progress: progress,
-                      rotation: _rotationController.value,
-                      completed: _completed,
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: AppSpacing.xxl),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
-                      child: _scanError == null
-                          ? _ScanStatusCard(
-                              key: ValueKey<String>(_statusFor(progress)),
-                              progress: progress,
-                              status: _statusFor(progress),
-                              isDark: isDark,
-                            )
-                          : _ScanErrorCard(
-                              onRetry: _startScan,
-                              onCancel: () => context.go(AppRoutes.home),
-                            ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  _PremiumScanRing(
+                    key: const Key('scan_progress_ring'),
+                    progress: progress,
+                    rotation: _rotationController.value,
+                    completed: _completed,
+                    isDark: isDark,
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    child: _scanError == null
+                        ? _ScanStatusCard(
+                            key: ValueKey<String>(_statusFor(progress)),
+                            progress: progress,
+                            status: _statusFor(progress),
+                            isDark: isDark,
+                          )
+                        : _ScanErrorCard(
+                            onRetry: _startScan,
+                            onCancel: () => context.go(AppRoutes.home),
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
@@ -269,7 +285,7 @@ class _PrivacyBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkInfoSurface : AppColors.softBlue,
+        color: isDark ? AppColors.darkInfoSurface : HomeUpperStyle.softBlue,
         borderRadius: BorderRadius.circular(99),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : const Color(0xFFD7E3FF),
@@ -280,7 +296,11 @@ class _PrivacyBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(Icons.shield_rounded, size: 16, color: AppColors.actionBlue),
+            Icon(
+              Icons.shield_rounded,
+              size: 16,
+              color: HomeUpperStyle.primaryBlue,
+            ),
             SizedBox(width: 7),
             Text(
               'Private, on-device scan',
@@ -338,7 +358,7 @@ class _PremiumScanRing extends StatelessWidget {
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
                         color: isDark
                             ? AppColors.darkTextPrimary
-                            : AppColors.navy,
+                            : HomeUpperStyle.textPrimary,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -1.8,
                       ),
@@ -382,7 +402,7 @@ class _PremiumScanPainter extends CustomPainter {
       Paint()
         ..color = isDark
             ? AppColors.darkPrimary.withValues(alpha: 0.07)
-            : AppColors.actionBlue.withValues(alpha: 0.055)
+            : HomeUpperStyle.primaryBlue.withValues(alpha: 0.055)
         ..style = PaintingStyle.fill,
     );
     canvas.drawCircle(
@@ -404,10 +424,10 @@ class _PremiumScanPainter extends CustomPainter {
         startAngle: 0,
         endAngle: math.pi * 2,
         colors: <Color>[
-          AppColors.actionBlue,
-          Color(0xFF3D8BFF),
-          Color(0xFF64D8FF),
-          AppColors.actionBlue,
+          HomeUpperStyle.deepBlue,
+          HomeUpperStyle.primaryBlue,
+          HomeUpperStyle.radarCyan,
+          HomeUpperStyle.deepBlue,
         ],
       ).createShader(progressRect);
     canvas.drawArc(
@@ -427,8 +447,8 @@ class _PremiumScanPainter extends CustomPainter {
         ..shader = SweepGradient(
           colors: <Color>[
             Colors.transparent,
-            const Color(0xFF8BE6FF).withValues(alpha: 0.2),
-            const Color(0xFF8BE6FF),
+            HomeUpperStyle.radarCyan.withValues(alpha: 0.2),
+            HomeUpperStyle.radarCyan,
           ],
           stops: const <double>[0, 0.72, 1],
           transform: GradientRotation(angle),
@@ -465,10 +485,20 @@ class _ScanStatusCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurfaceElevated : Colors.white,
+        color: isDark ? null : HomeUpperStyle.card,
+        gradient: isDark
+            ? const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: <Color>[
+                  Color(0xFF152235),
+                  AppColors.darkSurfaceElevated,
+                ],
+              )
+            : null,
         borderRadius: BorderRadius.circular(AppRadius.card),
         border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.border,
+          color: isDark ? AppColors.darkBorder : HomeUpperStyle.border,
         ),
         boxShadow: isDark
             ? null
@@ -486,7 +516,7 @@ class _ScanStatusCard extends StatelessWidget {
             children: <Widget>[
               const Icon(
                 Icons.auto_awesome_rounded,
-                color: AppColors.actionBlue,
+                color: HomeUpperStyle.primaryBlue,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -506,6 +536,9 @@ class _ScanStatusCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 7,
+              color: isDark
+                  ? AppColors.darkPrimary
+                  : HomeUpperStyle.primaryBlue,
               backgroundColor: isDark
                   ? AppColors.darkBorder
                   : const Color(0xFFE7ECF5),

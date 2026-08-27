@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_cleaner/app/navigation/exit_confirmation.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
@@ -14,8 +15,6 @@ import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_sty
 import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
-import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
-import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 
 /// UI V2.1 Home.
@@ -28,24 +27,8 @@ import 'package:mobile_cleaner/features/storage/presentation/providers/storage_o
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  static Future<void> _launchScan(
-    BuildContext context,
-    WidgetRef ref,
-    ScanLaunchTarget target,
-  ) async {
-    AppPermissionStatus status;
-    try {
-      status = await ref.read(permissionGatewayProvider).checkMediaAndStorage();
-    } catch (_) {
-      status = AppPermissionStatus.denied;
-    }
-    if (!context.mounted) {
-      return;
-    }
-    final String route = status == AppPermissionStatus.granted
-        ? AppRoutes.progressForScan(target)
-        : AppRoutes.permissionsForScan(target);
-    context.push(route);
+  static void _launchScan(BuildContext context, ScanLaunchTarget target) {
+    context.push(AppRoutes.permissionsForScan(target));
   }
 
   static ScanLaunchTarget _targetForRecommendation(RecommendationKind kind) {
@@ -72,6 +55,12 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         toolbarHeight: headerHeight,
         titleSpacing: AppSpacing.md,
+        leading: IconButton(
+          key: const Key('home_back_button'),
+          tooltip: 'Back',
+          onPressed: () => showExitConfirmation(context),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
         title: const _HomeHeaderTitle(),
       ),
       body: SafeArea(
@@ -98,10 +87,10 @@ class HomeScreen extends ConsumerWidget {
                 const SizedBox(height: HomeMetrics.sectionGap),
                 SmartScanCta(
                   onScan: () {
-                    _launchScan(context, ref, ScanLaunchTarget.smartScan);
+                    _launchScan(context, ScanLaunchTarget.smartScan);
                   },
                   onOpen: (RecommendationKind kind) {
-                    _launchScan(context, ref, _targetForRecommendation(kind));
+                    _launchScan(context, _targetForRecommendation(kind));
                   },
                 ),
                 const SizedBox(height: HomeMetrics.sectionGap),

@@ -91,6 +91,14 @@ class _PermissionEducationScreenState
     }
   }
 
+  void _goBack() {
+    if (GoRouter.of(context).canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.home);
+    }
+  }
+
   Future<void> _continueAfterGrant() async {
     await PermissionPreferences.markEducationSeen();
     if (!mounted) {
@@ -106,18 +114,20 @@ class _PermissionEducationScreenState
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: const Text('Storage access'),
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          key: const Key('permission_back_button'),
+          tooltip: 'Back',
+          onPressed: _goBack,
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
-        body: SafeArea(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            child: _buildContent(context),
-          ),
+        title: const Text('Storage access'),
+      ),
+      body: SafeArea(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: _buildContent(context),
         ),
       ),
     );

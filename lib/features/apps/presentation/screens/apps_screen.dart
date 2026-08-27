@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
 import 'package:mobile_cleaner/core/ui/responsive.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/core/utils/date_formatter.dart';
@@ -149,6 +150,7 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RootBackButton(buttonKey: Key('apps_back_button')),
         title: const Text('Apps'),
         actions: <Widget>[
           IconButton(
@@ -368,9 +370,8 @@ class _AppRow extends StatelessWidget {
                         key: Key('app_detail_${app.packageName}'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: colors.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -463,8 +464,7 @@ class _AppActions extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
-        final bool stacked =
-            constraints.maxWidth < 320 || textScale > 1.3;
+        final bool stacked = constraints.maxWidth < 320 || textScale > 1.3;
         if (stacked) {
           return Column(
             key: Key('app_actions_${app.packageName}'),
@@ -579,9 +579,8 @@ class _UsageAccessCard extends StatelessWidget {
             Text(
               'Android needs Usage Access before it will report app data and '
               'cache. It can only be granted from system settings.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colors.onSecondaryContainer,
-              ),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colors.onSecondaryContainer),
             ),
             Align(
               alignment: Alignment.centerRight,
@@ -620,9 +619,8 @@ class _TotalCard extends StatelessWidget {
               inventory.hasUsageAccess
                   ? 'Space used by apps'
                   : 'App size, excluding data',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: colors.onSurfaceVariant),
             ),
             const SizedBox(height: 6),
             Text(
@@ -637,9 +635,8 @@ class _TotalCard extends StatelessWidget {
             Text(
               '$count ${count == 1 ? 'app' : 'apps'}',
               key: const Key('apps_count'),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colors.onSurfaceVariant),
             ),
             const SizedBox(height: 12),
             Row(
@@ -655,9 +652,8 @@ class _TotalCard extends StatelessWidget {
                     'Android only lets this app see apps with a launcher '
                     'icon, so this list is shorter than system settings.',
                     key: const Key('apps_visibility_note'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: colors.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -694,9 +690,8 @@ class _NoApps extends StatelessWidget {
           'Android did not report any installed apps this app is allowed to '
           'see. Try including system apps.',
           textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: colors.onSurfaceVariant),
         ),
       ],
     );

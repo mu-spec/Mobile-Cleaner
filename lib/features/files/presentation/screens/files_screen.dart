@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
@@ -23,6 +24,7 @@ class FilesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const RootBackButton(buttonKey: Key('files_back_button')),
         title: const Text('Files'),
         actions: <Widget>[
           IconButton(
@@ -107,9 +109,8 @@ class _CategoryGrid extends StatelessWidget {
                                   'to scan again.'
                             : '${result.totalFiles} files · '
                                   '${ByteFormatter.format(result.totalBytes)}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(color: colors.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -118,7 +119,9 @@ class _CategoryGrid extends StatelessWidget {
                   nothingFound
                       ? Icons.folder_off_rounded
                       : Icons.travel_explore_rounded,
-                  color: nothingFound ? colors.onSurfaceVariant : colors.primary,
+                  color: nothingFound
+                      ? colors.onSurfaceVariant
+                      : colors.primary,
                 ),
               ],
             ),
@@ -146,7 +149,10 @@ class _CategoryGrid extends StatelessWidget {
             key: const Key('open_downloads_cleaner'),
             leading: CircleAvatar(
               backgroundColor: colors.primaryContainer,
-              child: Icon(Icons.cleaning_services_rounded, color: colors.primary),
+              child: Icon(
+                Icons.cleaning_services_rounded,
+                color: colors.primary,
+              ),
             ),
             title: const Text('Downloads Cleaner'),
             subtitle: const Text('Clear out old downloads'),
@@ -204,9 +210,8 @@ class _CategoryGrid extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'Tap a category to review its files.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: colors.onSurfaceVariant),
         ),
         const SizedBox(height: 12),
         GridView.count(
@@ -227,10 +232,7 @@ class _CategoryGrid extends StatelessWidget {
         ),
         if (!nothingFound) ...<Widget>[
           const SizedBox(height: 24),
-          Text(
-            'Largest files',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Largest files', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 6),
           for (final ScannedFile file in result.largestFiles(limit: 10))
             ScannedFileTile(file: file),
@@ -240,9 +242,8 @@ class _CategoryGrid extends StatelessWidget {
           Text(
             'Showing the top results per category. Rescan after cleaning to '
             'see more.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colors.onSurfaceVariant),
           ),
         ],
       ],

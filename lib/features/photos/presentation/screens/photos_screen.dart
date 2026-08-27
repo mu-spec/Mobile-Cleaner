@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/photo_cleanup_summary.dart';
@@ -27,6 +28,7 @@ class PhotosScreen extends ConsumerWidget {
     return Scaffold(
       key: const Key('photos_screen'),
       appBar: AppBar(
+        leading: const RootBackButton(buttonKey: Key('photos_back_button')),
         title: const Text('Photos'),
         actions: <Widget>[
           IconButton(
@@ -140,9 +142,8 @@ class _CleanupCard extends StatelessWidget {
             Text(
               'Photo Cleanup',
               key: const Key('photo_cleanup_heading'),
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Text(
@@ -158,9 +159,8 @@ class _CleanupCard extends StatelessWidget {
               'across ${summary.totalPhotos} '
               '${summary.totalPhotos == 1 ? 'photo' : 'photos'}',
               key: const Key('photo_cleanup_total_photos'),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colors.onSurfaceVariant),
             ),
             const SizedBox(height: 12),
             const Divider(height: 1),
@@ -172,9 +172,8 @@ class _CleanupCard extends StatelessWidget {
                 'Some photos appear in more than one tool and are counted '
                 'once in the total.',
                 key: const Key('photo_cleanup_overlap_note'),
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: colors.onSurfaceVariant),
               ),
               const SizedBox(height: 8),
             ],
@@ -250,9 +249,8 @@ class _CleanupRow extends StatelessWidget {
                     key: Key('photo_tool_note_${entry.tool.name}'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: colors.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -308,9 +306,8 @@ class _NothingToClean extends StatelessWidget {
         Text(
           'No duplicates, screenshots, or oversized images were found.',
           textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: colors.onSurfaceVariant),
         ),
       ],
     );
