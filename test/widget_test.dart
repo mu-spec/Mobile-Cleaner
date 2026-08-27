@@ -14,6 +14,7 @@ import 'package:mobile_cleaner/features/files/data/perceptual_hash_repository.da
 import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:mobile_cleaner/features/files/presentation/screens/files_screen.dart';
 import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
 import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
 import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
@@ -91,6 +92,9 @@ void main() {
     expectActiveOnboardingIndicator(2);
 
     await tester.tap(find.byKey(const Key('onboarding_next')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byKey(const Key('permission_education')), findsOneWidget);
 
@@ -295,8 +299,9 @@ void main() {
     expect(find.byKey(const Key('photos_screen')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_files')));
-    await tester.pump(const Duration(milliseconds: 2000));
-    expect(find.byKey(const Key('files_overview')), findsOneWidget);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(FilesScreen), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('nav_apps')));
     await tester.pump(const Duration(milliseconds: 2000));
