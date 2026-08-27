@@ -323,8 +323,8 @@ class _StorageRingState extends State<_StorageRing>
             usedColor:
                 isDark ? colors.primary : HomeUpperStyle.primaryBlue,
             availableColor: HomeUpperStyle.orange,
+            repaint: _animation,
           ),
-          repaint: _animation,
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.xs),
@@ -417,11 +417,12 @@ class _StorageRingState extends State<_StorageRing>
 }
 
 class _StorageRingPainter extends CustomPainter {
-  const _StorageRingPainter({
+  _StorageRingPainter({
     required this.usedFraction,
     required this.usedColor,
     required this.availableColor,
-  });
+    Listenable? repaint,
+  }) : super(repaint: repaint);
 
   final double usedFraction;
   final Color usedColor;
