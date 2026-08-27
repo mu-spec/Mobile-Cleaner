@@ -6,8 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
 import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
+import 'package:mobile_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
 import 'package:mobile_cleaner/features/cleaner/domain/scan_launch_target.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/duplicates_provider.dart';
+import 'package:mobile_cleaner/features/files/presentation/providers/file_scan_provider.dart';
+import 'package:mobile_cleaner/features/files/presentation/providers/photo_cleanup_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/screenshot_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/videos_provider.dart';
@@ -133,6 +136,19 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
         ref.invalidate(videoScanProvider);
         await ref.read(videoScanProvider.future);
         return;
+      case ScanLaunchTarget.photoCleanup:
+        refreshPhotoCleanup(ref);
+        ref.invalidate(photoCleanupProvider);
+        await ref.read(photoCleanupProvider.future);
+        return;
+      case ScanLaunchTarget.files:
+        ref.invalidate(fileScanProvider);
+        await ref.read(fileScanProvider.future);
+        return;
+      case ScanLaunchTarget.apps:
+        ref.invalidate(installedAppsProvider);
+        await ref.read(installedAppsProvider.future);
+        return;
     }
   }
 
@@ -142,8 +158,14 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
       ScanLaunchTarget.screenshots => AppRoutes.screenshotCleaner,
       ScanLaunchTarget.duplicates => AppRoutes.duplicates,
       ScanLaunchTarget.largeVideos => AppRoutes.videos,
+      ScanLaunchTarget.photoCleanup => AppRoutes.photos,
+      ScanLaunchTarget.files => AppRoutes.files,
+      ScanLaunchTarget.apps => AppRoutes.apps,
     };
-    if (widget.target == ScanLaunchTarget.smartScan) {
+    if (widget.target == ScanLaunchTarget.smartScan ||
+        widget.target == ScanLaunchTarget.photoCleanup ||
+        widget.target == ScanLaunchTarget.files ||
+        widget.target == ScanLaunchTarget.apps) {
       context.go(destination);
     } else {
       context.replace(destination);
@@ -163,6 +185,16 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
     ScanLaunchTarget.screenshots => 'Finding screenshots',
     ScanLaunchTarget.duplicates => 'Finding duplicates',
     ScanLaunchTarget.largeVideos => 'Finding large videos',
+    ScanLaunchTarget.photoCleanup => 'Scanning your photos',
+    ScanLaunchTarget.files => 'Scanning your files',
+    ScanLaunchTarget.apps => 'Analyzing your apps',
+  };
+
+  String get _scanSubtitle => switch (widget.target) {
+    ScanLaunchTarget.apps => 'Reviewing installed apps safely on this device.',
+    ScanLaunchTarget.photoCleanup =>
+      'Reviewing your photo library safely on this device.',
+    _ => 'Reviewing files safely on this device.',
   };
 
   String _statusFor(double progress) {
@@ -170,15 +202,25 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
       return 'Scan complete';
     }
     if (progress < 0.3) {
-      return 'Reading storage';
+      return switch (widget.target) {
+        ScanLaunchTarget.apps => 'Reading installed apps',
+        ScanLaunchTarget.photoCleanup => 'Reading photo library',
+        _ => 'Reading storage',
+      };
     }
     if (progress < 0.62) {
-      return 'Analyzing files';
+      return widget.target == ScanLaunchTarget.apps
+          ? 'Calculating app sizes'
+          : 'Analyzing files';
     }
     if (progress < 0.9) {
-      return 'Calculating recoverable space';
+      return widget.target == ScanLaunchTarget.apps
+          ? 'Preparing app insights'
+          : 'Calculating recoverable space';
     }
-    return 'Finishing the real device scan';
+    return widget.target == ScanLaunchTarget.apps
+        ? 'Finishing the app scan'
+        : 'Finishing the real device scan';
   }
 
   @override
@@ -235,7 +277,7 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    'Reviewing files safely on this device.',
+                    _scanSubtitle,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: isDark

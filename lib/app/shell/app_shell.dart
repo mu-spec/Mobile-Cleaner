@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/navigation/exit_confirmation.dart';
 import 'package:mobile_cleaner/app/route_observer.dart';
+import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/features/cleaner/domain/scan_launch_target.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({required this.navigationShell, super.key});
@@ -118,6 +120,19 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _onDestinationSelected(int index) {
+    final ScanLaunchTarget? scanTarget = switch (index) {
+      2 => ScanLaunchTarget.photoCleanup,
+      3 => ScanLaunchTarget.files,
+      4 => ScanLaunchTarget.apps,
+      _ => null,
+    };
+    if (scanTarget != null) {
+      final String route = scanTarget == ScanLaunchTarget.apps
+          ? AppRoutes.progressForScan(scanTarget)
+          : AppRoutes.permissionsForScan(scanTarget);
+      context.push(route);
+      return;
+    }
     widget.navigationShell.goBranch(
       index,
       initialLocation: index == widget.navigationShell.currentIndex,

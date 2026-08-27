@@ -18,6 +18,7 @@ import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/files_screen.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
 import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
 import 'package:mobile_cleaner/features/settings/presentation/screens/settings_screen.dart';
@@ -550,24 +551,54 @@ void main() {
     await tester.tap(find.byKey(const Key('nav_photos')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    expect(find.text('Scanning your photos'), findsOneWidget);
+    final Scaffold photoScan = tester.widget<Scaffold>(
+      find.byKey(const Key('scan_progress_screen')),
+    );
+    expect(photoScan.backgroundColor, HomeUpperStyle.background);
+    await tester.pump(const Duration(milliseconds: 2900));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byKey(const Key('photos_screen')), findsOneWidget);
     expect(find.byKey(const Key('photos_back_button')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 400));
 
     await tester.tap(find.byKey(const Key('nav_files')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    expect(find.text('Scanning your files'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 2900));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(FilesScreen), findsOneWidget);
     expect(find.byKey(const Key('files_back_button')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 400));
 
     await tester.tap(find.byKey(const Key('nav_apps')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    expect(find.text('Analyzing your apps'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 2900));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(AppsScreen), findsOneWidget);
     expect(find.byKey(const Key('apps_back_button')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 400));
 
     await tester.tap(find.byKey(const Key('nav_settings')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.byType(SettingsScreen), findsOneWidget);
     expect(find.byKey(const Key('settings_back_button')), findsOneWidget);
 

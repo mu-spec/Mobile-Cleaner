@@ -2,7 +2,10 @@ enum ScanLaunchTarget {
   smartScan('smart-scan'),
   screenshots('screenshots'),
   duplicates('duplicates'),
-  largeVideos('large-videos');
+  largeVideos('large-videos'),
+  photoCleanup('photo-cleanup'),
+  files('files'),
+  apps('apps');
 
   const ScanLaunchTarget(this.routeValue);
 
