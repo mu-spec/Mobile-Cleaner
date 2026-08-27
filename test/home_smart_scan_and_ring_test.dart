@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
+import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
+import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
 
 void main() {
@@ -12,14 +15,19 @@ void main() {
     testWidgets('ring starts at 0 and reaches usedFraction', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            storageOverviewProvider.overrideWithValue(
+              AsyncValue<StorageInfo>.data(
+                StorageInfo(
+                  totalBytes: 1024 * 1024 * 1024,
+                  freeBytes: 1024 * 1024 * (1024 - 150),
+                ),
+              ),
+            ),
+          ],
           child: MaterialApp(
             home: Scaffold(
-              body: StorageOverviewCard(
-                  info: StorageInfo(
-                    totalBytes: 1024 * 1024 * 1024,
-                    freeBytes: 1024 * 1024 * (1024 - 150),
-                  ),
-              ),
+              body: StorageOverviewCard(),
             ),
           ),
         ),
@@ -31,16 +39,21 @@ void main() {
     testWidgets('reduced motion shows final state', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
+          overrides: [
+            storageOverviewProvider.overrideWithValue(
+              AsyncValue<StorageInfo>.data(
+                StorageInfo(
+                  totalBytes: 1000,
+                  freeBytes: 900,
+                ),
+              ),
+            ),
+          ],
           child: MaterialApp(
             home: Scaffold(
               body: MediaQuery(
                 data: const MediaQueryData(disableAnimations: true),
-                child: StorageOverviewCard(
-                  info: StorageInfo(
-                    totalBytes: 1000,
-                    freeBytes: 900,
-                  ),
-                ),
+                child: StorageOverviewCard(),
               ),
             ),
           ),

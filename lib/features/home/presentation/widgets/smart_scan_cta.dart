@@ -100,7 +100,7 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                         children: <Widget>[
                           advice.when(
                             loading: () => const SizedBox.shrink(),
-                            error: (_, __) => const SizedBox.shrink(),
+                            error: (_, _) => const SizedBox.shrink(),
                             data: (List<Recommendation> found) {
                               if (found.isNotEmpty) {
                                 return InkWell(

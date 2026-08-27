@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 class RadarPainter extends CustomPainter {
-  const RadarPainter({required this.rotation, this.progress = 1.0})
+  RadarPainter({required this.rotation, this.progress = 1.0})
       : super(repaint: AlwaysStoppedAnimation(rotation));
 
   final double rotation; // 0-1 for full circle
