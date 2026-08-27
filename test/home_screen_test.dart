@@ -232,7 +232,7 @@ void main() {
     ) async {
       await _pumpHome(tester);
 
-      expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
+      expect(find.byKey(const Key('storage_used_percentage')), findsOneWidget);
       expect(find.text('${((128 - 46) / 128 * 100).round()}%'), findsOneWidget);
     });
 
@@ -556,10 +556,10 @@ void main() {
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
-      expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
+      expect(find.byKey(const Key('storage_used_percentage')), findsOneWidget);
       // After short pump the animation should have progressed.
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
+      expect(find.byKey(const Key('storage_used_percentage')), findsOneWidget);
     });
 
     testWidgets('reduced motion shows final state immediately', (
@@ -588,7 +588,7 @@ void main() {
         ),
       );
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.byKey(const Key('storage_percentage')), findsOneWidget);
+      expect(find.byKey(const Key('storage_used_percentage')), findsOneWidget);
     });
   });
 }

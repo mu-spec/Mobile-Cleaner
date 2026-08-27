@@ -122,6 +122,7 @@ class _SmartScanCtaState extends ConsumerState<SmartScanCta>
                           Align(
                             alignment: Alignment.bottomLeft,
                             child: ElevatedButton.icon(
+                              key: const Key('home_scan_now_button'),
                               onPressed: widget.onScan,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.white,

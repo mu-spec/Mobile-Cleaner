@@ -121,7 +121,7 @@ class _StorageDetails extends StatelessWidget {
                         builder: (BuildContext context, double value, Widget? child) {
                           return Text(
                             '${value.round()}%',
-                            key: const Key('storage_percentage'),
+                            key: const Key('storage_used_percentage'),
                             style: theme.textTheme.displaySmall?.copyWith(
                               fontSize: 38,
                               fontWeight: FontWeight.w800,
