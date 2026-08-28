@@ -12,8 +12,10 @@ import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/large_photos_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Large Photos: find the images taking the most space.
 ///
@@ -88,7 +90,10 @@ class _LargePhotosScreenState extends ConsumerState<LargePhotosScreen> {
     final bool selecting = _selection.isNotEmpty;
 
     return Scaffold(
+      backgroundColor: PhotoToolUi.background(context),
       appBar: AppBar(
+        backgroundColor: PhotoToolUi.background(context),
+        surfaceTintColor: Colors.transparent,
         leading: selecting
             ? IconButton(
                 key: const Key('large_photos_cancel_selection'),
@@ -100,16 +105,17 @@ class _LargePhotosScreenState extends ConsumerState<LargePhotosScreen> {
         title: Text(
           selecting ? '${_selection.count} selected' : 'Large Photos',
           key: const Key('large_photos_title'),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4),
         ),
         actions: <Widget>[
           if (!selecting)
-            IconButton(
+            PhotoToolActionButton(
               key: const Key('large_photos_rescan'),
+              icon: Icons.refresh_rounded,
               tooltip: 'Rescan',
               onPressed: () => ref.invalidate(largePhotoScanProvider),
-              icon: const Icon(Icons.refresh_rounded),
             ),
-          const SizedBox(width: 8),
         ],
       ),
       bottomNavigationBar: selecting
@@ -127,7 +133,11 @@ class _LargePhotosScreenState extends ConsumerState<LargePhotosScreen> {
           : null,
       body: SafeArea(
         child: summary.when(
-          loading: () => const FilesScanningView(),
+          loading: () => const PhotoToolLoadingState(
+            icon: PhosphorIconsDuotone.imageSquare,
+            title: 'Measuring large photos…',
+            description: 'Calculating real photo sizes safely on this device.',
+          ),
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(largePhotoScanProvider),
@@ -184,12 +194,11 @@ class _FilterBar extends StatelessWidget {
           for (final LargePhotoFilter option in LargePhotoFilter.values)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
+              child: PhotoToolChoiceChip(
                 key: Key('large_photo_filter_${option.name}'),
-                label: Text(option.label),
+                label: option.label,
                 selected: option == selected,
-                onSelected: (_) => onSelected(option),
-                visualDensity: VisualDensity.compact,
+                onSelected: () => onSelected(option),
               ),
             ),
         ],
@@ -229,39 +238,33 @@ class _LargePhotoList extends StatelessWidget {
           return _TotalCard(summary: summary);
         }
         if (index == 1) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    'Largest first',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                TextButton.icon(
-                  key: const Key('large_photos_select_all'),
-                  onPressed: onToggleAll,
-                  icon: Icon(
-                    allSelected
-                        ? Icons.remove_done_rounded
-                        : Icons.done_all_rounded,
-                    size: 18,
-                  ),
-                  label: Text(allSelected ? 'Clear all' : 'Select all'),
-                ),
-              ],
+          return PhotoToolSectionHeader(
+            title: 'Space-heavy photos',
+            subtitle: 'Largest first',
+            icon: PhosphorIconsDuotone.imageSquare,
+            trailing: TextButton.icon(
+              key: const Key('large_photos_select_all'),
+              onPressed: onToggleAll,
+              icon: Icon(
+                allSelected
+                    ? Icons.remove_done_rounded
+                    : Icons.done_all_rounded,
+                size: 18,
+              ),
+              label: Text(allSelected ? 'Clear all' : 'Select all'),
             ),
           );
         }
 
         final ScannedFile file = summary.files[index - headerCount];
-        return ScannedFileTile(
-          file: file,
-          selectionMode: true,
-          selected: selection.contains(file),
-          onTap: () => onToggle(file),
-          onLongPress: () => showFileDetails(context, file),
+        return PhotoToolFilePanel(
+          child: ScannedFileTile(
+            file: file,
+            selectionMode: true,
+            selected: selection.contains(file),
+            onTap: () => onToggle(file),
+            onLongPress: () => showFileDetails(context, file),
+          ),
         );
       },
     );
@@ -276,53 +279,27 @@ class _TotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    final String description =
+        '${summary.fileCount} '
+        '${summary.fileCount == 1 ? 'photo' : 'photos'} over '
+        '${summary.filter.threshold}';
 
-    return Card(
+    return PhotoToolSummaryCard(
       key: const Key('large_photos_total_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Space used by large photos',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+      icon: PhosphorIconsDuotone.imageSquare,
+      eyebrow: 'Photo storage',
+      value: ByteFormatter.format(summary.totalBytes),
+      valueKey: const Key('large_photos_total_bytes'),
+      description: description,
+      descriptionKey: const Key('large_photos_count'),
+      note: summary.isEmpty
+          ? null
+          : PhotoToolHeroNote(
+              key: const Key('large_photos_average'),
+              icon: PhosphorIconsDuotone.gauge,
+              text:
+                  'Average ${ByteFormatter.format(summary.averageBytes)} per photo',
             ),
-            const SizedBox(height: 6),
-            Text(
-              ByteFormatter.format(summary.totalBytes),
-              key: const Key('large_photos_total_bytes'),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: colors.primary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${summary.fileCount} '
-              '${summary.fileCount == 1 ? 'photo' : 'photos'} over '
-              '${summary.filter.threshold}',
-              key: const Key('large_photos_count'),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-            ),
-            if (!summary.isEmpty) ...<Widget>[
-              const SizedBox(height: 4),
-              Text(
-                'Average ${ByteFormatter.format(summary.averageBytes)} each',
-                key: const Key('large_photos_average'),
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }
@@ -334,32 +311,16 @@ class _EmptyLargePhotos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
     return ListView(
       key: const Key('large_photos_empty'),
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(32),
       children: <Widget>[
-        const SizedBox(height: 60),
-        Icon(
-          Icons.check_circle_outline_rounded,
-          size: 56,
-          color: colors.primary,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'No photos over ${filter.threshold}',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Nothing in your library is that large. Try a smaller threshold.',
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+        PhotoToolEmptyState(
+          icon: PhosphorIconsDuotone.imageSquare,
+          title: 'No photos over ${filter.threshold}',
+          description:
+              'Nothing in your library is that large. Try a smaller threshold.',
         ),
       ],
     );

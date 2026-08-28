@@ -387,6 +387,7 @@ void main() {
       expect(find.byKey(const Key('app_more_com.chat')), findsOneWidget);
       expect(find.byKey(const Key('app_open_com.chat')), findsNothing);
       expect(find.byKey(const Key('apps_usage_access_card')), findsNothing);
+      expect(find.byKey(const Key('apps_refresh')), findsNothing);
       expect(
         find.byKey(const Key('app_icon_fallback_com.chat')),
         findsOneWidget,

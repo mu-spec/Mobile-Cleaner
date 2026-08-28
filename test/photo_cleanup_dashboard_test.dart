@@ -279,6 +279,7 @@ void main() {
       expect(decoration.gradient, isA<LinearGradient>());
       expect(find.byKey(const Key('photo_hero_illustration')), findsOneWidget);
       expect(find.byKey(const Key('photo_cleanup_card')), findsOneWidget);
+      expect(find.byKey(const Key('photo_cleanup_rescan')), findsNothing);
       expect(
         tester.widget<Text>(find.byKey(const Key('photo_hero_title'))).data,
         'Review and clean\nyour photos',

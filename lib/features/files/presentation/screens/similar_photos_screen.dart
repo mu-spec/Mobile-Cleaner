@@ -17,8 +17,10 @@ import 'package:mobile_cleaner/features/files/presentation/providers/similar_pho
 import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_thumbnail.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Similar Photos: shots that look alike without being byte-identical.
 ///
@@ -121,7 +123,10 @@ class _SimilarPhotosScreenState extends ConsumerState<SimilarPhotosScreen> {
     final bool selecting = _selection.isNotEmpty;
 
     return Scaffold(
+      backgroundColor: PhotoToolUi.background(context),
       appBar: AppBar(
+        backgroundColor: PhotoToolUi.background(context),
+        surfaceTintColor: Colors.transparent,
         leading: selecting
             ? IconButton(
                 key: const Key('similar_photos_cancel_selection'),
@@ -133,16 +138,17 @@ class _SimilarPhotosScreenState extends ConsumerState<SimilarPhotosScreen> {
         title: Text(
           selecting ? '${_selection.count} selected' : 'Similar Photos',
           key: const Key('similar_photos_title'),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4),
         ),
         actions: <Widget>[
           if (!selecting)
-            IconButton(
+            PhotoToolActionButton(
               key: const Key('similar_photos_rescan'),
+              icon: Icons.refresh_rounded,
               tooltip: 'Rescan',
               onPressed: () => ref.invalidate(similarPhotoScanProvider),
-              icon: const Icon(Icons.refresh_rounded),
             ),
-          const SizedBox(width: 8),
         ],
       ),
       bottomNavigationBar: selecting
@@ -217,12 +223,11 @@ class _StrengthBar extends StatelessWidget {
           for (final SimilarityStrength option in SimilarityStrength.values)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
+              child: PhotoToolChoiceChip(
                 key: Key('similarity_${option.name}'),
-                label: Text(option.label),
+                label: option.label,
                 selected: option == selected,
-                onSelected: (_) => onSelected(option),
-                visualDensity: VisualDensity.compact,
+                onSelected: () => onSelected(option),
               ),
             ),
         ],
@@ -254,7 +259,7 @@ class _SimilarGroupList extends StatelessWidget {
   Widget build(BuildContext context) {
     // Lazily built: each group decodes several thumbnails, so building every
     // group up front would stall the UI thread.
-    const int headerCount = 1;
+    const int headerCount = 2;
 
     return ListView.builder(
       key: const Key('similar_photos_list'),
@@ -264,6 +269,13 @@ class _SimilarGroupList extends StatelessWidget {
       itemBuilder: (BuildContext context, int index) {
         if (index == 0) {
           return _TotalCard(result: result);
+        }
+        if (index == 1) {
+          return const PhotoToolSectionHeader(
+            title: 'Look-alike sets',
+            subtitle: 'Compare each shot before selecting extras',
+            icon: PhosphorIconsDuotone.imagesSquare,
+          );
         }
         final SimilarPhotoGroup group = result.groups[index - headerCount];
         return _SimilarGroupCard(
@@ -314,107 +326,102 @@ class _SimilarGroupCard extends StatelessWidget {
     final List<ScannedFile> removable = keep.removable(group);
     final bool allSelected = selection.containsAll(removable);
 
-    return Card(
+    return PhotoToolPanel(
       key: Key('similar_group_${group.key}'),
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    group.isBurst
-                        ? '${group.photoCount} shots in a burst'
-                        : '${group.photoCount} similar photos',
-                    key: Key('similar_group_title_${group.key}'),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  group.isBurst
+                      ? '${group.photoCount} shots in a burst'
+                      : '${group.photoCount} similar photos',
+                  key: Key('similar_group_title_${group.key}'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  'up to ${ByteFormatter.format(group.reclaimableBytes)}',
-                  key: Key('similar_group_save_${group.key}'),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'up to ${ByteFormatter.format(group.reclaimableBytes)}',
+                key: Key('similar_group_save_${group.key}'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w700,
                 ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'These look alike but are not identical. Compare them before '
-              'removing any.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-            ),
-            if (recommendation != null) ...<Widget>[
-              const SizedBox(height: 6),
-              _SuggestionNote(
-                groupKey: group.key,
-                recommendation: recommendation!,
               ),
             ],
-            const SizedBox(height: 10),
-            SizedBox(
-              // Cells carry several caption lines, so this is the layout most
-              // sensitive to a larger system font.
-              height: Responsive.photoStripHeight(context, _stripHeight),
-              child: ListView.builder(
-                key: Key('similar_group_strip_${group.key}'),
-                scrollDirection: Axis.horizontal,
-                itemCount: group.photoCount,
-                itemBuilder: (BuildContext context, int index) {
-                  final ScannedFile file = group.files[index];
-                  return SizedBox(
-                    width: _cellWidth,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: _ShotCell(
-                        file: file,
-                        kept: keep.isKept(group, file),
-                        selected: selection.contains(file),
-                        suggested:
-                            recommendation?.isSuggested(file) ?? false,
-                        score: recommendation?.scoreFor(file),
-                        onTap: () => onToggle(group, file),
-                        onKeep: () => onKeep(group, file),
-                        onDetails: () => showFileDetails(context, file),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                key: Key('similar_group_select_${group.key}'),
-                onPressed: onToggleGroup,
-                icon: Icon(
-                  allSelected
-                      ? Icons.remove_done_rounded
-                      : Icons.done_all_rounded,
-                  size: 18,
-                ),
-                label: Text(
-                  allSelected
-                      ? 'Clear this set'
-                      : 'Select ${removable.length} other '
-                            '${removable.length == 1 ? 'shot' : 'shots'}',
-                ),
-              ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'These look alike but are not identical. Compare them before '
+            'removing any.',
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colors.onSurfaceVariant),
+          ),
+          if (recommendation != null) ...<Widget>[
+            const SizedBox(height: 6),
+            _SuggestionNote(
+              groupKey: group.key,
+              recommendation: recommendation!,
             ),
           ],
-        ),
+          const SizedBox(height: 10),
+          SizedBox(
+            // Cells carry several caption lines, so this is the layout most
+            // sensitive to a larger system font.
+            height: Responsive.photoStripHeight(context, _stripHeight),
+            child: ListView.builder(
+              key: Key('similar_group_strip_${group.key}'),
+              scrollDirection: Axis.horizontal,
+              itemCount: group.photoCount,
+              itemBuilder: (BuildContext context, int index) {
+                final ScannedFile file = group.files[index];
+                return SizedBox(
+                  width: _cellWidth,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: _ShotCell(
+                      file: file,
+                      kept: keep.isKept(group, file),
+                      selected: selection.contains(file),
+                      suggested: recommendation?.isSuggested(file) ?? false,
+                      score: recommendation?.scoreFor(file),
+                      onTap: () => onToggle(group, file),
+                      onKeep: () => onKeep(group, file),
+                      onDetails: () => showFileDetails(context, file),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              key: Key('similar_group_select_${group.key}'),
+              onPressed: onToggleGroup,
+              icon: Icon(
+                allSelected
+                    ? Icons.remove_done_rounded
+                    : Icons.done_all_rounded,
+                size: 18,
+              ),
+              label: Text(
+                allSelected
+                    ? 'Clear this set'
+                    : 'Select ${removable.length} other '
+                          '${removable.length == 1 ? 'shot' : 'shots'}',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -474,34 +481,34 @@ class _ShotCell extends StatelessWidget {
           selected: selected,
           button: true,
           child: GestureDetector(
-          key: Key('similar_shot_${file.id}'),
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            Haptics.selection();
-            onTap();
-          },
-          onLongPress: onDetails,
-          child: Container(
-            width: _thumbSize,
-            height: _thumbSize,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: border, width: emphasised ? 3 : 1),
+            key: Key('similar_shot_${file.id}'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              Haptics.selection();
+              onTap();
+            },
+            onLongPress: onDetails,
+            child: Container(
+              width: _thumbSize,
+              height: _thumbSize,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: border, width: emphasised ? 3 : 1),
+              ),
+              child: Stack(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(3),
+                    child: FileThumbnail(file: file, size: _thumbSize - 8),
+                  ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: _CornerBadge(kept: kept, selected: selected),
+                  ),
+                ],
+              ),
             ),
-            child: Stack(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(3),
-                  child: FileThumbnail(file: file, size: _thumbSize - 8),
-                ),
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: _CornerBadge(kept: kept, selected: selected),
-                ),
-              ],
-            ),
-          ),
           ),
         ),
         const SizedBox(height: 4),
@@ -510,9 +517,8 @@ class _ShotCell extends StatelessWidget {
           key: Key('similar_shot_name_${file.id}'),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(fontWeight: FontWeight.w600),
         ),
         // Size is shown here, unlike the duplicate tool, because similar shots
         // differ in size and that is a real reason to prefer one.
@@ -521,9 +527,8 @@ class _ShotCell extends StatelessWidget {
           key: Key('similar_shot_size_${file.id}'),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: colors.onSurfaceVariant),
         ),
         Text(
           score == null
@@ -532,9 +537,8 @@ class _ShotCell extends StatelessWidget {
           key: Key('similar_shot_detail_${file.id}'),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: colors.onSurfaceVariant),
         ),
         if (suggested)
           _SuggestedBadge(fileId: file.id)
@@ -545,9 +549,8 @@ class _ShotCell extends StatelessWidget {
             key: Key('similar_shot_soft_${file.id}'),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colors.onSurfaceVariant),
           ),
         const SizedBox(height: 2),
         if (kept)
@@ -591,10 +594,7 @@ class _ShotCell extends StatelessWidget {
 /// When the shots are too close to separate, this says so rather than
 /// inventing a winner.
 class _SuggestionNote extends StatelessWidget {
-  const _SuggestionNote({
-    required this.groupKey,
-    required this.recommendation,
-  });
+  const _SuggestionNote({required this.groupKey, required this.recommendation});
 
   final String groupKey;
   final BestPhotoRecommendation recommendation;
@@ -607,9 +607,7 @@ class _SuggestionNote extends StatelessWidget {
     return Row(
       children: <Widget>[
         Icon(
-          decided
-              ? Icons.auto_awesome_rounded
-              : Icons.balance_rounded,
+          decided ? Icons.auto_awesome_rounded : Icons.balance_rounded,
           size: 14,
           color: decided ? colors.tertiary : colors.onSurfaceVariant,
         ),
@@ -657,10 +655,8 @@ class _SuggestedBadge extends StatelessWidget {
             key: Key('similar_shot_suggested_$fileId'),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colors.tertiary,
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colors.tertiary, fontWeight: FontWeight.w700),
           ),
         ),
       ],
@@ -706,64 +702,24 @@ class _TotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
+    final String description =
+        '${result.extraPhotoCount} extra '
+        '${result.extraPhotoCount == 1 ? 'shot' : 'shots'} across '
+        '${result.groupCount} '
+        '${result.groupCount == 1 ? 'set' : 'sets'}';
 
-    return Card(
+    return PhotoToolSummaryCard(
       key: const Key('similar_photos_total_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Recoverable if you keep one of each',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'up to ${ByteFormatter.format(result.reclaimableBytes)}',
-              key: const Key('similar_photos_total_bytes'),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: colors.primary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${result.extraPhotoCount} extra '
-              '${result.extraPhotoCount == 1 ? 'shot' : 'shots'} across '
-              '${result.groupCount} '
-              '${result.groupCount == 1 ? 'set' : 'sets'}',
-              key: const Key('similar_photos_count'),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: <Widget>[
-                Icon(
-                  Icons.visibility_outlined,
-                  size: 15,
-                  color: colors.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Matched by appearance, not byte for byte. Nothing is '
-                    'selected for you — check each shot first.',
-                    key: const Key('similar_photos_caution'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+      icon: PhosphorIconsDuotone.imagesSquare,
+      eyebrow: 'Potentially recoverable',
+      value: 'up to ${ByteFormatter.format(result.reclaimableBytes)}',
+      valueKey: const Key('similar_photos_total_bytes'),
+      description: description,
+      descriptionKey: const Key('similar_photos_count'),
+      note: const PhotoToolHeroNote(
+        key: Key('similar_photos_caution'),
+        icon: PhosphorIconsDuotone.info,
+        text: 'Matched by appearance. Nothing is selected automatically—compare every shot.',
       ),
     );
   }
@@ -775,26 +731,12 @@ class _AnalyzingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      key: const Key('similar_photos_analyzing'),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          const CircularProgressIndicator(),
-          const SizedBox(height: 18),
-          Text(
-            'Analyzing photos…',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Comparison happens on this device. Nothing is uploaded.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+    return const Center(
+      key: Key('similar_photos_analyzing'),
+      child: PhotoToolLoadingState(
+        icon: PhosphorIconsDuotone.imagesSquare,
+        title: 'Analyzing photos…',
+        description: 'Comparison happens on this device. Nothing is uploaded.',
       ),
     );
   }
@@ -807,35 +749,18 @@ class _NoSimilarPhotos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
     return ListView(
       key: const Key('similar_photos_empty'),
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(32),
       children: <Widget>[
-        const SizedBox(height: 60),
-        Icon(
-          Icons.check_circle_outline_rounded,
-          size: 56,
-          color: colors.primary,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'No similar photos',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          strength == SimilarityStrength.relaxed
+        PhotoToolEmptyState(
+          icon: PhosphorIconsDuotone.imagesSquare,
+          title: 'No similar photos',
+          description: strength == SimilarityStrength.relaxed
               ? 'Nothing in your library looks alike.'
               : 'Nothing matched at ${strength.label} strength. Try a wider '
                     'setting.',
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
         ),
       ],
     );

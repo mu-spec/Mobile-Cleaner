@@ -15,8 +15,10 @@ import 'package:mobile_cleaner/features/files/presentation/providers/photo_dupli
 import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_thumbnail.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Duplicate Photos: the Phase 17 duplicate engine, images only.
 ///
@@ -35,8 +37,7 @@ class PhotoDuplicatesScreen extends ConsumerStatefulWidget {
       _PhotoDuplicatesScreenState();
 }
 
-class _PhotoDuplicatesScreenState
-    extends ConsumerState<PhotoDuplicatesScreen> {
+class _PhotoDuplicatesScreenState extends ConsumerState<PhotoDuplicatesScreen> {
   FileSelection _selection = const FileSelection.empty();
   DuplicateKeepSelection _keep = const DuplicateKeepSelection.empty();
 
@@ -103,7 +104,10 @@ class _PhotoDuplicatesScreenState
     final bool selecting = _selection.isNotEmpty;
 
     return Scaffold(
+      backgroundColor: PhotoToolUi.background(context),
       appBar: AppBar(
+        backgroundColor: PhotoToolUi.background(context),
+        surfaceTintColor: Colors.transparent,
         leading: selecting
             ? IconButton(
                 key: const Key('photo_duplicates_cancel_selection'),
@@ -115,16 +119,17 @@ class _PhotoDuplicatesScreenState
         title: Text(
           selecting ? '${_selection.count} selected' : 'Duplicate Photos',
           key: const Key('photo_duplicates_title'),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4),
         ),
         actions: <Widget>[
           if (!selecting)
-            IconButton(
+            PhotoToolActionButton(
               key: const Key('photo_duplicates_rescan'),
+              icon: Icons.refresh_rounded,
               tooltip: 'Rescan',
               onPressed: () => ref.invalidate(photoDuplicateScanProvider),
-              icon: const Icon(Icons.refresh_rounded),
             ),
-          const SizedBox(width: 8),
         ],
       ),
       bottomNavigationBar: selecting
@@ -215,28 +220,20 @@ class _PhotoGroupList extends StatelessWidget {
           return _TotalCard(result: result, keep: keep);
         }
         if (index == 1) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    'Biggest savings first',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                TextButton.icon(
-                  key: const Key('photo_duplicates_select_all'),
-                  onPressed: onToggleAll,
-                  icon: Icon(
-                    allSelected
-                        ? Icons.remove_done_rounded
-                        : Icons.done_all_rounded,
-                    size: 18,
-                  ),
-                  label: Text(allSelected ? 'Clear all' : 'Select copies'),
-                ),
-              ],
+          return PhotoToolSectionHeader(
+            title: 'Duplicate sets',
+            subtitle: 'Biggest savings first',
+            icon: PhosphorIconsDuotone.copy,
+            trailing: TextButton.icon(
+              key: const Key('photo_duplicates_select_all'),
+              onPressed: onToggleAll,
+              icon: Icon(
+                allSelected
+                    ? Icons.remove_done_rounded
+                    : Icons.done_all_rounded,
+                size: 18,
+              ),
+              label: Text(allSelected ? 'Clear all' : 'Select copies'),
             ),
           );
         }
@@ -285,95 +282,91 @@ class _PhotoGroupCard extends StatelessWidget {
     final List<ScannedFile> removable = keep.removable(group);
     final bool allSelected = selection.containsAll(removable);
 
-    return Card(
+    return PhotoToolPanel(
       key: Key('photo_group_${group.hash}'),
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    '${group.copyCount} identical photos · '
-                    '${ByteFormatter.format(group.fileBytes)} each',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'save ${ByteFormatter.format(group.reclaimableBytes)}',
-                  key: Key('photo_group_save_${group.hash}'),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Tap Keep on the copy you want to keep. The rest can go.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-            ),
-            const SizedBox(height: 10),
-            // Copies sit side by side so they can be compared at a glance.
-            SizedBox(
-              // Cells carry several caption lines, so this is the layout most
-              // sensitive to a larger system font.
-              height: Responsive.photoStripHeight(context, _stripHeight),
-              child: ListView.builder(
-                key: Key('photo_group_strip_${group.hash}'),
-                scrollDirection: Axis.horizontal,
-                itemCount: group.copyCount,
-                itemBuilder: (BuildContext context, int index) {
-                  final ScannedFile file = group.files[index];
-                  return SizedBox(
-                    width: _cellWidth,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: _CopyCell(
-                        file: file,
-                        kept: keep.isKept(group, file),
-                        selected: selection.contains(file),
-                        onTap: () => onToggle(group, file),
-                        onKeep: () => onKeep(group, file),
-                        onDetails: () => showFileDetails(context, file),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                key: Key('photo_group_select_${group.hash}'),
-                onPressed: onToggleGroup,
-                icon: Icon(
-                  allSelected
-                      ? Icons.remove_done_rounded
-                      : Icons.done_all_rounded,
-                  size: 18,
-                ),
-                label: Text(
-                  allSelected
-                      ? 'Clear this set'
-                      : 'Select ${removable.length} extra '
-                            '${removable.length == 1 ? 'copy' : 'copies'}',
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  '${group.copyCount} identical photos · '
+                  '${ByteFormatter.format(group.fileBytes)} each',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
+              const SizedBox(width: 8),
+              Text(
+                'save ${ByteFormatter.format(group.reclaimableBytes)}',
+                key: Key('photo_group_save_${group.hash}'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            'Tap Keep on the copy you want to keep. The rest can go.',
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colors.onSurfaceVariant),
+          ),
+          const SizedBox(height: 10),
+          // Copies sit side by side so they can be compared at a glance.
+          SizedBox(
+            // Cells carry several caption lines, so this is the layout most
+            // sensitive to a larger system font.
+            height: Responsive.photoStripHeight(context, _stripHeight),
+            child: ListView.builder(
+              key: Key('photo_group_strip_${group.hash}'),
+              scrollDirection: Axis.horizontal,
+              itemCount: group.copyCount,
+              itemBuilder: (BuildContext context, int index) {
+                final ScannedFile file = group.files[index];
+                return SizedBox(
+                  width: _cellWidth,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: _CopyCell(
+                      file: file,
+                      kept: keep.isKept(group, file),
+                      selected: selection.contains(file),
+                      onTap: () => onToggle(group, file),
+                      onKeep: () => onKeep(group, file),
+                      onDetails: () => showFileDetails(context, file),
+                    ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              key: Key('photo_group_select_${group.hash}'),
+              onPressed: onToggleGroup,
+              icon: Icon(
+                allSelected
+                    ? Icons.remove_done_rounded
+                    : Icons.done_all_rounded,
+                size: 18,
+              ),
+              label: Text(
+                allSelected
+                    ? 'Clear this set'
+                    : 'Select ${removable.length} extra '
+                          '${removable.length == 1 ? 'copy' : 'copies'}',
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -420,40 +413,40 @@ class _CopyCell extends StatelessWidget {
           selected: selected,
           button: true,
           child: GestureDetector(
-          key: Key('photo_copy_${file.id}'),
-          // Always hit-testable. A tap on the kept copy is ignored upstream
-          // rather than being dropped here, so the cell never becomes a dead
-          // region the user cannot even long-press for details.
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            Haptics.selection();
-            onTap();
-          },
-          onLongPress: onDetails,
-          child: Container(
-            width: _thumbSize,
-            height: _thumbSize,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: border,
-                width: kept || selected ? 3 : 1,
+            key: Key('photo_copy_${file.id}'),
+            // Always hit-testable. A tap on the kept copy is ignored upstream
+            // rather than being dropped here, so the cell never becomes a dead
+            // region the user cannot even long-press for details.
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              Haptics.selection();
+              onTap();
+            },
+            onLongPress: onDetails,
+            child: Container(
+              width: _thumbSize,
+              height: _thumbSize,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: border,
+                  width: kept || selected ? 3 : 1,
+                ),
+              ),
+              child: Stack(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.all(3),
+                    child: FileThumbnail(file: file, size: _thumbSize - 8),
+                  ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: _CornerBadge(kept: kept, selected: selected),
+                  ),
+                ],
               ),
             ),
-            child: Stack(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(3),
-                  child: FileThumbnail(file: file, size: _thumbSize - 8),
-                ),
-                Positioned(
-                  top: 4,
-                  right: 4,
-                  child: _CornerBadge(kept: kept, selected: selected),
-                ),
-              ],
-            ),
-          ),
           ),
         ),
         const SizedBox(height: 4),
@@ -462,25 +455,22 @@ class _CopyCell extends StatelessWidget {
           key: Key('photo_copy_name_${file.id}'),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(fontWeight: FontWeight.w600),
         ),
         Text(
           DateFormatter.relative(file.dateModified),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: colors.onSurfaceVariant),
         ),
         Text(
           file.folderName,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: colors.onSurfaceVariant),
         ),
         const SizedBox(height: 2),
         if (kept)
@@ -558,64 +548,24 @@ class _TotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
     final int reclaimable = keep.reclaimableBytes(result.groups);
+    final String description =
+        '${result.duplicateCount} extra '
+        '${result.duplicateCount == 1 ? 'photo' : 'photos'} across '
+        '${result.groupCount} '
+        '${result.groupCount == 1 ? 'set' : 'sets'}';
 
-    return Card(
+    return PhotoToolSummaryCard(
       key: const Key('photo_duplicates_total_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              'Recoverable by removing extra copies',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              ByteFormatter.format(reclaimable),
-              key: const Key('photo_duplicates_total_bytes'),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: colors.primary,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '${result.duplicateCount} extra '
-              '${result.duplicateCount == 1 ? 'photo' : 'photos'} across '
-              '${result.groupCount} '
-              '${result.groupCount == 1 ? 'set' : 'sets'}',
-              key: const Key('photo_duplicates_count'),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: <Widget>[
-                Icon(
-                  Icons.verified_outlined,
-                  size: 15,
-                  color: colors.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Matched byte for byte. One photo of each set is always '
-                    'kept.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+      icon: PhosphorIconsDuotone.copy,
+      eyebrow: 'Safely recoverable',
+      value: ByteFormatter.format(reclaimable),
+      valueKey: const Key('photo_duplicates_total_bytes'),
+      description: description,
+      descriptionKey: const Key('photo_duplicates_count'),
+      note: const PhotoToolHeroNote(
+        icon: PhosphorIconsDuotone.shieldCheck,
+        text: 'Matched byte for byte. One photo from every set is protected.',
       ),
     );
   }
@@ -627,25 +577,12 @@ class _ComparingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      key: const Key('photo_duplicates_scanning'),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          const CircularProgressIndicator(),
-          const SizedBox(height: 18),
-          Text(
-            'Comparing photos…',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Only photos of matching size are read.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+    return const Center(
+      key: Key('photo_duplicates_scanning'),
+      child: PhotoToolLoadingState(
+        icon: PhosphorIconsDuotone.copy,
+        title: 'Comparing photos…',
+        description: 'Only photos of matching size are read on this device.',
       ),
     );
   }
@@ -656,32 +593,15 @@ class _NoPhotoDuplicates extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
     return ListView(
       key: const Key('photo_duplicates_empty'),
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(32),
       children: <Widget>[
-        const SizedBox(height: 60),
-        Icon(
-          Icons.check_circle_outline_rounded,
-          size: 56,
-          color: colors.primary,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'No duplicate photos',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'No two pictures on this phone are byte for byte identical.',
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+        const PhotoToolEmptyState(
+          icon: PhosphorIconsDuotone.shieldCheck,
+          title: 'No duplicate photos',
+          description: 'Your library is tidy. No two photos are byte-for-byte identical.',
         ),
       ],
     );

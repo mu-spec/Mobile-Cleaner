@@ -142,15 +142,6 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
             letterSpacing: -0.4,
           ),
         ),
-        actions: <Widget>[
-          IconButton(
-            key: const Key('apps_refresh'),
-            tooltip: 'Refresh',
-            onPressed: () => refreshInstalledApps(ref),
-            icon: const Icon(Icons.refresh_rounded, size: 27),
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: SafeArea(
         child: inventory.when(

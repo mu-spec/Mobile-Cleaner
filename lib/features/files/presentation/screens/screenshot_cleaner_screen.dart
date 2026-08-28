@@ -11,9 +11,11 @@ import 'package:mobile_cleaner/features/files/domain/screenshot_summary.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/screenshot_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
 import 'package:mobile_cleaner/features/settings/presentation/providers/settings_provider.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Screenshot cleaner: find screenshots and remove the ones no longer needed.
 ///
@@ -96,7 +98,10 @@ class _ScreenshotCleanerScreenState
     final bool selecting = _selection.isNotEmpty;
 
     return Scaffold(
+      backgroundColor: PhotoToolUi.background(context),
       appBar: AppBar(
+        backgroundColor: PhotoToolUi.background(context),
+        surfaceTintColor: Colors.transparent,
         leading: selecting
             ? IconButton(
                 key: const Key('screenshot_cancel_selection'),
@@ -108,16 +113,17 @@ class _ScreenshotCleanerScreenState
         title: Text(
           selecting ? '${_selection.count} selected' : 'Screenshots',
           key: const Key('screenshot_title'),
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4),
         ),
         actions: <Widget>[
           if (!selecting)
-            IconButton(
+            PhotoToolActionButton(
               key: const Key('screenshot_rescan'),
+              icon: Icons.refresh_rounded,
               tooltip: 'Rescan',
               onPressed: () => ref.invalidate(screenshotScanProvider),
-              icon: const Icon(Icons.refresh_rounded),
             ),
-          const SizedBox(width: 8),
         ],
       ),
       bottomNavigationBar: selecting
@@ -135,7 +141,11 @@ class _ScreenshotCleanerScreenState
           : null,
       body: SafeArea(
         child: summary.when(
-          loading: () => const FilesScanningView(),
+          loading: () => const PhotoToolLoadingState(
+            icon: PhosphorIconsDuotone.deviceMobileCamera,
+            title: 'Finding screenshots…',
+            description: 'Reviewing your photo library safely on this device.',
+          ),
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(screenshotScanProvider),
@@ -187,8 +197,9 @@ class _GroupBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-          final int columns =
-              constraints.maxWidth >= 360 && textScale <= 1.3 ? 3 : 2;
+          final int columns = constraints.maxWidth >= 360 && textScale <= 1.3
+              ? 3
+              : 2;
           const double gap = 8;
           final double chipWidth =
               (constraints.maxWidth - gap * (columns - 1)) / columns;
@@ -200,19 +211,11 @@ class _GroupBar extends StatelessWidget {
               for (final ScreenshotGroup option in ScreenshotGroup.values)
                 SizedBox(
                   width: chipWidth,
-                  child: ChoiceChip(
+                  child: PhotoToolChoiceChip(
                     key: Key('screenshot_group_${option.name}'),
-                    label: SizedBox(
-                      width: double.infinity,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(option.label, maxLines: 1),
-                      ),
-                    ),
+                    label: option.label,
                     selected: option == selected,
-                    onSelected: (_) => onSelected(option),
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    onSelected: () => onSelected(option),
                   ),
                 ),
             ],
@@ -260,39 +263,33 @@ class _ScreenshotList extends StatelessWidget {
           return _TotalCard(summary: summary);
         }
         if (index == 1) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    'Newest first',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
-                TextButton.icon(
-                  key: const Key('screenshot_select_all'),
-                  onPressed: onToggleAll,
-                  icon: Icon(
-                    allSelected
-                        ? Icons.remove_done_rounded
-                        : Icons.done_all_rounded,
-                    size: 18,
-                  ),
-                  label: Text(allSelected ? 'Clear all' : 'Select all'),
-                ),
-              ],
+          return PhotoToolSectionHeader(
+            title: 'Your screenshots',
+            subtitle: 'Newest first',
+            icon: PhosphorIconsDuotone.deviceMobileCamera,
+            trailing: TextButton.icon(
+              key: const Key('screenshot_select_all'),
+              onPressed: onToggleAll,
+              icon: Icon(
+                allSelected
+                    ? Icons.remove_done_rounded
+                    : Icons.done_all_rounded,
+                size: 18,
+              ),
+              label: Text(allSelected ? 'Clear all' : 'Select all'),
             ),
           );
         }
 
         final ScannedFile file = summary.files[index - headerCount];
-        return ScannedFileTile(
-          file: file,
-          selectionMode: true,
-          selected: selection.contains(file),
-          onTap: () => onToggle(file),
-          onLongPress: () => showFileDetails(context, file),
+        return PhotoToolFilePanel(
+          child: ScannedFileTile(
+            file: file,
+            selectionMode: true,
+            selected: selection.contains(file),
+            onTap: () => onToggle(file),
+            onLongPress: () => showFileDetails(context, file),
+          ),
         );
       },
     );
@@ -307,57 +304,39 @@ class _TotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
-    return Card(
+    return PhotoToolSummaryCard(
       key: const Key('screenshot_total_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    'Screenshots',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '${summary.fileCount}',
-                    key: const Key('screenshot_count'),
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: colors.primary,
-                    ),
-                  ),
-                ],
-              ),
+      icon: PhosphorIconsDuotone.deviceMobileCamera,
+      eyebrow: 'Screenshot storage',
+      value: ByteFormatter.format(summary.totalBytes),
+      valueKey: const Key('screenshot_total_bytes'),
+      description: 'Space occupied by screenshots in this range',
+      note: Row(
+        children: <Widget>[
+          const PhosphorIcon(
+            PhosphorIconsDuotone.imagesSquare,
+            size: 16,
+            color: Colors.white,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '${summary.fileCount}',
+            key: const Key('screenshot_count'),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: <Widget>[
-                Text(
-                  'Total size',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  ByteFormatter.format(summary.totalBytes),
-                  key: const Key('screenshot_total_bytes'),
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              summary.fileCount == 1
+                  ? 'screenshot ready to review'
+                  : 'screenshots ready to review',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.86)),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -370,34 +349,18 @@ class _EmptyScreenshots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
     return ListView(
       key: const Key('screenshot_empty'),
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(32),
       children: <Widget>[
-        const SizedBox(height: 60),
-        Icon(
-          Icons.check_circle_outline_rounded,
-          size: 56,
-          color: colors.primary,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          group == ScreenshotGroup.all
+        PhotoToolEmptyState(
+          icon: PhosphorIconsDuotone.deviceMobileCamera,
+          title: group == ScreenshotGroup.all
               ? 'No screenshots found'
               : 'No screenshots ${group.description.toLowerCase()}',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Nothing here is taking up space. Try a different range.',
-          textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          description:
+              'Nothing here is taking up space. Try a different date range.',
         ),
       ],
     );

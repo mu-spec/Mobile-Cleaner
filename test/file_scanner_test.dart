@@ -303,6 +303,7 @@ void main() {
       );
       expect(find.text('Show more documents\nand downloads'), findsOneWidget);
       expect(find.text('Choose Folder'), findsOneWidget);
+      expect(find.byKey(const Key('files_rescan_button')), findsNothing);
     });
 
     testWidgets('shows a premium icon tile for every category and tool', (

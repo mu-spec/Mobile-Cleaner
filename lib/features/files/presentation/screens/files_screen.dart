@@ -38,15 +38,6 @@ class FilesScreen extends ConsumerWidget {
             letterSpacing: -0.4,
           ),
         ),
-        actions: <Widget>[
-          IconButton(
-            key: const Key('files_rescan_button'),
-            tooltip: 'Rescan',
-            onPressed: () => ref.invalidate(fileScanProvider),
-            icon: const Icon(Icons.refresh_rounded, size: 27),
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: SafeArea(
         child: RefreshIndicator(
