@@ -20,8 +20,12 @@ const int _mib = 1024 * 1024;
 
 DateTime _daysAgo(int days) {
   final DateTime now = DateTime.now();
-  return DateTime(now.year, now.month, now.day, 12)
-      .subtract(Duration(days: days));
+  return DateTime(
+    now.year,
+    now.month,
+    now.day,
+    12,
+  ).subtract(Duration(days: days));
 }
 
 ScannedFile _file({
@@ -55,7 +59,8 @@ class _StubScanner implements FileScannerRepository {
   Future<FileScanResult> scan([
     FileScanRequest request = const FileScanRequest(),
   ]) async => FileScanResult.fromFiles(
-    files.where((ScannedFile f) => request.categories.contains(f.category))
+    files
+        .where((ScannedFile f) => request.categories.contains(f.category))
         .toList(),
     categories: request.categories,
   );
@@ -84,10 +89,7 @@ class _RecordingDelete implements DeleteRepository {
   @override
   Future<DeleteResult> deleteFiles(List<ScannedFile> files) async {
     requests.add(files);
-    return DeleteResult(
-      deletedFiles: files,
-      failures: const <DeleteFailure>[],
-    );
+    return DeleteResult(deletedFiles: files, failures: const <DeleteFailure>[]);
   }
 }
 
@@ -303,7 +305,7 @@ void main() {
         expect(find.byKey(Key(testCase.barKey)), findsNothing);
       });
 
-      testWidgets('selecting one item reveals a visible Delete action', (
+      testWidgets('selecting one item reveals a visible Clean Now action', (
         WidgetTester tester,
       ) async {
         await _pump(tester, testCase);
@@ -313,7 +315,7 @@ void main() {
         final Finder deleteButton = find.byKey(Key(testCase.deleteKey));
         expect(find.byKey(Key(testCase.barKey)), findsOneWidget);
         expect(deleteButton, findsOneWidget);
-        expect(find.text('Delete'), findsOneWidget);
+        expect(find.text('Clean Now'), findsOneWidget);
         expect(
           tester.widget<FilledButton>(deleteButton).onPressed,
           isNotNull,
@@ -432,14 +434,18 @@ void main() {
         await _selectFirst(tester, testCase);
 
         final Finder list = _fileList(testCase);
-        final double before =
-            tester.state<ScrollableState>(list).position.pixels;
+        final double before = tester
+            .state<ScrollableState>(list)
+            .position
+            .pixels;
 
         await tester.drag(list, const Offset(0, -300));
         await tester.pumpAndSettle();
 
-        final double after =
-            tester.state<ScrollableState>(list).position.pixels;
+        final double after = tester
+            .state<ScrollableState>(list)
+            .position
+            .pixels;
         expect(
           after,
           greaterThan(before),
@@ -514,16 +520,12 @@ void main() {
               thumbnailRepositoryProvider.overrideWithValue(
                 const _NoThumbnails(),
               ),
-              storageRepositoryProvider.overrideWithValue(
-                const _FakeStorage(),
-              ),
+              storageRepositoryProvider.overrideWithValue(const _FakeStorage()),
               deleteRepositoryProvider.overrideWithValue(deleter),
             ],
             child: MediaQuery(
               // Accessibility font scaling is a common real-device setting.
-              data: const MediaQueryData(
-                textScaler: TextScaler.linear(1.5),
-              ),
+              data: const MediaQueryData(textScaler: TextScaler.linear(1.5)),
               child: MaterialApp(home: testCase.screen),
             ),
           ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Persistent bottom action bar shown while files are selected.
 ///
@@ -58,8 +60,7 @@ class SelectionActionBar extends StatelessWidget {
             final double barWidth = constraints.maxWidth.isFinite
                 ? constraints.maxWidth
                 : MediaQuery.sizeOf(context).width;
-            final bool stacked =
-                barWidth < _stackBreakpoint || textScale > 1.3;
+            final bool stacked = barWidth < _stackBreakpoint || textScale > 1.3;
 
             final Widget summary = _SelectionSummary(
               selection: selection,
@@ -81,14 +82,14 @@ class SelectionActionBar extends StatelessWidget {
             final Widget deleteButton = FilledButton.icon(
               key: deleteKey,
               style: FilledButton.styleFrom(
-                backgroundColor: colors.error,
-                foregroundColor: colors.onError,
+                backgroundColor: AppColors.cleanupOrange,
+                foregroundColor: Colors.white,
                 minimumSize: const Size(0, _minButtonHeight),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
               ),
               onPressed: canDelete ? onDelete : null,
-              icon: const Icon(Icons.delete_outline_rounded, size: 18),
-              label: const Text('Delete'),
+              icon: const Icon(PhosphorIconsDuotone.broom, size: 18),
+              label: const Text('Clean Now'),
             );
 
             return SizedBox(
@@ -154,7 +155,7 @@ class _SelectionSummary extends StatelessWidget {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final String bytesLabel = canDelete && deletable < selection.count
         ? '${ByteFormatter.format(selection.totalBytes)}'
-              ' · $deletable can be deleted'
+              ' · $deletable can be cleaned'
         : ByteFormatter.format(selection.totalBytes);
 
     return Column(
@@ -166,18 +167,16 @@ class _SelectionSummary extends StatelessWidget {
           key: countKey,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          style: Theme.of(context).textTheme.titleSmall
+              ?.copyWith(fontWeight: FontWeight.w700),
         ),
         Text(
           bytesLabel,
           key: bytesKey,
           maxLines: allowTwoLines ? 2 : 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: colors.onSurfaceVariant),
         ),
       ],
     );

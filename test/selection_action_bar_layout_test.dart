@@ -115,7 +115,7 @@ void main() {
       });
     }
 
-    testWidgets('the Delete button is never given an infinite width', (
+    testWidgets('the Clean Now button is never given an infinite width', (
       WidgetTester tester,
     ) async {
       await tester.binding.setSurfaceSize(const Size(360, 720));
@@ -232,9 +232,7 @@ void main() {
             ? AppTheme.light
             : AppTheme.dark;
         final ButtonStyle? style = theme.filledButtonTheme.style;
-        final Size? minimumSize = style?.minimumSize?.resolve(
-          <WidgetState>{},
-        );
+        final Size? minimumSize = style?.minimumSize?.resolve(<WidgetState>{});
 
         expect(minimumSize, isNotNull, reason: '$brightness has no min size');
         expect(
@@ -310,5 +308,4 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
-
 }

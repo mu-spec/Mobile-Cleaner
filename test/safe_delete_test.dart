@@ -71,10 +71,8 @@ class _FakeStorage implements StorageRepository {
   final int freeBytes;
 
   @override
-  Future<StorageInfo> getStorageInfo() async => StorageInfo(
-    totalBytes: 64 * 1024 * 1024 * 1024,
-    freeBytes: freeBytes,
-  );
+  Future<StorageInfo> getStorageInfo() async =>
+      StorageInfo(totalBytes: 64 * 1024 * 1024 * 1024, freeBytes: freeBytes);
 }
 
 /// Storage that cannot be read, to prove the screen degrades gracefully.
@@ -123,10 +121,7 @@ class _FakeDelete implements DeleteRepository {
         ],
       );
     }
-    return DeleteResult(
-      deletedFiles: files,
-      failures: const <DeleteFailure>[],
-    );
+    return DeleteResult(deletedFiles: files, failures: const <DeleteFailure>[]);
   }
 }
 
@@ -176,9 +171,7 @@ void main() {
     test('reports a partial success', () {
       final DeleteResult result = DeleteResult(
         deletedFiles: <ScannedFile>[a],
-        failures: <DeleteFailure>[
-          DeleteFailure(uri: b.uri, reason: 'Denied'),
-        ],
+        failures: <DeleteFailure>[DeleteFailure(uri: b.uri, reason: 'Denied')],
       );
 
       expect(result.isCompleteSuccess, isFalse);
@@ -281,7 +274,10 @@ void main() {
       final DeleteResult result = PlatformDeleteRepository.parseResult(
         <Object?, Object?>{
           'deletedUris': <Object?>['content://not-requested', '', 42],
-          'failed': <Object?>['not-a-map', <Object?, Object?>{'reason': 'x'}],
+          'failed': <Object?>[
+            'not-a-map',
+            <Object?, Object?>{'reason': 'x'},
+          ],
         },
         requested,
       );
@@ -328,9 +324,7 @@ void main() {
         channel: channel,
       );
 
-      final DeleteResult result = await repository.deleteFiles(
-        <ScannedFile>[],
-      );
+      final DeleteResult result = await repository.deleteFiles(<ScannedFile>[]);
 
       expect(calls, isEmpty);
       expect(result.deletedCount, 0);
@@ -355,18 +349,23 @@ void main() {
       expect((args['uris']! as List<Object?>), hasLength(3));
     });
 
-    test('a platform error fails every file rather than claiming success', () async {
-      mock((MethodCall call) => throw PlatformException(code: 'DELETE_FAILED'));
-      final PlatformDeleteRepository repository = PlatformDeleteRepository(
-        channel: channel,
-      );
+    test(
+      'a platform error fails every file rather than claiming success',
+      () async {
+        mock(
+          (MethodCall call) => throw PlatformException(code: 'DELETE_FAILED'),
+        );
+        final PlatformDeleteRepository repository = PlatformDeleteRepository(
+          channel: channel,
+        );
 
-      final DeleteResult result = await repository.deleteFiles(_fixture());
+        final DeleteResult result = await repository.deleteFiles(_fixture());
 
-      expect(result.deletedCount, 0);
-      expect(result.failureCount, 3);
-      expect(result.freedBytes, 0);
-    });
+        expect(result.deletedCount, 0);
+        expect(result.failureCount, 3);
+        expect(result.freedBytes, 0);
+      },
+    );
 
     test('a missing plugin fails safely', () async {
       mock((MethodCall call) => throw MissingPluginException());
@@ -381,7 +380,7 @@ void main() {
     });
   });
 
-  group('Delete flow', () {
+  group('Cleanup flow', () {
     testWidgets('Select -> Review shows the count and size', (
       WidgetTester tester,
     ) async {
@@ -397,13 +396,12 @@ void main() {
         tester
             .widget<Text>(find.byKey(const Key('delete_review_summary')))
             .data,
-        '3 files · 100.0 MB',
+        'Selected items can be safely removed from your device.',
       );
-      // The irreversible-action warning must always be shown.
-      expect(
-        find.textContaining('cannot be undone'),
-        findsOneWidget,
-      );
+      expect(find.text('Clean Now (100.0 MB)'), findsOneWidget);
+      expect(find.byKey(const Key('cleanup_breakdown_apks')), findsOneWidget);
+      expect(find.text('APK Installers'), findsOneWidget);
+      expect(find.textContaining('cannot be restored'), findsOneWidget);
     });
 
     testWidgets('Cancel deletes nothing', (WidgetTester tester) async {
@@ -433,13 +431,21 @@ void main() {
       await tester.tap(find.byKey(const Key('apk_selection_delete')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('delete_confirm')));
+
+      // The reference-style live screen is a real stage, not a flash frame.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(const Key('delete_progress')), findsOneWidget);
+      expect(find.byKey(const Key('cleanup_progress_bar')), findsOneWidget);
+      expect(find.text('Cleaning...'), findsWidgets);
+
       await tester.pumpAndSettle();
 
       expect(deleter.requests.single, hasLength(1));
       expect(find.byKey(const Key('cleanup_complete_screen')), findsOneWidget);
       expect(
         tester.widget<Text>(find.byKey(const Key('cleanup_title'))).data,
-        'Cleanup Complete',
+        'Cleaned Successfully!',
       );
       expect(
         tester
@@ -480,7 +486,7 @@ void main() {
 
       expect(
         tester.widget<Text>(find.byKey(const Key('delete_result_title'))).data,
-        'Nothing deleted',
+        'Nothing cleaned',
       );
       expect(find.byKey(const Key('delete_result_freed')), findsNothing);
     });
@@ -499,13 +505,13 @@ void main() {
 
       expect(
         tester.widget<Text>(find.byKey(const Key('delete_result_title'))).data,
-        'Could not delete',
+        'Could not clean',
       );
       expect(find.byKey(const Key('delete_result_failed')), findsOneWidget);
       expect(find.text('Access was denied.'), findsOneWidget);
     });
 
-    testWidgets('a large selection is summarised, not listed in full', (
+    testWidgets('a large selection is grouped into one real breakdown row', (
       WidgetTester tester,
     ) async {
       final List<ScannedFile> many = <ScannedFile>[
@@ -519,11 +525,8 @@ void main() {
       await tester.tap(find.byKey(const Key('apk_selection_delete')));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('delete_review_more')), findsOneWidget);
-      expect(
-        tester.widget<Text>(find.byKey(const Key('delete_review_more'))).data,
-        'and 4 more',
-      );
+      expect(find.byKey(const Key('cleanup_breakdown_apks')), findsOneWidget);
+      expect(find.text('12 items'), findsOneWidget);
     });
 
     testWidgets('deleting rescans so the list reflects the device', (
@@ -593,7 +596,7 @@ void main() {
   });
 
   group('Cleanup Complete screen', () {
-    testWidgets('reports files deleted, storage recovered, and free space', (
+    testWidgets('reports items removed, space freed, and elapsed time', (
       WidgetTester tester,
     ) async {
       await _pump(
@@ -613,14 +616,14 @@ void main() {
       expect(find.byKey(const Key('cleanup_complete_screen')), findsOneWidget);
       expect(
         tester.widget<Text>(find.byKey(const Key('cleanup_title'))).data,
-        'Cleanup Complete',
+        'Cleaned Successfully!',
       );
       // Files deleted.
       expect(
         tester
             .widget<Text>(find.byKey(const Key('cleanup_files_deleted')))
             .data,
-        '3',
+        '3 items',
       );
       // Storage recovered: 60 + 30 + 10 MB.
       expect(
@@ -629,11 +632,8 @@ void main() {
             .data,
         '100.0 MB',
       );
-      // Free storage now, read fresh from the platform.
-      expect(
-        tester.widget<Text>(find.byKey(const Key('cleanup_free_storage'))).data,
-        '25.0 GB',
-      );
+      expect(find.byKey(const Key('cleanup_time_saved')), findsOneWidget);
+      expect(find.byKey(const Key('cleanup_share')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -653,7 +653,7 @@ void main() {
         tester
             .widget<Text>(find.byKey(const Key('cleanup_files_deleted')))
             .data,
-        '1',
+        '1 item',
       );
       expect(
         tester
@@ -663,7 +663,7 @@ void main() {
       );
     });
 
-    testWidgets('a storage read failure does not spoil the result', (
+    testWidgets('completion does not depend on another storage read', (
       WidgetTester tester,
     ) async {
       await _pump(tester, _FakeDelete(), storage: const _FailingStorage());
@@ -683,10 +683,7 @@ void main() {
             .data,
         '60.0 MB',
       );
-      expect(
-        tester.widget<Text>(find.byKey(const Key('cleanup_free_storage'))).data,
-        'Unavailable',
-      );
+      expect(find.byKey(const Key('cleanup_complete_screen')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -709,7 +706,7 @@ void main() {
         tester
             .widget<Text>(find.byKey(const Key('cleanup_files_deleted')))
             .data,
-        '1',
+        '1 item',
       );
       expect(find.textContaining('could not'), findsOneWidget);
     });
@@ -746,5 +743,4 @@ void main() {
       expect(find.byKey(const Key('apk_list')), findsOneWidget);
     });
   });
-
 }
