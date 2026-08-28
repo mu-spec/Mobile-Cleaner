@@ -51,6 +51,11 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            ShareBridge.CHANNEL,
+        ).setMethodCallHandler(ShareBridge(applicationContext))
+
         val saf = SafAccessBridge(applicationContext)
         saf.activity = this
         safAccess = saf

@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/core/ui/success_check.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
+import 'package:mobile_cleaner/features/files/data/cleanup_share_service.dart';
 import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
@@ -35,11 +38,16 @@ class CleanupCompleteScreen extends StatelessWidget {
         'Mobile Cleaner removed ${result.deletedCount} '
         '${result.deletedCount == 1 ? 'item' : 'items'} and freed '
         '${ByteFormatter.format(result.freedBytes)}.';
-    await Clipboard.setData(ClipboardData(text: summary));
-    if (context.mounted) {
+    final bool opened = await CleanupShareService().shareCleanupSummary(
+      summary,
+    );
+    if (!opened) {
+      await Clipboard.setData(ClipboardData(text: summary));
+    }
+    if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Cleanup summary copied. Share it anywhere.'),
+          content: Text('No share app opened, so the summary was copied.'),
         ),
       );
     }
@@ -147,36 +155,7 @@ class _CelebrationCard extends StatelessWidget {
       ),
       child: Stack(
         children: <Widget>[
-          const _CelebrationSparkle(
-            alignment: Alignment(-0.82, -0.72),
-            color: AppColors.cleanupOrange,
-            size: 7,
-          ),
-          const _CelebrationSparkle(
-            alignment: Alignment(0.8, -0.66),
-            color: AppColors.actionBlue,
-            size: 8,
-          ),
-          const _CelebrationSparkle(
-            alignment: Alignment(-0.72, -0.12),
-            color: AppColors.actionBlue,
-            size: 6,
-          ),
-          const _CelebrationSparkle(
-            alignment: Alignment(0.7, 0.02),
-            color: AppColors.cleanupOrange,
-            size: 6,
-          ),
-          const _CelebrationSparkle(
-            alignment: Alignment(-0.55, 0.62),
-            color: Color(0xFF7DC7E8),
-            size: 8,
-          ),
-          const _CelebrationSparkle(
-            alignment: Alignment(0.58, 0.7),
-            color: AppColors.actionBlue,
-            size: 7,
-          ),
+          const Positioned.fill(child: _PremiumParticleCelebration()),
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -218,27 +197,126 @@ class _CelebrationCard extends StatelessWidget {
   }
 }
 
-class _CelebrationSparkle extends StatelessWidget {
-  const _CelebrationSparkle({
-    required this.alignment,
-    required this.color,
-    required this.size,
-  });
+class _PremiumParticleCelebration extends StatefulWidget {
+  const _PremiumParticleCelebration();
 
-  final Alignment alignment;
-  final Color color;
-  final double size;
+  @override
+  State<_PremiumParticleCelebration> createState() =>
+      _PremiumParticleCelebrationState();
+}
+
+class _PremiumParticleCelebrationState
+    extends State<_PremiumParticleCelebration>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2200),
+    animationBehavior: AnimationBehavior.preserve,
+  );
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) {
+      return;
+    }
+    _started = true;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((Duration _) {
+        if (mounted) {
+          _controller.forward(from: 0);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: alignment,
-      child: Transform.rotate(
-        angle: 0.78,
-        child: Container(width: size, height: size, color: color),
+    return RepaintBoundary(
+      key: const Key('cleanup_particles'),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (BuildContext context, Widget? child) => CustomPaint(
+          painter: _CelebrationParticlePainter(progress: _controller.value),
+        ),
       ),
     );
   }
+}
+
+class _CelebrationParticlePainter extends CustomPainter {
+  const _CelebrationParticlePainter({required this.progress});
+
+  final double progress;
+
+  static const List<Color> _colors = <Color>[
+    AppColors.cleanupOrange,
+    Color(0xFFFFB13B),
+    AppColors.actionBlue,
+    AppColors.brandBlue,
+    Color(0xFF70C6E8),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double burst = Curves.easeOutCubic.transform(
+      (progress / 0.72).clamp(0, 1),
+    );
+    final double fadeStart = ((progress - 0.58) / 0.42).clamp(0, 1);
+    final double opacity = 1 - Curves.easeIn.transform(fadeStart);
+    if (opacity <= 0) {
+      return;
+    }
+
+    final Offset origin = Offset(size.width / 2, size.height * 0.29);
+    for (int index = 0; index < 30; index++) {
+      final double angle = -math.pi + (index * 2.399963229728653);
+      final double distance = 48 + ((index * 37) % 86).toDouble();
+      final double drift = ((index % 5) - 2) * 8 * progress;
+      final Offset position = Offset(
+        origin.dx + math.cos(angle) * distance * burst + drift,
+        origin.dy +
+            math.sin(angle) * distance * burst +
+            54 * progress * progress,
+      );
+      final double particleSize = 3.5 + (index % 4) * 1.2;
+      final Paint paint = Paint()
+        ..color = _colors[index % _colors.length].withValues(
+          alpha: opacity * (index.isEven ? 0.95 : 0.72),
+        );
+
+      canvas.save();
+      canvas.translate(position.dx, position.dy);
+      canvas.rotate(angle + progress * (2.4 + (index % 3)));
+      if (index % 3 == 0) {
+        canvas.drawCircle(Offset.zero, particleSize / 2, paint);
+      } else {
+        final RRect piece = RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: particleSize,
+            height: particleSize * 1.8,
+          ),
+          const Radius.circular(1.5),
+        );
+        canvas.drawRRect(piece, paint);
+      }
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CelebrationParticlePainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }
 
 class _CleanupDetailsCard extends StatelessWidget {
@@ -324,12 +402,6 @@ class _DetailRow extends StatelessWidget {
             key: valueKey,
             style: Theme.of(context).textTheme.labelLarge
                 ?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(width: 5),
-          Icon(
-            Icons.chevron_right_rounded,
-            size: 19,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ],
       ),

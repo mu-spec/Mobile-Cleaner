@@ -634,6 +634,8 @@ void main() {
       );
       expect(find.byKey(const Key('cleanup_time_saved')), findsOneWidget);
       expect(find.byKey(const Key('cleanup_share')), findsOneWidget);
+      expect(find.byKey(const Key('cleanup_particles')), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_right_rounded), findsNothing);
       expect(tester.takeException(), isNull);
     });
 

@@ -160,6 +160,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byKey(const Key('permission_education')), findsOneWidget);
+    expect(find.byKey(const Key('permission_premium_hero')), findsOneWidget);
     await tester.tap(find.byKey(const Key('permission_primary_action')));
     await tester.pump(const Duration(milliseconds: 2000));
 
@@ -221,8 +222,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('permission_primary_action')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.byKey(const Key('scan_progress_ring')), findsOneWidget);
     expect(find.byKey(const Key('scan_progress_percent')), findsOneWidget);
 
@@ -340,7 +341,7 @@ void main() {
     expect(find.byKey(const Key('permission_granted')), findsOneWidget);
     await tester.tap(find.byKey(const Key('permission_primary_action')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 3000));
 
     expect(find.text('90%'), findsOneWidget);
@@ -500,7 +501,7 @@ void main() {
     expect(find.byKey(const Key('permission_granted')), findsOneWidget);
     await tester.tap(find.byKey(const Key('permission_primary_action')));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
@@ -545,6 +546,15 @@ void main() {
     await tester.tap(find.byKey(const Key('nav_clean')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    expect(find.text('Scanning your storage'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 2900));
+    await tester.pump(const Duration(milliseconds: 700));
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(CleanScreen), findsOneWidget);
     expect(find.byKey(const Key('clean_back_button')), findsOneWidget);
 
@@ -555,11 +565,13 @@ void main() {
     await tester.tap(find.byKey(const Key('permission_primary_action')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.text('Scanning your photos'), findsOneWidget);
-    final Scaffold photoScan = tester.widget<Scaffold>(
-      find.byKey(const Key('scan_progress_screen')),
+    final Finder activePhotoScan = find.ancestor(
+      of: find.text('Scanning your photos'),
+      matching: find.byKey(const Key('scan_progress_screen')),
     );
+    final Scaffold photoScan = tester.widget<Scaffold>(activePhotoScan);
     expect(photoScan.backgroundColor, HomeUpperStyle.background);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
@@ -575,7 +587,7 @@ void main() {
     await tester.tap(find.byKey(const Key('permission_primary_action')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.text('Scanning your files'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
@@ -587,7 +599,11 @@ void main() {
     await tester.tap(find.byKey(const Key('nav_apps')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.text('Analyzing your apps'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));

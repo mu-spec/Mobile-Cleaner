@@ -97,7 +97,7 @@ class HomeScreen extends ConsumerWidget {
                 QuickToolsSection(
                   onPhotos: () => context.go(AppRoutes.photos),
                   onFiles: () => context.push(AppRoutes.largeFiles),
-                  onApps: () => context.go(AppRoutes.apps),
+                  onApps: () => _launchScan(context, ScanLaunchTarget.apps),
                   onPermissions: () => context.push(AppRoutes.permissions),
                 ),
                 const SizedBox(height: HomeMetrics.sectionGap),

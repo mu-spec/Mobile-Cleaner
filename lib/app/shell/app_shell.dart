@@ -121,16 +121,14 @@ class _AppShellState extends State<AppShell> {
 
   void _onDestinationSelected(int index) {
     final ScanLaunchTarget? scanTarget = switch (index) {
+      1 => ScanLaunchTarget.smartScan,
       2 => ScanLaunchTarget.photoCleanup,
       3 => ScanLaunchTarget.files,
       4 => ScanLaunchTarget.apps,
       _ => null,
     };
     if (scanTarget != null) {
-      final String route = scanTarget == ScanLaunchTarget.apps
-          ? AppRoutes.progressForScan(scanTarget)
-          : AppRoutes.permissionsForScan(scanTarget);
-      context.push(route);
+      context.push(AppRoutes.permissionsForScan(scanTarget));
       return;
     }
     widget.navigationShell.goBranch(
