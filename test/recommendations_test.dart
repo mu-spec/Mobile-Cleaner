@@ -10,6 +10,7 @@ import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation_engine.dart';
+import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/recommendations_card.dart';
 
 const int _mib = 1024 * 1024;
@@ -130,15 +131,16 @@ Future<List<RecommendationKind>> _pumpCard(
       child: MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
-            child: RecommendationsCard(
-              onScan: () {},
-              onOpen: opened.add,
-            ),
+            child: RecommendationsCard(onScan: () {}, onOpen: opened.add),
           ),
         ),
       ),
     ),
   );
+  final ProviderContainer container = ProviderScope.containerOf(
+    tester.element(find.byType(RecommendationsCard)),
+  );
+  await container.read(recommendationsProvider.notifier).scan();
   await tester.pumpAndSettle();
   return opened;
 }
@@ -177,10 +179,7 @@ void main() {
   group('Duplicate rule: > 500 MB', () {
     test('fires above the threshold and names the sets', () {
       final List<Recommendation> found = RecommendationEngine.evaluate(
-        _inputs(
-          duplicateReclaimableBytes: 700 * _mib,
-          duplicateGroupCount: 12,
-        ),
+        _inputs(duplicateReclaimableBytes: 700 * _mib, duplicateGroupCount: 12),
       );
 
       expect(_kinds(found), <RecommendationKind>[
@@ -210,10 +209,7 @@ void main() {
 
     test('one set is described in the singular', () {
       final List<Recommendation> found = RecommendationEngine.evaluate(
-        _inputs(
-          duplicateReclaimableBytes: 600 * _mib,
-          duplicateGroupCount: 1,
-        ),
+        _inputs(duplicateReclaimableBytes: 600 * _mib, duplicateGroupCount: 1),
       );
       expect(found.single.detail, contains('across 1 set ·'));
     });
@@ -396,9 +392,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Advice only: the card routes, it never deletes or selects.
-      expect(opened, <RecommendationKind>[
-        RecommendationKind.screenshotReview,
-      ]);
+      expect(opened, <RecommendationKind>[RecommendationKind.screenshotReview]);
       expect(tester.takeException(), isNull);
     });
 

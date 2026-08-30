@@ -53,7 +53,8 @@ class RecommendationsCard extends ConsumerWidget {
           ),
           error: (Object error, StackTrace stackTrace) => _IdleCard(
             onScan: onScan,
-            message: 'Run Smart Scan to get safe, personalized cleanup '
+            message:
+                'Run Smart Scan to get safe, personalized cleanup '
                 'suggestions.',
           ),
           data: (List<Recommendation> found) {
@@ -183,8 +184,11 @@ class _AdviceRow extends StatelessWidget {
   final bool showDivider;
 
   IconData get _icon => switch (item.kind) {
-    RecommendationKind.screenshotReview => PhosphorIconsDuotone.image,
     RecommendationKind.duplicateCleanup => PhosphorIconsDuotone.files,
+    RecommendationKind.apkInstallerReview => PhosphorIconsDuotone.androidLogo,
+    RecommendationKind.oldDownloadReview => PhosphorIconsDuotone.downloadSimple,
+    RecommendationKind.screenshotReview => PhosphorIconsDuotone.image,
+    RecommendationKind.largeFileReview => PhosphorIconsDuotone.fileArrowDown,
     RecommendationKind.largeVideoReview => PhosphorIconsDuotone.playCircle,
   };
 
@@ -256,9 +260,7 @@ class _AdviceRow extends StatelessWidget {
                       // checkable rather than something to take on trust.
                       Text(
                         item.detail,
-                        key: Key(
-                          'recommendation_detail_${item.kind.name}',
-                        ),
+                        key: Key('recommendation_detail_${item.kind.name}'),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: theme.textTheme.bodySmall?.copyWith(
@@ -345,9 +347,8 @@ class _IdleCard extends StatelessWidget {
                   Text(
                     message,
                     key: const Key('recommendations_message'),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: colors.onSurfaceVariant),
                   ),
                   if (showAction) ...<Widget>[
                     const SizedBox(height: AppSpacing.sm),

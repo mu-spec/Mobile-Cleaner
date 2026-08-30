@@ -9,7 +9,7 @@ import 'package:mobile_cleaner/features/cleaner/domain/scan_launch_target.dart';
 import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
 import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
-import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:mobile_cleaner/features/home/presentation/recommendation_destination.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
@@ -29,14 +29,6 @@ class HomeScreen extends ConsumerWidget {
 
   static void _launchScan(BuildContext context, ScanLaunchTarget target) {
     context.push(AppRoutes.permissionsForScan(target));
-  }
-
-  static ScanLaunchTarget _targetForRecommendation(RecommendationKind kind) {
-    return switch (kind) {
-      RecommendationKind.screenshotReview => ScanLaunchTarget.screenshots,
-      RecommendationKind.duplicateCleanup => ScanLaunchTarget.duplicates,
-      RecommendationKind.largeVideoReview => ScanLaunchTarget.largeVideos,
-    };
   }
 
   @override
@@ -68,7 +60,6 @@ class HomeScreen extends ConsumerWidget {
           onRefresh: () async {
             ref.invalidate(storageOverviewProvider);
             ref.invalidate(cleanupHistoryProvider);
-            refreshRecommendations(ref);
             await ref.read(storageOverviewProvider.future);
           },
           child: SingleChildScrollView(
@@ -90,7 +81,7 @@ class HomeScreen extends ConsumerWidget {
                     _launchScan(context, ScanLaunchTarget.smartScan);
                   },
                   onOpen: (RecommendationKind kind) {
-                    _launchScan(context, _targetForRecommendation(kind));
+                    context.push(recommendationRoute(kind));
                   },
                 ),
                 const SizedBox(height: HomeMetrics.sectionGap),

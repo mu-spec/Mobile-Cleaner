@@ -5,8 +5,11 @@ import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 /// One value per rule, so a rule can be found, tested, and routed by identity
 /// rather than by matching on its wording.
 enum RecommendationKind {
-  screenshotReview,
   duplicateCleanup,
+  apkInstallerReview,
+  oldDownloadReview,
+  screenshotReview,
+  largeFileReview,
   largeVideoReview,
 }
 
@@ -70,6 +73,12 @@ class RecommendationInputs {
     this.largestVideo,
     this.largeVideoCount = 0,
     this.largeVideoBytes = 0,
+    this.largeFileCount = 0,
+    this.largeFileBytes = 0,
+    this.oldDownloadCount = 0,
+    this.oldDownloadBytes = 0,
+    this.apkInstallerCount = 0,
+    this.apkInstallerBytes = 0,
   });
 
   /// Screenshots older than [RecommendationEngine.screenshotAgeDays].
@@ -88,4 +97,16 @@ class RecommendationInputs {
 
   /// Combined size of those videos.
   final int largeVideoBytes;
+
+  /// Files matched by Smart Scan's existing 100 MB+ large-file analyzer.
+  final int largeFileCount;
+  final int largeFileBytes;
+
+  /// Downloads untouched for the configured default age (currently 30 days).
+  final int oldDownloadCount;
+  final int oldDownloadBytes;
+
+  /// Installer packages found by Smart Scan's existing APK analyzer.
+  final int apkInstallerCount;
+  final int apkInstallerBytes;
 }

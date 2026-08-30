@@ -63,7 +63,7 @@ class SettingsScreen extends ConsumerWidget {
                 _ChoiceTile<LargeFileFilter>(
                   tileKey: const Key('setting_large_file_threshold'),
                   valueKey: const Key('setting_large_file_threshold_value'),
-                  icon: PhosphorIconsDuotone.gauge,
+                  icon: _SettingsIcons.largeFiles,
                   title: 'Large-file threshold',
                   value: settings.largeFileFilter,
                   options: LargeFileFilter.values,
@@ -74,7 +74,7 @@ class SettingsScreen extends ConsumerWidget {
                 _ChoiceTile<ScreenshotGroup>(
                   tileKey: const Key('setting_screenshot_age'),
                   valueKey: const Key('setting_screenshot_age_value'),
-                  icon: PhosphorIconsDuotone.deviceMobileCamera,
+                  icon: _SettingsIcons.screenshots,
                   title: 'Screenshot age',
                   value: settings.screenshotGroup,
                   options: ScreenshotGroup.values,
@@ -85,7 +85,7 @@ class SettingsScreen extends ConsumerWidget {
                 _ChoiceTile<DownloadAgeFilter>(
                   tileKey: const Key('setting_download_age'),
                   valueKey: const Key('setting_download_age_value'),
-                  icon: PhosphorIconsDuotone.downloadSimple,
+                  icon: _SettingsIcons.downloads,
                   title: 'Download age',
                   value: settings.downloadAgeFilter,
                   options: DownloadAgeFilter.values,
@@ -102,13 +102,13 @@ class SettingsScreen extends ConsumerWidget {
               children: <Widget>[
                 _ActionTile(
                   tileKey: const Key('open_cleanup_history'),
-                  icon: PhosphorIconsDuotone.clockCounterClockwise,
+                  icon: _SettingsIcons.history,
                   title: 'Cleanup history',
                   onTap: () => context.push(AppRoutes.history),
                 ),
                 _ActionTile(
                   tileKey: const Key('replay_onboarding'),
-                  icon: PhosphorIconsDuotone.presentation,
+                  icon: _SettingsIcons.onboarding,
                   title: 'Replay onboarding',
                   onTap: () => _replayOnboarding(context),
                 ),
@@ -119,13 +119,13 @@ class SettingsScreen extends ConsumerWidget {
               children: <Widget>[
                 _ActionTile(
                   tileKey: const Key('manage_permissions'),
-                  icon: PhosphorIconsDuotone.folderLock,
+                  icon: _SettingsIcons.permissions,
                   title: 'Storage & media access',
                   onTap: () => context.push(AppRoutes.permissions),
                 ),
                 _ActionTile(
                   tileKey: const Key('open_privacy_policy'),
-                  icon: PhosphorIconsDuotone.shieldCheck,
+                  icon: _SettingsIcons.privacy,
                   title: 'Privacy policy',
                   onTap: () => showPrivacyPolicy(context),
                 ),
@@ -136,7 +136,7 @@ class SettingsScreen extends ConsumerWidget {
               children: <Widget>[
                 _ActionTile(
                   tileKey: const Key('open_about'),
-                  icon: PhosphorIconsDuotone.info,
+                  icon: _SettingsIcons.about,
                   title: 'About Mobile Cleaner',
                   value: AppConstants.appVersion,
                   valueKey: const Key('setting_app_version'),
@@ -173,9 +173,68 @@ abstract final class _SettingsStyle {
 
   static Color blue(BuildContext context) =>
       isDark(context) ? AppColors.darkPrimary : HomeUpperStyle.primaryBlue;
+}
 
-  static Color orange(BuildContext context) =>
-      isDark(context) ? AppColors.darkOrange : HomeUpperStyle.orange;
+/// A deliberate icon palette keeps every setting recognisable at a glance
+/// while sharing the same visual language as the Home screen.
+class _SettingIconSpec {
+  const _SettingIconSpec({
+    required this.icon,
+    required this.primary,
+    required this.secondary,
+  });
+
+  final IconData icon;
+  final Color primary;
+  final Color secondary;
+}
+
+abstract final class _SettingsIcons {
+  static const _SettingIconSpec theme = _SettingIconSpec(
+    icon: PhosphorIconsDuotone.paintBrushBroad,
+    primary: Color(0xFF7256D9),
+    secondary: Color(0xFF4A8CF7),
+  );
+  static const _SettingIconSpec largeFiles = _SettingIconSpec(
+    icon: PhosphorIconsDuotone.gauge,
+    primary: Color(0xFF2671E8),
+    secondary: Color(0xFF55B9FF),
+  );
+  static const _SettingIconSpec screenshots = _SettingIconSpec(
+    icon: PhosphorIconsDuotone.deviceMobileCamera,
+    primary: Color(0xFF6C58D9),
+    secondary: Color(0xFFA779F2),
+  );
+  static const _SettingIconSpec downloads = _SettingIconSpec(
+    icon: PhosphorIconsDuotone.downloadSimple,
+    primary: Color(0xFFF28A18),
+    secondary: Color(0xFFFFB84D),
+  );
+  static const _SettingIconSpec history = _SettingIconSpec(
+    icon: PhosphorIconsDuotone.clockCounterClockwise,
+    primary: Color(0xFF0B9A9A),
+    secondary: Color(0xFF55D1C5),
+  );
+  static const _SettingIconSpec onboarding = _SettingIconSpec(
+    icon: PhosphorIconsDuotone.presentation,
+    primary: Color(0xFF4D68D8),
+    secondary: Color(0xFF8B9CFF),
+  );
+  static const _SettingIconSpec permissions = _SettingIconSpec(
+    icon: PhosphorIconsDuotone.folderLock,
+    primary: Color(0xFFE77920),
+    secondary: Color(0xFFFFB044),
+  );
+  static const _SettingIconSpec privacy = _SettingIconSpec(
+    icon: PhosphorIconsDuotone.shieldCheck,
+    primary: Color(0xFF1B9B68),
+    secondary: Color(0xFF66C894),
+  );
+  static const _SettingIconSpec about = _SettingIconSpec(
+    icon: PhosphorIconsDuotone.info,
+    primary: Color(0xFF2771D9),
+    secondary: Color(0xFF55B8E9),
+  );
 }
 
 class _SettingsGroup extends StatelessWidget {
@@ -236,7 +295,7 @@ class _ActionTile extends StatelessWidget {
   });
 
   final Key tileKey;
-  final IconData icon;
+  final _SettingIconSpec icon;
   final String title;
   final VoidCallback onTap;
   final String? value;
@@ -274,8 +333,8 @@ class _ActionTile extends StatelessWidget {
                   ),
                 ),
               const SizedBox(width: 7),
-              Icon(
-                Icons.chevron_right_rounded,
+              PhosphorIcon(
+                PhosphorIconsRegular.caretRight,
                 size: 19,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -290,27 +349,59 @@ class _ActionTile extends StatelessWidget {
 class _SettingIcon extends StatelessWidget {
   const _SettingIcon({required this.icon});
 
-  final IconData icon;
+  final _SettingIconSpec icon;
 
   @override
   Widget build(BuildContext context) {
+    final bool dark = _SettingsStyle.isDark(context);
+
     return Container(
-      width: 36,
-      height: 36,
+      width: 42,
+      height: 42,
       decoration: BoxDecoration(
-        color: _SettingsStyle.isDark(context)
-            ? AppColors.darkInfoSurface
-            : HomeUpperStyle.softBlue,
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Center(
-        child: PhosphorIcon(
-          icon,
-          size: 21,
-          color: _SettingsStyle.blue(context),
-          duotoneSecondaryColor: _SettingsStyle.orange(context),
-          duotoneSecondaryOpacity: 0.85,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            icon.primary.withValues(alpha: dark ? 0.25 : 0.16),
+            icon.secondary.withValues(alpha: dark ? 0.13 : 0.07),
+          ],
         ),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: icon.primary.withValues(alpha: dark ? 0.38 : 0.20),
+        ),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: icon.primary.withValues(alpha: dark ? 0.12 : 0.10),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: <Widget>[
+          Positioned(
+            top: 6,
+            right: 7,
+            child: Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(
+                color: icon.secondary.withValues(alpha: 0.55),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          PhosphorIcon(
+            icon.icon,
+            size: 24,
+            color: icon.primary,
+            duotoneSecondaryColor: icon.secondary,
+            duotoneSecondaryOpacity: 0.78,
+          ),
+        ],
       ),
     );
   }
@@ -371,17 +462,23 @@ class _ThemeTile extends ConsumerWidget {
                   ButtonSegment<ThemeMode>(
                     value: ThemeMode.system,
                     label: Text('System'),
-                    icon: Icon(Icons.brightness_auto_rounded, size: 17),
+                    icon: PhosphorIcon(PhosphorIconsDuotone.monitor, size: 18),
                   ),
                   ButtonSegment<ThemeMode>(
                     value: ThemeMode.light,
                     label: Text('Light'),
-                    icon: Icon(Icons.light_mode_rounded, size: 17),
+                    icon: PhosphorIcon(
+                      PhosphorIconsDuotone.sunHorizon,
+                      size: 18,
+                    ),
                   ),
                   ButtonSegment<ThemeMode>(
                     value: ThemeMode.dark,
                     label: Text('Dark'),
-                    icon: Icon(Icons.dark_mode_rounded, size: 17),
+                    icon: PhosphorIcon(
+                      PhosphorIconsDuotone.moonStars,
+                      size: 18,
+                    ),
                   ),
                 ],
                 selected: <ThemeMode>{settings.themeMode},
@@ -407,7 +504,7 @@ class _ThemeTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return _ActionTile(
       tileKey: const Key('setting_theme_mode'),
-      icon: PhosphorIconsDuotone.palette,
+      icon: _SettingsIcons.theme,
       title: 'Theme',
       value: settings.themeLabel,
       valueKey: const Key('setting_theme_mode_value'),
@@ -435,7 +532,7 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
   /// from [tileKey] — casting a Key back to a `ValueKey<String>` would throw
   /// if a caller ever passed a different Key subtype.
   final Key valueKey;
-  final IconData icon;
+  final _SettingIconSpec icon;
   final String title;
   final T value;
   final List<T> options;
@@ -476,8 +573,8 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   trailing: option == value
-                      ? Icon(
-                          Icons.check_circle_rounded,
+                      ? PhosphorIcon(
+                          PhosphorIconsDuotone.checkCircle,
                           color: _SettingsStyle.blue(sheetContext),
                         )
                       : null,
@@ -528,8 +625,8 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 5),
-              Icon(
-                Icons.chevron_right_rounded,
+              PhosphorIcon(
+                PhosphorIconsRegular.caretRight,
                 size: 19,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),

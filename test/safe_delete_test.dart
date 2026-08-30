@@ -12,6 +12,7 @@ import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/apk_cleaner_screen.dart';
+import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 
@@ -425,6 +426,11 @@ void main() {
     ) async {
       final _FakeDelete deleter = _FakeDelete();
       await _pump(tester, deleter);
+      final ProviderContainer container = ProviderScope.containerOf(
+        tester.element(find.byType(ApkCleanerScreen)),
+      );
+      await container.read(recommendationsProvider.notifier).scan();
+      expect(container.read(recommendationsProvider).requireValue, isNotEmpty);
 
       await tester.tap(find.byKey(const Key('file_checkbox_1')));
       await tester.pumpAndSettle();
@@ -453,6 +459,7 @@ void main() {
             .data,
         '60.0 MB',
       );
+      expect(container.read(recommendationsProvider).requireValue, isEmpty);
     });
 
     testWidgets('the selection clears after a successful delete', (

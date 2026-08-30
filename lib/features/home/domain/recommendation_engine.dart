@@ -44,6 +44,9 @@ abstract final class RecommendationEngine {
       ..._screenshotRule(inputs),
       ..._duplicateRule(inputs),
       ..._largeVideoRule(inputs),
+      ..._largeFileRule(inputs),
+      ..._oldDownloadRule(inputs),
+      ..._apkInstallerRule(inputs),
     ];
 
     // Highest priority first, then biggest saving, then a stable tiebreak on
@@ -143,6 +146,69 @@ abstract final class RecommendationEngine {
       // The whole set of large videos, not just the one that tripped the rule.
       reclaimableBytes: inputs.largeVideoBytes,
       itemCount: inputs.largeVideoCount,
+    );
+  }
+
+  static Iterable<Recommendation> _largeFileRule(
+    RecommendationInputs inputs,
+  ) sync* {
+    if (inputs.largeFileCount == 0 || inputs.largeFileBytes <= 0) {
+      return;
+    }
+
+    yield Recommendation(
+      kind: RecommendationKind.largeFileReview,
+      priority: _priorityFor(inputs.largeFileBytes),
+      title: 'Review large files',
+      detail:
+          '${inputs.largeFileCount} '
+          '${inputs.largeFileCount == 1 ? 'file' : 'files'} use '
+          '${ByteFormatter.format(inputs.largeFileBytes)}',
+      actionLabel: 'Review large files',
+      reclaimableBytes: inputs.largeFileBytes,
+      itemCount: inputs.largeFileCount,
+    );
+  }
+
+  static Iterable<Recommendation> _oldDownloadRule(
+    RecommendationInputs inputs,
+  ) sync* {
+    if (inputs.oldDownloadCount == 0 || inputs.oldDownloadBytes <= 0) {
+      return;
+    }
+
+    yield Recommendation(
+      kind: RecommendationKind.oldDownloadReview,
+      priority: _priorityFor(inputs.oldDownloadBytes),
+      title: 'Review old downloads',
+      detail:
+          '${inputs.oldDownloadCount} old '
+          '${inputs.oldDownloadCount == 1 ? 'download' : 'downloads'} use '
+          '${ByteFormatter.format(inputs.oldDownloadBytes)}',
+      actionLabel: 'Review downloads',
+      reclaimableBytes: inputs.oldDownloadBytes,
+      itemCount: inputs.oldDownloadCount,
+    );
+  }
+
+  static Iterable<Recommendation> _apkInstallerRule(
+    RecommendationInputs inputs,
+  ) sync* {
+    if (inputs.apkInstallerCount == 0 || inputs.apkInstallerBytes <= 0) {
+      return;
+    }
+
+    yield Recommendation(
+      kind: RecommendationKind.apkInstallerReview,
+      priority: _priorityFor(inputs.apkInstallerBytes),
+      title: 'Review APK installers',
+      detail:
+          '${inputs.apkInstallerCount} '
+          '${inputs.apkInstallerCount == 1 ? 'installer' : 'installers'} use '
+          '${ByteFormatter.format(inputs.apkInstallerBytes)}',
+      actionLabel: 'Review installers',
+      reclaimableBytes: inputs.apkInstallerBytes,
+      itemCount: inputs.apkInstallerCount,
     );
   }
 

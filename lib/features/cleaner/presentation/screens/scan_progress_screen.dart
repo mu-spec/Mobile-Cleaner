@@ -12,8 +12,8 @@ import 'package:mobile_cleaner/features/files/presentation/providers/duplicates_
 import 'package:mobile_cleaner/features/files/presentation/providers/file_scan_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/photo_cleanup_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/screenshot_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/videos_provider.dart';
+import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
 /// Runs a real storage scan behind a deliberately paced premium progress UI.
@@ -119,9 +119,7 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
   Future<void> _runRealScan() async {
     switch (widget.target) {
       case ScanLaunchTarget.smartScan:
-        refreshSmartScan(ref);
-        ref.invalidate(smartScanProvider);
-        await ref.read(smartScanProvider.future);
+        await ref.read(recommendationsProvider.notifier).scan();
         return;
       case ScanLaunchTarget.screenshots:
         ref.invalidate(screenshotScanProvider);

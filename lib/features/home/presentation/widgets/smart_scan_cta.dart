@@ -230,7 +230,7 @@ class _NoRecommendationState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'No Recommendation Yet',
+      label: 'Scan your phone to find cleanup opportunities',
       child: Row(
         key: const Key('smart_scan_no_recommendation'),
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -245,8 +245,8 @@ class _NoRecommendationState extends StatelessWidget {
           const SizedBox(width: 8),
           const Expanded(
             child: Text(
-              'No Recommendation Yet',
-              maxLines: 1,
+              'Scan your phone to find cleanup opportunities',
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: Colors.white,
@@ -270,8 +270,11 @@ class _RecommendationState extends StatelessWidget {
   final VoidCallback onOpen;
 
   IconData get _icon => switch (item.kind) {
-    RecommendationKind.screenshotReview => PhosphorIconsDuotone.image,
     RecommendationKind.duplicateCleanup => PhosphorIconsDuotone.files,
+    RecommendationKind.apkInstallerReview => PhosphorIconsDuotone.androidLogo,
+    RecommendationKind.oldDownloadReview => PhosphorIconsDuotone.downloadSimple,
+    RecommendationKind.screenshotReview => PhosphorIconsDuotone.image,
+    RecommendationKind.largeFileReview => PhosphorIconsDuotone.fileArrowDown,
     RecommendationKind.largeVideoReview => PhosphorIconsDuotone.playCircle,
   };
 

@@ -12,6 +12,7 @@ import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/screens/cleanup_complete_screen.dart';
 import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
+import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
@@ -124,6 +125,7 @@ class _CleanupFlowScreenState extends ConsumerState<_CleanupFlowScreen>
     if (result.deletedCount > 0) {
       Haptics.success();
       ref.invalidate(storageOverviewProvider);
+      ref.read(recommendationsProvider.notifier).invalidateAfterCleanup();
       unawaited(
         recordCleanup(
           ref,

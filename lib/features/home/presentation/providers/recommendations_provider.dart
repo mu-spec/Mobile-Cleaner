@@ -3,27 +3,28 @@ import 'package:mobile_cleaner/features/files/domain/duplicate_group.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/domain/screenshot_filter.dart';
 import 'package:mobile_cleaner/features/files/domain/screenshot_summary.dart';
+import 'package:mobile_cleaner/features/files/domain/smart_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/video_sort.dart';
 import 'package:mobile_cleaner/features/files/domain/video_summary.dart';
+import 'package:mobile_cleaner/features/files/presentation/providers/apk_provider.dart';
+import 'package:mobile_cleaner/features/files/presentation/providers/downloads_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/duplicates_provider.dart';
+import 'package:mobile_cleaner/features/files/presentation/providers/large_files_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/screenshot_provider.dart';
+import 'package:mobile_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/videos_provider.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation_engine.dart';
 
-/// Gathers the figures the rules read.
-///
-/// Composed from the existing tool providers rather than scanning again, so a
-/// recommendation always matches what the tool will show when opened, and
-/// opening that tool reuses the cached scan.
-///
-/// The three scans start together and are awaited afterwards, so the wait is
-/// the slowest one rather than the sum.
+/// Gathers results from the existing real analyzers after a user starts Smart
+/// Scan. Nothing on Home watches this provider directly, so it cannot start a
+/// background scan merely because the Home screen was built.
 final FutureProvider<RecommendationInputs> recommendationInputsProvider =
     FutureProvider<RecommendationInputs>((ref) async {
+      final Future<SmartScanResult> smartScan = ref.watch(
+        smartScanProvider.future,
+      );
       final Future<ScreenshotSummary> screenshots = ref.watch(
-        // The rule is specifically about screenshots older than 90 days, so
-        // ask for exactly that bucket rather than filtering afterwards.
         screenshotSummaryProvider(ScreenshotGroup.days90).future,
       );
       final Future<DuplicateScanResult> duplicates = ref.watch(
@@ -33,6 +34,7 @@ final FutureProvider<RecommendationInputs> recommendationInputsProvider =
         videoSummaryProvider(VideoSort.largest).future,
       );
 
+      final SmartScanResult fileResult = await smartScan;
       final ScreenshotSummary staleShots = await screenshots;
       final DuplicateScanResult duplicateResult = await duplicates;
       final VideoSummary videoResult = await videos;
@@ -41,6 +43,15 @@ final FutureProvider<RecommendationInputs> recommendationInputsProvider =
         for (final ScannedFile video in videoResult.videos)
           if (video.sizeBytes >= RecommendationEngine.largeVideoBytes) video,
       ];
+      final SmartScanGroup largeFiles = fileResult.groupFor(
+        SmartScanCategory.largeFiles,
+      );
+      final SmartScanGroup oldDownloads = fileResult.groupFor(
+        SmartScanCategory.oldDownloads,
+      );
+      final SmartScanGroup apks = fileResult.groupFor(
+        SmartScanCategory.apkInstallers,
+      );
 
       return RecommendationInputs(
         oldScreenshotCount: staleShots.fileCount,
@@ -53,27 +64,71 @@ final FutureProvider<RecommendationInputs> recommendationInputsProvider =
           0,
           (int sum, ScannedFile video) => sum + video.sizeBytes,
         ),
+        largeFileCount: largeFiles.fileCount,
+        largeFileBytes: largeFiles.totalBytes,
+        oldDownloadCount: oldDownloads.fileCount,
+        oldDownloadBytes: oldDownloads.totalBytes,
+        apkInstallerCount: apks.fileCount,
+        apkInstallerBytes: apks.totalBytes,
       );
     });
 
-/// The advice Home shows, strongest first.
+/// The current app-session recommendation state for Home.
 ///
-/// Rule evaluation is pure arithmetic, so it is derived here rather than
-/// recomputed by the widget on every rebuild.
-final FutureProvider<List<Recommendation>> recommendationsProvider =
-    FutureProvider<List<Recommendation>>((ref) async {
-      final RecommendationInputs inputs = await ref.watch(
+/// It begins empty on every process/provider-container start. A real scan is
+/// only launched by [RecommendationsController.scan], which is called from
+/// the explicit Smart Scan progress flow. Results are never persisted because
+/// file-system findings cannot be guaranteed valid across app restarts.
+final NotifierProvider<
+  RecommendationsController,
+  AsyncValue<List<Recommendation>>
+>
+recommendationsProvider =
+    NotifierProvider<
+      RecommendationsController,
+      AsyncValue<List<Recommendation>>
+    >(RecommendationsController.new);
+
+class RecommendationsController
+    extends Notifier<AsyncValue<List<Recommendation>>> {
+  @override
+  AsyncValue<List<Recommendation>> build() =>
+      const AsyncValue<List<Recommendation>>.data(<Recommendation>[]);
+
+  /// Runs every existing analyzer used by Home recommendations and publishes
+  /// advice only after all of them finish successfully.
+  Future<List<Recommendation>> scan() async {
+    state = const AsyncValue<List<Recommendation>>.loading();
+    _invalidateScanInputs();
+
+    try {
+      final RecommendationInputs inputs = await ref.read(
         recommendationInputsProvider.future,
       );
-      return RecommendationEngine.evaluate(inputs);
-    });
+      final List<Recommendation> found = RecommendationEngine.evaluate(inputs);
+      state = AsyncValue<List<Recommendation>>.data(found);
+      return found;
+    } catch (error, stackTrace) {
+      state = AsyncValue<List<Recommendation>>.error(error, stackTrace);
+      rethrow;
+    }
+  }
 
-/// Re-runs every scan the recommendations depend on.
-///
-/// Takes a [WidgetRef] because it is called from Home. Invalidating the
-/// underlying scans is enough: the inputs and rules rebuild from them.
-void refreshRecommendations(WidgetRef ref) {
-  ref.invalidate(screenshotScanProvider);
-  ref.invalidate(duplicateScanProvider);
-  ref.invalidate(videoScanProvider);
+  /// Clears potentially stale advice without starting another scan.
+  void invalidateAfterCleanup() {
+    state = const AsyncValue<List<Recommendation>>.data(<Recommendation>[]);
+    _invalidateScanInputs();
+  }
+
+  void _invalidateScanInputs() {
+    ref.invalidate(largeFileScanProvider);
+    ref.invalidate(downloadsScanProvider);
+    ref.invalidate(apkScanProvider);
+    ref.invalidate(smartScanProvider);
+    ref.invalidate(screenshotScanProvider);
+    ref.invalidate(duplicateScanProvider);
+    ref.invalidate(duplicatesProvider);
+    ref.invalidate(videoScanProvider);
+    ref.invalidate(recommendationInputsProvider);
+  }
 }

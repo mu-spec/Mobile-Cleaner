@@ -11,6 +11,15 @@ import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
+class _SeededRecommendationsController extends RecommendationsController {
+  _SeededRecommendationsController(this.initial);
+
+  final AsyncValue<List<Recommendation>> initial;
+
+  @override
+  AsyncValue<List<Recommendation>> build() => initial;
+}
+
 void main() {
   group('Storage ring animation', () {
     const StorageInfo info = StorageInfo(totalBytes: 1000, freeBytes: 270);
@@ -187,7 +196,10 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 2000));
       expect(find.text('Scan Now'), findsOneWidget);
-      expect(find.text('No Recommendation Yet'), findsOneWidget);
+      expect(
+        find.text('Scan your phone to find cleanup opportunities'),
+        findsOneWidget,
+      );
       expect(
         tester
             .getSize(find.byKey(const Key('smart_scan_recommendation_slot')))
@@ -214,8 +226,10 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            recommendationsProvider.overrideWithValue(
-              const AsyncValue<List<Recommendation>>.loading(),
+            recommendationsProvider.overrideWith(
+              () => _SeededRecommendationsController(
+                const AsyncValue<List<Recommendation>>.loading(),
+              ),
             ),
           ],
           child: MaterialApp(
@@ -226,7 +240,10 @@ void main() {
         ),
       );
 
-      expect(find.text('No Recommendation Yet'), findsOneWidget);
+      expect(
+        find.text('Scan your phone to find cleanup opportunities'),
+        findsOneWidget,
+      );
       expect(
         tester
             .getSize(find.byKey(const Key('smart_scan_recommendation_slot')))
@@ -242,17 +259,19 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            recommendationsProvider.overrideWithValue(
-              AsyncValue<List<Recommendation>>.data(<Recommendation>[
-                const Recommendation(
-                  kind: RecommendationKind.duplicateCleanup,
-                  priority: RecommendationPriority.high,
-                  title: 'Clean up duplicates',
-                  detail: 'Found duplicates',
-                  actionLabel: 'Review',
-                  reclaimableBytes: 715 * 1024 * 1024,
-                ),
-              ]),
+            recommendationsProvider.overrideWith(
+              () => _SeededRecommendationsController(
+                AsyncValue<List<Recommendation>>.data(<Recommendation>[
+                  const Recommendation(
+                    kind: RecommendationKind.duplicateCleanup,
+                    priority: RecommendationPriority.high,
+                    title: 'Clean up duplicates',
+                    detail: 'Found duplicates',
+                    actionLabel: 'Review',
+                    reclaimableBytes: 715 * 1024 * 1024,
+                  ),
+                ]),
+              ),
             ),
           ],
           child: MaterialApp(
@@ -264,7 +283,10 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 2000));
       expect(find.text('Clean up duplicates'), findsOneWidget);
-      expect(find.text('No Recommendation Yet'), findsNothing);
+      expect(
+        find.text('Scan your phone to find cleanup opportunities'),
+        findsNothing,
+      );
       expect(find.text('Scan Now'), findsOneWidget);
       expect(
         tester

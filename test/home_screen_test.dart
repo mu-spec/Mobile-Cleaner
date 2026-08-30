@@ -18,6 +18,7 @@ import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/history/data/cleanup_history_repository.dart';
 import 'package:mobile_cleaner/features/history/domain/cleanup_entry.dart';
 import 'package:mobile_cleaner/features/history/domain/cleanup_history.dart';
+import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/screens/home_screen.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
@@ -135,6 +136,7 @@ Future<void> _pumpHome(
   ThemeData? theme,
   double textScale = 1,
   Size size = const Size(420, 1000),
+  bool completeSmartScan = false,
 }) async {
   await tester.binding.setSurfaceSize(size);
   addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -172,6 +174,13 @@ Future<void> _pumpHome(
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 50));
   await tester.pump(const Duration(milliseconds: 2400));
+  if (completeSmartScan) {
+    final ProviderContainer container = ProviderScope.containerOf(
+      tester.element(find.byType(HomeScreen)),
+    );
+    await container.read(recommendationsProvider.notifier).scan();
+    await tester.pump();
+  }
 }
 
 Future<void> _scrollTo(WidgetTester tester, Finder target) async {
@@ -313,20 +322,32 @@ void main() {
       expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
-      expect(find.text('No Recommendation Yet'), findsOneWidget);
+      expect(
+        find.text('Scan your phone to find cleanup opportunities'),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('recommendations_section')), findsNothing);
       expect(find.text('Recommended for you'), findsNothing);
     });
 
-    testWidgets('real recommendation shown inside Smart Scan card', (tester) async {
+    testWidgets('real recommendation shown inside Smart Scan card', (
+      tester,
+    ) async {
       await _pumpHome(
         tester,
         files: <ScannedFile>[for (int i = 0; i < 25; i++) _screenshot(i)],
+        completeSmartScan: true,
       );
       await tester.pump(const Duration(milliseconds: 2000));
-      expect(find.byKey(const Key('smart_scan_recommendation_screenshotReview')), findsOneWidget);
+      expect(
+        find.byKey(const Key('smart_scan_recommendation_screenshotReview')),
+        findsOneWidget,
+      );
       expect(find.text('Review old screenshots'), findsOneWidget);
-      expect(find.text('No Recommendation Yet'), findsNothing);
+      expect(
+        find.text('Scan your phone to find cleanup opportunities'),
+        findsNothing,
+      );
     });
   });
 
@@ -339,7 +360,9 @@ void main() {
       final Rect storage = tester.getRect(
         find.byKey(const Key('storage_overview_card')),
       );
-      final Rect scan = tester.getRect(find.byKey(const Key('smart_scan_hero')));
+      final Rect scan = tester.getRect(
+        find.byKey(const Key('smart_scan_hero')),
+      );
       final Rect quick = tester.getRect(
         find.byKey(const Key('quick_tools_card')),
       );
@@ -358,10 +381,7 @@ void main() {
       final Rect cleanupTitle = tester.getRect(
         find.byKey(const Key('cleanup_summary_title')),
       );
-      expect(
-        scan.top - storage.bottom,
-        closeTo(HomeMetrics.sectionGap, 0.01),
-      );
+      expect(scan.top - storage.bottom, closeTo(HomeMetrics.sectionGap, 0.01));
       expect(
         quickSection.top - scan.bottom,
         closeTo(HomeMetrics.sectionGap, 0.01),
@@ -386,35 +406,36 @@ void main() {
       );
     });
 
-    testWidgets('Storage, Smart Scan, Quick Tools, Cleanup Summary appear in order', (
-      WidgetTester tester,
-    ) async {
-      await _pumpHome(tester);
+    testWidgets(
+      'Storage, Smart Scan, Quick Tools, Cleanup Summary appear in order',
+      (WidgetTester tester) async {
+        await _pumpHome(tester);
 
-      // Quick Tools restored
-      expect(find.byKey(const Key('quick_tools_section')), findsOneWidget);
+        // Quick Tools restored
+        expect(find.byKey(const Key('quick_tools_section')), findsOneWidget);
 
-      final double storageY = tester
-          .getTopLeft(find.byKey(const Key('used_storage')))
-          .dy;
-      final double scanY = tester
-          .getTopLeft(find.byKey(const Key('smart_scan_button')))
-          .dy;
+        final double storageY = tester
+            .getTopLeft(find.byKey(const Key('used_storage')))
+            .dy;
+        final double scanY = tester
+            .getTopLeft(find.byKey(const Key('smart_scan_button')))
+            .dy;
 
-      await _scrollTo(tester, find.byKey(const Key('home_history_empty')));
-      final double historyY = tester
-          .getTopLeft(find.byKey(const Key('home_history_empty')))
-          .dy;
-      // Quick Tools below Smart Scan and above Cleanup Summary
-      final double quickY = tester
-          .getTopLeft(find.byKey(const Key('quick_tools_section')))
-          .dy;
+        await _scrollTo(tester, find.byKey(const Key('home_history_empty')));
+        final double historyY = tester
+            .getTopLeft(find.byKey(const Key('home_history_empty')))
+            .dy;
+        // Quick Tools below Smart Scan and above Cleanup Summary
+        final double quickY = tester
+            .getTopLeft(find.byKey(const Key('quick_tools_section')))
+            .dy;
 
-      expect(storageY, lessThan(scanY));
-      expect(scanY, lessThan(quickY));
-      expect(quickY, lessThan(historyY));
-      expect(find.text('Cleanup Summary'), findsOneWidget);
-    });
+        expect(storageY, lessThan(scanY));
+        expect(scanY, lessThan(quickY));
+        expect(quickY, lessThan(historyY));
+        expect(find.text('Cleanup Summary'), findsOneWidget);
+      },
+    );
   });
 
   group('History card', () {
@@ -464,10 +485,7 @@ void main() {
         find.byKey(const Key('smart_scan_surface')),
       );
 
-      expect(
-        (storageSurface.decoration as BoxDecoration).gradient,
-        isNotNull,
-      );
+      expect((storageSurface.decoration as BoxDecoration).gradient, isNotNull);
       expect(
         (quickToolsSurface.decoration! as BoxDecoration).gradient,
         isNotNull,
@@ -539,7 +557,10 @@ void main() {
       expect(find.byKey(const Key('smart_scan_hero')), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
       expect(find.text('Scan Now'), findsOneWidget);
-      expect(find.text('No Recommendation Yet'), findsOneWidget);
+      expect(
+        find.text('Scan your phone to find cleanup opportunities'),
+        findsOneWidget,
+      );
       // Old descriptive text removed per spec.
       expect(find.text('Find and clean unnecessary files'), findsNothing);
     });
@@ -551,6 +572,7 @@ void main() {
       await _pumpHome(
         tester,
         files: <ScannedFile>[for (int i = 0; i < 25; i++) _screenshot(i)],
+        completeSmartScan: true,
       );
       await _scrollTo(
         tester,
@@ -561,19 +583,17 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Review old screenshots'), findsOneWidget);
-      expect(find.text('No Recommendation Yet'), findsNothing);
       expect(
-        find.text('100.0 MB recoverable'),
-        findsOneWidget,
+        find.text('Scan your phone to find cleanup opportunities'),
+        findsNothing,
       );
+      expect(find.text('100.0 MB recoverable'), findsOneWidget);
       expect(
         find.descendant(
           of: find.byKey(
             const Key('smart_scan_recommendation_screenshotReview'),
           ),
-          matching: find.byKey(
-            const Key('smart_scan_recommendation_icon'),
-          ),
+          matching: find.byKey(const Key('smart_scan_recommendation_icon')),
         ),
         findsOneWidget,
       );
@@ -585,6 +605,7 @@ void main() {
       await _pumpHome(
         tester,
         files: <ScannedFile>[for (int i = 0; i < 25; i++) _screenshot(i)],
+        completeSmartScan: true,
       );
       await _scrollTo(
         tester,
@@ -603,10 +624,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await _pumpHome(tester);
-      expect(
-        find.byKey(const Key('recommendations_section')),
-        findsNothing,
-      );
+      expect(find.byKey(const Key('recommendations_section')), findsNothing);
       expect(find.text('Recommended for you'), findsNothing);
       expect(find.byKey(const Key('recommendations_title')), findsNothing);
       expect(find.byKey(const Key('recommendations_count')), findsNothing);
@@ -692,10 +710,12 @@ void main() {
         ProviderScope(
           overrides: [
             storageRepositoryProvider.overrideWithValue(
-              const _FakeStorage(StorageInfo(
-                totalBytes: 128 * 1024 * 1024 * 1024,
-                freeBytes: 30 * 1024 * 1024 * 1024,
-              )),
+              const _FakeStorage(
+                StorageInfo(
+                  totalBytes: 128 * 1024 * 1024 * 1024,
+                  freeBytes: 30 * 1024 * 1024 * 1024,
+                ),
+              ),
             ),
           ],
           child: MaterialApp(

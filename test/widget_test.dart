@@ -240,7 +240,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('a Home recommendation also opens storage access first', (
+  testWidgets('Home does not fabricate a recommendation before Smart Scan', (
     WidgetTester tester,
   ) async {
     await usePhoneSurface(tester);
@@ -284,13 +284,11 @@ void main() {
     final Finder recommendation = find.byKey(
       const Key('smart_scan_recommendation_screenshotReview'),
     );
-    expect(recommendation, findsOneWidget);
-    await tester.tap(recommendation);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-
-    expect(find.byKey(const Key('permission_education')), findsOneWidget);
-    expect(find.byKey(const Key('permission_back_button')), findsOneWidget);
+    expect(recommendation, findsNothing);
+    expect(
+      find.text('Scan your phone to find cleanup opportunities'),
+      findsOneWidget,
+    );
     expect(find.byKey(const Key('scan_progress_screen')), findsNothing);
   });
 
