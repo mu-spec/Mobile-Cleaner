@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
 import 'package:mobile_cleaner/core/constants/app_constants.dart';
 import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';
 import 'package:mobile_cleaner/features/files/domain/large_file_filter.dart';
 import 'package:mobile_cleaner/features/files/domain/screenshot_filter.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/onboarding/data/onboarding_preferences.dart';
 import 'package:mobile_cleaner/features/settings/domain/app_settings.dart';
 import 'package:mobile_cleaner/features/settings/presentation/providers/settings_provider.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Settings.
 ///
@@ -27,119 +30,119 @@ class SettingsScreen extends ConsumerWidget {
         ref.watch(settingsProvider).value ?? AppSettings.defaults;
 
     return Scaffold(
+      backgroundColor: _SettingsStyle.background(context),
       appBar: AppBar(
+        backgroundColor: _SettingsStyle.background(context),
+        surfaceTintColor: Colors.transparent,
+        toolbarHeight: 60,
         leading: const RootBackButton(buttonKey: Key('settings_back_button')),
-        title: const Text('Settings'),
+        title: Text(
+          'Settings',
+          style: Theme.of(context).textTheme.titleLarge
+              ?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.4),
+        ),
       ),
       body: SafeArea(
         child: ListView(
           key: const Key('settings_list'),
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 36),
           children: <Widget>[
-            _SectionHeading(label: 'Appearance'),
-            _ThemeTile(settings: settings),
-            const Divider(),
-
-            _SectionHeading(label: 'Cleanup defaults'),
-            _ChoiceTile<LargeFileFilter>(
-              tileKey: const Key('setting_large_file_threshold'),
-              valueKey: const Key('setting_large_file_threshold_value'),
-              icon: Icons.data_usage_rounded,
-              title: 'Large-file threshold',
-              subtitle: 'Files at least ${settings.largeFileFilter.threshold}',
-              value: settings.largeFileFilter,
-              options: LargeFileFilter.values,
-              labelOf: (LargeFileFilter v) => v.label,
-              onChanged: (LargeFileFilter v) =>
-                  saveSettings(ref, settings.copyWith(largeFileFilter: v)),
-            ),
-            _ChoiceTile<ScreenshotGroup>(
-              tileKey: const Key('setting_screenshot_age'),
-              valueKey: const Key('setting_screenshot_age_value'),
-              icon: Icons.screenshot_rounded,
-              title: 'Screenshot age',
-              subtitle: settings.screenshotGroup.description,
-              value: settings.screenshotGroup,
-              options: ScreenshotGroup.values,
-              labelOf: (ScreenshotGroup v) => v.label,
-              onChanged: (ScreenshotGroup v) =>
-                  saveSettings(ref, settings.copyWith(screenshotGroup: v)),
-            ),
-            _ChoiceTile<DownloadAgeFilter>(
-              tileKey: const Key('setting_download_age'),
-              valueKey: const Key('setting_download_age_value'),
-              icon: Icons.download_rounded,
-              title: 'Download age',
-              subtitle:
-                  'Downloads untouched for '
-                  '${settings.downloadAgeFilter.threshold}',
-              value: settings.downloadAgeFilter,
-              options: DownloadAgeFilter.values,
-              labelOf: (DownloadAgeFilter v) => v.label,
-              onChanged: (DownloadAgeFilter v) =>
-                  saveSettings(ref, settings.copyWith(downloadAgeFilter: v)),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-              child: Text(
-                'Each tool still lets you change this while you are in it.',
+            const _SectionHeading(label: 'Appearance'),
+            _SettingsGroup(children: <Widget>[_ThemeTile(settings: settings)]),
+            const _SectionHeading(label: 'Cleanup defaults'),
+            _SettingsGroup(
+              footer: Text(
+                'Each cleanup tool can still be adjusted while you use it.',
                 key: const Key('settings_defaults_note'),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  height: 1.35,
                 ),
               ),
+              children: <Widget>[
+                _ChoiceTile<LargeFileFilter>(
+                  tileKey: const Key('setting_large_file_threshold'),
+                  valueKey: const Key('setting_large_file_threshold_value'),
+                  icon: PhosphorIconsDuotone.gauge,
+                  title: 'Large-file threshold',
+                  value: settings.largeFileFilter,
+                  options: LargeFileFilter.values,
+                  labelOf: (LargeFileFilter v) => v.label,
+                  onChanged: (LargeFileFilter v) =>
+                      saveSettings(ref, settings.copyWith(largeFileFilter: v)),
+                ),
+                _ChoiceTile<ScreenshotGroup>(
+                  tileKey: const Key('setting_screenshot_age'),
+                  valueKey: const Key('setting_screenshot_age_value'),
+                  icon: PhosphorIconsDuotone.deviceMobileCamera,
+                  title: 'Screenshot age',
+                  value: settings.screenshotGroup,
+                  options: ScreenshotGroup.values,
+                  labelOf: (ScreenshotGroup v) => v.label,
+                  onChanged: (ScreenshotGroup v) =>
+                      saveSettings(ref, settings.copyWith(screenshotGroup: v)),
+                ),
+                _ChoiceTile<DownloadAgeFilter>(
+                  tileKey: const Key('setting_download_age'),
+                  valueKey: const Key('setting_download_age_value'),
+                  icon: PhosphorIconsDuotone.downloadSimple,
+                  title: 'Download age',
+                  value: settings.downloadAgeFilter,
+                  options: DownloadAgeFilter.values,
+                  labelOf: (DownloadAgeFilter v) => v.label,
+                  onChanged: (DownloadAgeFilter v) => saveSettings(
+                    ref,
+                    settings.copyWith(downloadAgeFilter: v),
+                  ),
+                ),
+              ],
             ),
-            const Divider(height: 28),
-
-            _SectionHeading(label: 'Privacy and data'),
-            ListTile(
-              key: const Key('manage_permissions'),
-              leading: const Icon(Icons.folder_shared_rounded),
-              title: const Text('Media and storage access'),
-              subtitle: const Text('Review or update permissions'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => context.push(AppRoutes.permissions),
+            const _SectionHeading(label: 'Advanced'),
+            _SettingsGroup(
+              children: <Widget>[
+                _ActionTile(
+                  tileKey: const Key('open_cleanup_history'),
+                  icon: PhosphorIconsDuotone.clockCounterClockwise,
+                  title: 'Cleanup history',
+                  onTap: () => context.push(AppRoutes.history),
+                ),
+                _ActionTile(
+                  tileKey: const Key('replay_onboarding'),
+                  icon: PhosphorIconsDuotone.presentation,
+                  title: 'Replay onboarding',
+                  onTap: () => _replayOnboarding(context),
+                ),
+              ],
             ),
-            ListTile(
-              key: const Key('open_cleanup_history'),
-              leading: const Icon(Icons.history_rounded),
-              title: const Text('Cleanup history'),
-              subtitle: const Text('What you have removed, and when'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => context.push(AppRoutes.history),
+            const _SectionHeading(label: 'Privacy & data'),
+            _SettingsGroup(
+              children: <Widget>[
+                _ActionTile(
+                  tileKey: const Key('manage_permissions'),
+                  icon: PhosphorIconsDuotone.folderLock,
+                  title: 'Storage & media access',
+                  onTap: () => context.push(AppRoutes.permissions),
+                ),
+                _ActionTile(
+                  tileKey: const Key('open_privacy_policy'),
+                  icon: PhosphorIconsDuotone.shieldCheck,
+                  title: 'Privacy policy',
+                  onTap: () => showPrivacyPolicy(context),
+                ),
+              ],
             ),
-            ListTile(
-              key: const Key('open_privacy_policy'),
-              leading: const Icon(Icons.privacy_tip_outlined),
-              title: const Text('Privacy Policy'),
-              subtitle: const Text('What this app does with your data'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => showPrivacyPolicy(context),
-            ),
-            const Divider(height: 28),
-
-            _SectionHeading(label: 'About'),
-            ListTile(
-              key: const Key('replay_onboarding'),
-              leading: const Icon(Icons.slideshow_rounded),
-              title: const Text('Replay onboarding'),
-              subtitle: const Text('View the introduction again'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => _replayOnboarding(context),
-            ),
-            ListTile(
-              key: const Key('open_about'),
-              leading: const Icon(Icons.help_outline_rounded),
-              title: const Text('About Mobile Cleaner'),
-              subtitle: const Text('How it works, and what it will not do'),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => showAboutSheet(context),
-            ),
-            const ListTile(
-              key: Key('setting_app_version'),
-              leading: Icon(Icons.info_outline_rounded),
-              title: Text('App version'),
-              subtitle: Text(AppConstants.appVersion),
+            const _SectionHeading(label: 'About'),
+            _SettingsGroup(
+              children: <Widget>[
+                _ActionTile(
+                  tileKey: const Key('open_about'),
+                  icon: PhosphorIconsDuotone.info,
+                  title: 'About Mobile Cleaner',
+                  value: AppConstants.appVersion,
+                  valueKey: const Key('setting_app_version'),
+                  onTap: () => showAboutSheet(context),
+                ),
+              ],
             ),
           ],
         ),
@@ -155,6 +158,164 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
+abstract final class _SettingsStyle {
+  static bool isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  static Color background(BuildContext context) =>
+      isDark(context) ? AppColors.darkBackground : HomeUpperStyle.background;
+
+  static Color surface(BuildContext context) =>
+      isDark(context) ? AppColors.darkSurfaceElevated : HomeUpperStyle.card;
+
+  static Color border(BuildContext context) =>
+      isDark(context) ? AppColors.darkBorder : HomeUpperStyle.border;
+
+  static Color blue(BuildContext context) =>
+      isDark(context) ? AppColors.darkPrimary : HomeUpperStyle.primaryBlue;
+
+  static Color orange(BuildContext context) =>
+      isDark(context) ? AppColors.darkOrange : HomeUpperStyle.orange;
+}
+
+class _SettingsGroup extends StatelessWidget {
+  const _SettingsGroup({required this.children, this.footer});
+
+  final List<Widget> children;
+  final Widget? footer;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool dark = _SettingsStyle.isDark(context);
+    final Color border = _SettingsStyle.border(context);
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: _SettingsStyle.surface(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: border),
+        boxShadow: dark
+            ? const <BoxShadow>[]
+            : <BoxShadow>[
+                BoxShadow(
+                  color: HomeUpperStyle.navy.withValues(alpha: 0.045),
+                  blurRadius: 22,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+      ),
+      child: Column(
+        children: <Widget>[
+          for (int index = 0; index < children.length; index++) ...<Widget>[
+            children[index],
+            if (index != children.length - 1)
+              Divider(height: 1, indent: 62, color: border),
+          ],
+          if (footer != null) ...<Widget>[
+            Divider(height: 1, indent: 62, color: border),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(62, 10, 16, 13),
+              child: footer!,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionTile extends StatelessWidget {
+  const _ActionTile({
+    required this.tileKey,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.value,
+    this.valueKey,
+  });
+
+  final Key tileKey;
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+  final String? value;
+  final Key? valueKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: tileKey,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 11, 10, 11),
+          child: Row(
+            children: <Widget>[
+              _SettingIcon(icon: icon),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+              ),
+              if (value != null)
+                Text(
+                  value!,
+                  key: valueKey,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              const SizedBox(width: 7),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 19,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingIcon extends StatelessWidget {
+  const _SettingIcon({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: _SettingsStyle.isDark(context)
+            ? AppColors.darkInfoSurface
+            : HomeUpperStyle.softBlue,
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Center(
+        child: PhosphorIcon(
+          icon,
+          size: 21,
+          color: _SettingsStyle.blue(context),
+          duotoneSecondaryColor: _SettingsStyle.orange(context),
+          duotoneSecondaryOpacity: 0.85,
+        ),
+      ),
+    );
+  }
+}
+
 class _SectionHeading extends StatelessWidget {
   const _SectionHeading({required this.label});
 
@@ -163,77 +324,94 @@ class _SectionHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+      padding: const EdgeInsets.fromLTRB(4, 18, 4, 8),
       child: Text(
         label,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: Theme.of(context).colorScheme.primary,
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          color: _SettingsStyle.blue(context),
+          letterSpacing: 0.15,
         ),
       ),
     );
   }
 }
 
-/// System / Light / Dark, as a segmented control.
-///
-/// Shown inline rather than behind a dialog: it is the one setting people
-/// change to see an immediate effect, and the effect is visible instantly.
+/// Compact theme row matching the reference; choices open only when needed.
 class _ThemeTile extends ConsumerWidget {
   const _ThemeTile({required this.settings});
 
   final AppSettings settings;
 
+  Future<void> _pickTheme(BuildContext context, WidgetRef ref) async {
+    final ThemeMode? chosen = await showModalBottomSheet<ThemeMode>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: _SettingsStyle.surface(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (BuildContext sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                'Choose theme',
+                style: Theme.of(sheetContext).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 16),
+              SegmentedButton<ThemeMode>(
+                key: const Key('setting_theme_mode_control'),
+                segments: const <ButtonSegment<ThemeMode>>[
+                  ButtonSegment<ThemeMode>(
+                    value: ThemeMode.system,
+                    label: Text('System'),
+                    icon: Icon(Icons.brightness_auto_rounded, size: 17),
+                  ),
+                  ButtonSegment<ThemeMode>(
+                    value: ThemeMode.light,
+                    label: Text('Light'),
+                    icon: Icon(Icons.light_mode_rounded, size: 17),
+                  ),
+                  ButtonSegment<ThemeMode>(
+                    value: ThemeMode.dark,
+                    label: Text('Dark'),
+                    icon: Icon(Icons.dark_mode_rounded, size: 17),
+                  ),
+                ],
+                selected: <ThemeMode>{settings.themeMode},
+                showSelectedIcon: false,
+                onSelectionChanged: (Set<ThemeMode> selection) {
+                  if (selection.isNotEmpty) {
+                    Navigator.of(sheetContext).pop(selection.first);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (chosen != null && chosen != settings.themeMode) {
+      await saveSettings(ref, settings.copyWith(themeMode: chosen));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              const Icon(Icons.brightness_6_outlined, size: 22),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
-                  'Theme',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          SegmentedButton<ThemeMode>(
-            key: const Key('setting_theme_mode'),
-            segments: const <ButtonSegment<ThemeMode>>[
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.system,
-                label: Text('System'),
-                icon: Icon(Icons.brightness_auto_rounded, size: 17),
-              ),
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.light,
-                label: Text('Light'),
-                icon: Icon(Icons.light_mode_rounded, size: 17),
-              ),
-              ButtonSegment<ThemeMode>(
-                value: ThemeMode.dark,
-                label: Text('Dark'),
-                icon: Icon(Icons.dark_mode_rounded, size: 17),
-              ),
-            ],
-            selected: <ThemeMode>{settings.themeMode},
-            showSelectedIcon: false,
-            onSelectionChanged: (Set<ThemeMode> selection) {
-              if (selection.isEmpty) {
-                return;
-              }
-              saveSettings(ref, settings.copyWith(themeMode: selection.first));
-            },
-          ),
-        ],
-      ),
+    return _ActionTile(
+      tileKey: const Key('setting_theme_mode'),
+      icon: PhosphorIconsDuotone.palette,
+      title: 'Theme',
+      value: settings.themeLabel,
+      valueKey: const Key('setting_theme_mode_value'),
+      onTap: () => _pickTheme(context, ref),
     );
   }
 }
@@ -245,7 +423,6 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
     required this.valueKey,
     required this.icon,
     required this.title,
-    required this.subtitle,
     required this.value,
     required this.options,
     required this.labelOf,
@@ -260,7 +437,6 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
   final Key valueKey;
   final IconData icon;
   final String title;
-  final String subtitle;
   final T value;
   final List<T> options;
   final String Function(T) labelOf;
@@ -270,38 +446,48 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
     final T? chosen = await showModalBottomSheet<T>(
       context: context,
       showDragHandle: true,
+      backgroundColor: _SettingsStyle.surface(context),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
       builder: (BuildContext sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-              child: Text(
-                title,
-                style: Theme.of(sheetContext).textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 0, 10, 14),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                child: Text(
+                  title,
+                  style: Theme.of(sheetContext).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
               ),
-            ),
-            // Plain ListTiles with a check mark rather than RadioListTile:
-            // `groupValue` and `onChanged` were deprecated on the radio
-            // widgets after Flutter 3.32 in favour of a RadioGroup ancestor,
-            // and a simple selected-tile list avoids the whole question.
-            for (final T option in options)
-              ListTile(
-                key: Key('option_${option.name}'),
-                title: Text(labelOf(option)),
-                trailing: option == value
-                    ? Icon(
-                        Icons.check_rounded,
-                        color: Theme.of(sheetContext).colorScheme.primary,
-                      )
-                    : null,
-                selected: option == value,
-                onTap: () => Navigator.of(sheetContext).pop(option),
-              ),
-            const SizedBox(height: 8),
-          ],
+              for (final T option in options)
+                ListTile(
+                  key: Key('option_${option.name}'),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  title: Text(
+                    labelOf(option),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  trailing: option == value
+                      ? Icon(
+                          Icons.check_circle_rounded,
+                          color: _SettingsStyle.blue(sheetContext),
+                        )
+                      : null,
+                  selected: option == value,
+                  selectedTileColor: _SettingsStyle.blue(sheetContext)
+                      .withValues(alpha: 0.08),
+                  onTap: () => Navigator.of(sheetContext).pop(option),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -313,20 +499,44 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      key: tileKey,
-      leading: Icon(icon),
-      title: Text(title),
-      subtitle: Text(subtitle),
-      trailing: Text(
-        labelOf(value),
-        key: valueKey,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: Theme.of(context).colorScheme.primary,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: tileKey,
+        onTap: () => _pick(context),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 11, 10, 11),
+          child: Row(
+            children: <Widget>[
+              _SettingIcon(icon: icon),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.1,
+                  ),
+                ),
+              ),
+              Text(
+                labelOf(value),
+                key: valueKey,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: _SettingsStyle.blue(context),
+                ),
+              ),
+              const SizedBox(width: 5),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 19,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
         ),
       ),
-      onTap: () => _pick(context),
     );
   }
 }

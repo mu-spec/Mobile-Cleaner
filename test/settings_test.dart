@@ -147,8 +147,8 @@ void main() {
 
     test('a fresh install gets the defaults', () async {
       SharedPreferences.setMockInitialValues(<String, Object>{});
-      final AppSettings loaded =
-          await const PreferencesSettingsRepository().load();
+      final AppSettings loaded = await const PreferencesSettingsRepository()
+          .load();
       expect(loaded, AppSettings.defaults);
     });
 
@@ -158,8 +158,8 @@ void main() {
         PreferencesSettingsRepository.largeFileKey: 'over1gb',
       });
 
-      final AppSettings loaded =
-          await const PreferencesSettingsRepository().load();
+      final AppSettings loaded = await const PreferencesSettingsRepository()
+          .load();
       expect(loaded.themeMode, ThemeMode.system);
       // Still honoured despite the bad neighbour.
       expect(loaded.largeFileFilter, LargeFileFilter.over1gb);
@@ -210,6 +210,8 @@ void main() {
     testWidgets('theme choice is saved', (WidgetTester tester) async {
       final _StubSettings repo = await _pumpSettings(tester);
 
+      await tester.tap(find.byKey(const Key('setting_theme_mode')));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Dark'));
       await tester.pumpAndSettle();
 
@@ -306,9 +308,18 @@ void main() {
             .data,
         '6+ months',
       );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('setting_theme_mode_value')))
+            .data,
+        'Light',
+      );
+
+      await tester.tap(find.byKey(const Key('setting_theme_mode')));
+      await tester.pumpAndSettle();
       final SegmentedButton<ThemeMode> control = tester
           .widget<SegmentedButton<ThemeMode>>(
-            find.byKey(const Key('setting_theme_mode')),
+            find.byKey(const Key('setting_theme_mode_control')),
           );
       expect(control.selected, <ThemeMode>{ThemeMode.light});
     });
@@ -352,7 +363,8 @@ void main() {
       await _pumpSettings(tester);
 
       await _scrollTo(tester, find.byKey(const Key('setting_app_version')));
-      expect(find.text('App version'), findsOneWidget);
+      expect(find.byKey(const Key('setting_app_version')), findsOneWidget);
+      expect(find.text('About Mobile Cleaner'), findsOneWidget);
     });
   });
 }
