@@ -6,10 +6,13 @@ import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart'
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
 import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:mobile_cleaner/features/home/domain/cleanup_score.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation_engine.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/recommendation_destination.dart';
+import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
+import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 
 const int _mib = 1024 * 1024;
 const int _gib = 1024 * 1024 * 1024;
@@ -44,6 +47,14 @@ class _Hashes implements FileHashRepository {
       const <String, String>{};
 }
 
+class _Storage implements StorageRepository {
+  const _Storage();
+
+  @override
+  Future<StorageInfo> getStorageInfo() async =>
+      const StorageInfo(totalBytes: 128 * _gib, freeBytes: 40 * _gib);
+}
+
 ScannedFile _file({
   required String id,
   required String name,
@@ -67,6 +78,7 @@ ProviderContainer _container(_CountingScanner scanner) => ProviderContainer(
   overrides: [
     fileScannerRepositoryProvider.overrideWithValue(scanner),
     fileHashRepositoryProvider.overrideWithValue(const _Hashes()),
+    storageRepositoryProvider.overrideWithValue(const _Storage()),
   ],
 );
 
@@ -90,6 +102,7 @@ void main() {
     addTearDown(container.dispose);
 
     expect(_recommendations(container), isEmpty);
+    expect(container.read(cleanupAnalysisProvider).requireValue, isNull);
     expect(scanner.calls, 0);
   });
 
@@ -113,8 +126,17 @@ void main() {
       await container.read(recommendationsProvider.notifier).scan();
 
       final Recommendation screenshot = _recommendations(container).single;
+      final CompletedCleanupAnalysis analysis = container
+          .read(cleanupAnalysisProvider)
+          .requireValue!;
       expect(screenshot.kind, RecommendationKind.screenshotReview);
       expect(screenshot.reclaimableBytes, 100 * _mib);
+      expect(analysis.recommendations, _recommendations(container));
+      expect(analysis.score.opportunityBytes, 100 * _mib);
+      expect(
+        analysis.score.breakdown.single.kind,
+        CleanupOpportunityKind.oldScreenshots,
+      );
       expect(scanner.calls, greaterThan(0));
     },
   );
@@ -191,6 +213,12 @@ void main() {
     await container.read(recommendationsProvider.notifier).scan();
 
     expect(_recommendations(container), isEmpty);
+    final CompletedCleanupAnalysis analysis = container
+        .read(cleanupAnalysisProvider)
+        .requireValue!;
+    expect(analysis.score.value, 100);
+    expect(analysis.score.label, CleanupScoreLabel.excellent);
+    expect(analysis.score.breakdown, isEmpty);
     expect(scanner.calls, greaterThan(0));
   });
 
@@ -219,6 +247,30 @@ void main() {
       recommendationRoute(RecommendationKind.largeVideoReview),
       AppRoutes.videos,
     );
+    expect(
+      recommendationKindForOpportunity(CleanupOpportunityKind.exactDuplicates),
+      RecommendationKind.duplicateCleanup,
+    );
+    expect(
+      recommendationKindForOpportunity(CleanupOpportunityKind.apkInstallers),
+      RecommendationKind.apkInstallerReview,
+    );
+    expect(
+      recommendationKindForOpportunity(CleanupOpportunityKind.oldDownloads),
+      RecommendationKind.oldDownloadReview,
+    );
+    expect(
+      recommendationKindForOpportunity(CleanupOpportunityKind.oldScreenshots),
+      RecommendationKind.screenshotReview,
+    );
+    expect(
+      recommendationKindForOpportunity(CleanupOpportunityKind.largeFiles),
+      RecommendationKind.largeFileReview,
+    );
+    expect(
+      recommendationKindForOpportunity(CleanupOpportunityKind.largeVideos),
+      RecommendationKind.largeVideoReview,
+    );
   });
 
   test('successful-cleanup invalidation clears stale recommendation', () async {
@@ -241,6 +293,7 @@ void main() {
     controller.invalidateAfterCleanup();
 
     expect(_recommendations(container), isEmpty);
+    expect(container.read(cleanupAnalysisProvider).requireValue, isNull);
   });
 
   test('new app session does not restore old scan recommendations', () async {
@@ -262,6 +315,7 @@ void main() {
     addTearDown(newSession.dispose);
 
     expect(_recommendations(newSession), isEmpty);
+    expect(newSession.read(cleanupAnalysisProvider).requireValue, isNull);
     expect(scanner.calls, callsAfterOldScan);
   });
 }

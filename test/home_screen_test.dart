@@ -328,6 +328,12 @@ void main() {
       );
       expect(find.byKey(const Key('recommendations_section')), findsNothing);
       expect(find.text('Recommended for you'), findsNothing);
+      expect(find.byKey(const Key('cleanup_score_unscanned')), findsOneWidget);
+      expect(
+        find.text('Run Smart Scan to calculate your score'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('cleanup_score_value')), findsNothing);
     });
 
     testWidgets('real recommendation shown inside Smart Scan card', (
@@ -348,6 +354,18 @@ void main() {
         find.text('Scan your phone to find cleanup opportunities'),
         findsNothing,
       );
+
+      await _scrollTo(tester, find.byKey(const Key('cleanup_score_card')));
+      expect(find.byKey(const Key('cleanup_score_card')), findsOneWidget);
+      expect(find.text('100.0 MB cleanup opportunities'), findsOneWidget);
+      expect(
+        find.byKey(const Key('cleanup_score_breakdown_oldScreenshots')),
+        findsOneWidget,
+      );
+      final Text score = tester.widget<Text>(
+        find.byKey(const Key('cleanup_score_value')),
+      );
+      expect(int.parse(score.data!), lessThan(100));
     });
   });
 
@@ -363,6 +381,9 @@ void main() {
       final Rect scan = tester.getRect(
         find.byKey(const Key('smart_scan_hero')),
       );
+      final Rect score = tester.getRect(
+        find.byKey(const Key('cleanup_score_unscanned')),
+      );
       final Rect quick = tester.getRect(
         find.byKey(const Key('quick_tools_card')),
       );
@@ -370,7 +391,7 @@ void main() {
         find.byKey(const Key('home_history_empty')),
       );
 
-      for (final Rect section in <Rect>[storage, scan, quick, history]) {
+      for (final Rect section in <Rect>[storage, scan, score, quick, history]) {
         expect(section.left, closeTo(AppSpacing.md, 0.01));
         expect(section.right, closeTo(420 - AppSpacing.md, 0.01));
       }
@@ -382,8 +403,9 @@ void main() {
         find.byKey(const Key('cleanup_summary_title')),
       );
       expect(scan.top - storage.bottom, closeTo(HomeMetrics.sectionGap, 0.01));
+      expect(score.top - scan.bottom, closeTo(HomeMetrics.sectionGap, 0.01));
       expect(
-        quickSection.top - scan.bottom,
+        quickSection.top - score.bottom,
         closeTo(HomeMetrics.sectionGap, 0.01),
       );
       expect(
@@ -407,7 +429,7 @@ void main() {
     });
 
     testWidgets(
-      'Storage, Smart Scan, Quick Tools, Cleanup Summary appear in order',
+      'Storage, Smart Scan, Score, Quick Tools, Cleanup Summary appear in order',
       (WidgetTester tester) async {
         await _pumpHome(tester);
 
@@ -420,6 +442,9 @@ void main() {
         final double scanY = tester
             .getTopLeft(find.byKey(const Key('smart_scan_button')))
             .dy;
+        final double scoreY = tester
+            .getTopLeft(find.byKey(const Key('cleanup_score_unscanned')))
+            .dy;
 
         await _scrollTo(tester, find.byKey(const Key('home_history_empty')));
         final double historyY = tester
@@ -431,7 +456,8 @@ void main() {
             .dy;
 
         expect(storageY, lessThan(scanY));
-        expect(scanY, lessThan(quickY));
+        expect(scanY, lessThan(scoreY));
+        expect(scoreY, lessThan(quickY));
         expect(quickY, lessThan(historyY));
         expect(find.text('Cleanup Summary'), findsOneWidget);
       },

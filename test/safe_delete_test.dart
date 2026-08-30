@@ -431,6 +431,7 @@ void main() {
       );
       await container.read(recommendationsProvider.notifier).scan();
       expect(container.read(recommendationsProvider).requireValue, isNotEmpty);
+      expect(container.read(cleanupAnalysisProvider).requireValue, isNotNull);
 
       await tester.tap(find.byKey(const Key('file_checkbox_1')));
       await tester.pumpAndSettle();
@@ -460,6 +461,7 @@ void main() {
         '60.0 MB',
       );
       expect(container.read(recommendationsProvider).requireValue, isEmpty);
+      expect(container.read(cleanupAnalysisProvider).requireValue, isNull);
     });
 
     testWidgets('the selection clears after a successful delete', (

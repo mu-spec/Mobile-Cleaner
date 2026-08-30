@@ -10,6 +10,7 @@ import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_h
 import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/presentation/recommendation_destination.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/cleanup_score_card.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
@@ -82,6 +83,16 @@ class HomeScreen extends ConsumerWidget {
                   },
                   onOpen: (RecommendationKind kind) {
                     context.push(recommendationRoute(kind));
+                  },
+                ),
+                const SizedBox(height: HomeMetrics.sectionGap),
+                CleanupScoreCard(
+                  onOpen: (opportunity) {
+                    context.push(
+                      recommendationRoute(
+                        recommendationKindForOpportunity(opportunity),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(height: HomeMetrics.sectionGap),

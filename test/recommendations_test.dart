@@ -12,6 +12,8 @@ import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation_engine.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/recommendations_card.dart';
+import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
+import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 
 const int _mib = 1024 * 1024;
 const int _gib = 1024 * 1024 * 1024;
@@ -112,6 +114,14 @@ class _NoThumbnails implements ThumbnailRepository {
   Future<Uint8List?> load(ScannedFile file, {int size = 128}) async => null;
 }
 
+class _Storage implements StorageRepository {
+  const _Storage();
+
+  @override
+  Future<StorageInfo> getStorageInfo() async =>
+      const StorageInfo(totalBytes: 128 * _gib, freeBytes: 40 * _gib);
+}
+
 Future<List<RecommendationKind>> _pumpCard(
   WidgetTester tester, {
   required List<ScannedFile> files,
@@ -127,6 +137,7 @@ Future<List<RecommendationKind>> _pumpCard(
         fileScannerRepositoryProvider.overrideWithValue(_StubScanner(files)),
         fileHashRepositoryProvider.overrideWithValue(_StubHasher(hashes)),
         thumbnailRepositoryProvider.overrideWithValue(const _NoThumbnails()),
+        storageRepositoryProvider.overrideWithValue(const _Storage()),
       ],
       child: MaterialApp(
         home: Scaffold(
