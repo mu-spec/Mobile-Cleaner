@@ -47,8 +47,14 @@ class _FolderAccessBannerState extends ConsumerState<FolderAccessBanner> {
       key: const Key('folder_access_banner'),
       padding: const EdgeInsets.fromLTRB(16, 16, 14, 14),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF281A0E) : const Color(0xFFFFF4E8),
-        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const <Color>[Color(0xFF2B1B0D), Color(0xFF17243B)]
+              : const <Color>[Color(0xFFFFF5E8), Color(0xFFF1F6FF)],
+        ),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: orange.withValues(alpha: isDark ? 0.30 : 0.16),
         ),
@@ -69,16 +75,16 @@ class _FolderAccessBannerState extends ConsumerState<FolderAccessBanner> {
             children: <Widget>[
               Container(
                 key: const Key('folder_access_icon'),
-                width: 44,
-                height: 44,
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
                   color: orange.withValues(alpha: isDark ? 0.18 : 0.12),
-                  borderRadius: BorderRadius.circular(13),
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 child: Center(
                   child: PhosphorIcon(
                     PhosphorIconsDuotone.folderOpen,
-                    size: 27,
+                    size: 30,
                     color: orange,
                     duotoneSecondaryColor: const Color(0xFFFFBF66),
                     duotoneSecondaryOpacity: 1,

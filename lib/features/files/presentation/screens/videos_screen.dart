@@ -12,9 +12,11 @@ import 'package:mobile_cleaner/features/files/domain/video_summary.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/videos_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/video_tile.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Videos: the dedicated section for reviewing video files.
 ///
@@ -80,7 +82,10 @@ class _VideosScreenState extends ConsumerState<VideosScreen> {
     final bool selecting = _selection.isNotEmpty;
 
     return Scaffold(
+      backgroundColor: PhotoToolUi.background(context),
       appBar: AppBar(
+        backgroundColor: PhotoToolUi.background(context),
+        surfaceTintColor: Colors.transparent,
         leading: selecting
             ? IconButton(
                 key: const Key('videos_cancel_selection'),
@@ -92,6 +97,7 @@ class _VideosScreenState extends ConsumerState<VideosScreen> {
         title: Text(
           selecting ? '${_selection.count} selected' : 'Videos',
           key: const Key('videos_title'),
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: <Widget>[
           if (!selecting)
@@ -99,7 +105,14 @@ class _VideosScreenState extends ConsumerState<VideosScreen> {
               key: const Key('videos_rescan'),
               tooltip: 'Rescan',
               onPressed: () => ref.invalidate(videoScanProvider),
-              icon: const Icon(Icons.refresh_rounded),
+              style: IconButton.styleFrom(
+                backgroundColor: PhotoToolUi.isDark(context)
+                    ? const Color(0xFF182945)
+                    : const Color(0xFFEAF2FF),
+                foregroundColor: PhotoToolUi.primary(context),
+                side: BorderSide(color: PhotoToolUi.border(context)),
+              ),
+              icon: const PhosphorIcon(PhosphorIconsRegular.arrowsClockwise),
             ),
           const SizedBox(width: 8),
         ],
@@ -181,19 +194,11 @@ class _SortBar extends StatelessWidget {
               for (final VideoSort option in VideoSort.values)
                 SizedBox(
                   width: chipWidth,
-                  child: ChoiceChip(
+                  child: PhotoToolChoiceChip(
                     key: Key('video_sort_${option.name}'),
-                    label: SizedBox(
-                      width: double.infinity,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(option.label, maxLines: 1),
-                      ),
-                    ),
+                    label: option.label,
                     selected: option == selected,
-                    onSelected: (_) => onSelected(option),
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    onSelected: () => onSelected(option),
                   ),
                 ),
             ],
@@ -265,12 +270,14 @@ class _VideoList extends StatelessWidget {
         }
 
         final ScannedFile file = summary.videos[index - headerCount];
-        return VideoTile(
-          file: file,
-          selectionMode: true,
-          selected: selection.contains(file),
-          onTap: () => onToggle(file),
-          onLongPress: () => showFileDetails(context, file),
+        return PhotoToolFilePanel(
+          child: VideoTile(
+            file: file,
+            selectionMode: true,
+            selected: selection.contains(file),
+            onTap: () => onToggle(file),
+            onLongPress: () => showFileDetails(context, file),
+          ),
         );
       },
     );
@@ -291,6 +298,14 @@ class _TotalCard extends StatelessWidget {
 
     return Card(
       key: const Key('videos_total_card'),
+      color: PhotoToolUi.surface(context),
+      surfaceTintColor: Colors.transparent,
+      elevation: PhotoToolUi.isDark(context) ? 0 : 2,
+      shadowColor: const Color(0xFF102B5B).withValues(alpha: 0.12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: PhotoToolUi.border(context)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -308,7 +323,7 @@ class _TotalCard extends StatelessWidget {
               key: const Key('videos_total_bytes'),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: colors.primary,
+                color: PhotoToolUi.orange(context),
               ),
             ),
             const SizedBox(height: 4),
@@ -336,8 +351,8 @@ class _TotalCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: <Widget>[
-                  Icon(
-                    Icons.info_outline_rounded,
+                  PhosphorIcon(
+                    PhosphorIconsDuotone.info,
                     size: 15,
                     color: colors.onSurfaceVariant,
                   ),
@@ -375,10 +390,12 @@ class _NoVideos extends StatelessWidget {
       padding: const EdgeInsets.all(32),
       children: <Widget>[
         const SizedBox(height: 60),
-        Icon(
-          Icons.videocam_off_outlined,
-          size: 56,
-          color: colors.primary,
+        PhosphorIcon(
+          PhosphorIconsDuotone.videoCameraSlash,
+          size: 64,
+          color: PhotoToolUi.primary(context),
+          duotoneSecondaryColor: PhotoToolUi.orange(context),
+          duotoneSecondaryOpacity: 0.9,
         ),
         const SizedBox(height: 16),
         Text(

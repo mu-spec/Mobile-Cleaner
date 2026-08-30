@@ -13,6 +13,7 @@ import 'package:mobile_cleaner/features/files/presentation/screens/category_file
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/folder_access_banner.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
@@ -27,7 +28,10 @@ class FilesScreen extends ConsumerWidget {
 
     return Scaffold(
       key: const Key('files_screen'),
+      backgroundColor: PhotoToolUi.background(context),
       appBar: AppBar(
+        backgroundColor: PhotoToolUi.background(context),
+        surfaceTintColor: Colors.transparent,
         toolbarHeight: 60,
         leading: const RootBackButton(buttonKey: Key('files_back_button')),
         titleSpacing: 4,
@@ -112,6 +116,11 @@ class _FilesOverview extends StatelessWidget {
         const SizedBox(height: 22),
         _DeviceFilesSummary(result: result),
         const SizedBox(height: 12),
+        const _SectionTitle(
+          title: 'Cleanup tools',
+          subtitle: 'Focused tools for the files taking up your space.',
+        ),
+        const SizedBox(height: 12),
         const _FileToolsCard(),
         if (nothingFound) ...<Widget>[
           const SizedBox(height: 14),
@@ -132,7 +141,7 @@ class _FilesOverview extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           for (final ScannedFile file in result.largestFiles(limit: 10))
-            ScannedFileTile(file: file),
+            PhotoToolFilePanel(child: ScannedFileTile(file: file)),
         ],
         if (result.truncated) ...<Widget>[
           const SizedBox(height: 16),
@@ -198,7 +207,7 @@ class _DeviceFilesSummary extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurfaceElevated : AppColors.card,
-        borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : AppColors.border,
         ),
@@ -241,20 +250,20 @@ class _DeviceFilesSummary extends StatelessWidget {
             ),
           ),
           Container(
-            width: 42,
-            height: 42,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: isDark
                   ? AppColors.actionBlue.withValues(alpha: 0.15)
                   : AppColors.softBlue,
-              borderRadius: BorderRadius.circular(13),
+              borderRadius: BorderRadius.circular(15),
             ),
             child: Center(
               child: PhosphorIcon(
                 empty
                     ? PhosphorIconsDuotone.folderDashed
                     : PhosphorIconsDuotone.chartDonut,
-                size: 25,
+                size: 28,
                 color: empty
                     ? theme.colorScheme.onSurfaceVariant
                     : AppColors.actionBlue,

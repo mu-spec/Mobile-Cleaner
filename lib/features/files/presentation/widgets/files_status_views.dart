@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_cleaner/core/errors/app_failure.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Shown while a scan is in flight.
 class FilesScanningView extends StatelessWidget {
@@ -7,25 +9,12 @@ class FilesScanningView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      key: const Key('files_scanning'),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          const CircularProgressIndicator(),
-          const SizedBox(height: 18),
-          Text(
-            'Scanning your files…',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Reading names, sizes, and dates only.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+    return const Center(
+      key: Key('files_scanning'),
+      child: PhotoToolLoadingState(
+        icon: PhosphorIconsDuotone.folderOpen,
+        title: 'Scanning your files…',
+        description: 'Reading names, sizes, and dates only.',
       ),
     );
   }
@@ -55,10 +44,22 @@ class FilesErrorView extends StatelessWidget {
       padding: const EdgeInsets.all(28),
       children: <Widget>[
         const SizedBox(height: 60),
-        Icon(
-          _iconFor(failure.kind),
-          size: 52,
-          color: colors.onSurfaceVariant,
+        Container(
+          width: 76,
+          height: 76,
+          decoration: BoxDecoration(
+            color: PhotoToolUi.isDark(context)
+                ? const Color(0xFF182945)
+                : const Color(0xFFEAF2FF),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Icon(
+              _iconFor(failure.kind),
+              size: 38,
+              color: PhotoToolUi.orange(context),
+            ),
+          ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -72,9 +73,8 @@ class FilesErrorView extends StatelessWidget {
           failure.message,
           key: const Key('files_error_message'),
           textAlign: TextAlign.center,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: colors.onSurfaceVariant),
         ),
         if (failure.technicalDetail != null) ...<Widget>[
           const SizedBox(height: 10),
@@ -84,9 +84,8 @@ class FilesErrorView extends StatelessWidget {
             failure.technicalDetail!,
             key: const Key('files_error_detail'),
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colors.onSurfaceVariant),
           ),
         ],
         const SizedBox(height: 20),
@@ -98,6 +97,13 @@ class FilesErrorView extends StatelessWidget {
               onPressed: onPermissions,
               icon: const Icon(Icons.shield_outlined),
               label: const Text('Review permissions'),
+              style: FilledButton.styleFrom(
+                backgroundColor: PhotoToolUi.primary(context),
+                minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
             ),
           ),
         // Retrying a permission problem or an unsupported feature would fail

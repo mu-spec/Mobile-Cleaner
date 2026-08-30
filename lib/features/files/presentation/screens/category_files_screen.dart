@@ -12,8 +12,10 @@ import 'package:mobile_cleaner/features/files/presentation/providers/file_scan_p
 import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Full, sortable, searchable list of the files inside one category.
 class CategoryFilesScreen extends ConsumerStatefulWidget {
@@ -102,7 +104,10 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
     );
 
     return Scaffold(
+      backgroundColor: PhotoToolUi.background(context),
       appBar: AppBar(
+        backgroundColor: PhotoToolUi.background(context),
+        surfaceTintColor: Colors.transparent,
         leading: _selection.isNotEmpty
             ? IconButton(
                 key: const Key('category_cancel_selection'),
@@ -127,7 +132,13 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
                 ),
                 onChanged: (String value) => setState(() => _query = value),
               )
-            : Text(widget.category.label),
+            : Text(
+                widget.category.label,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.35,
+                ),
+              ),
         actions: <Widget>[
           if (_selection.isNotEmpty)
             const SizedBox.shrink()
@@ -143,12 +154,26 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
               key: const Key('category_search_button'),
               tooltip: 'Search',
               onPressed: () => setState(() => _searching = true),
-              icon: const Icon(Icons.search_rounded),
+              style: IconButton.styleFrom(
+                backgroundColor: PhotoToolUi.isDark(context)
+                    ? const Color(0xFF182945)
+                    : const Color(0xFFEAF2FF),
+                foregroundColor: PhotoToolUi.primary(context),
+                side: BorderSide(color: PhotoToolUi.border(context)),
+              ),
+              icon: const PhosphorIcon(
+                PhosphorIconsRegular.magnifyingGlass,
+                size: 21,
+              ),
             ),
             PopupMenuButton<FileListSort>(
               key: const Key('category_sort_button'),
               tooltip: 'Sort',
-              icon: const Icon(Icons.sort_rounded),
+              icon: PhosphorIcon(
+                PhosphorIconsRegular.slidersHorizontal,
+                size: 21,
+                color: PhotoToolUi.primary(context),
+              ),
               initialValue: _sort,
               onSelected: (FileListSort value) =>
                   setState(() => _sort = value),
@@ -257,28 +282,27 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
                     ),
                   ),
                   Expanded(
-                    child: ListView.separated(
+                    child: ListView.builder(
                       key: Key('category_list_${widget.category.key}'),
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
                       itemCount: items.length,
-                      separatorBuilder:
-                          (BuildContext context, int index) =>
-                              const Divider(height: 1),
                       itemBuilder: (BuildContext context, int index) {
                         final ScannedFile file = items[index];
-                        return ScannedFileTile(
-                          file: file,
-                          selectionMode: true,
-                          selected: _selection.contains(file),
-                          // A normal row tap opens details. Once selection is
-                          // active, row taps join the selection workflow; the
-                          // checkbox and long press can start it.
-                          onTap: _selection.isNotEmpty
-                              ? () => _toggle(file)
-                              : () => showFileDetails(context, file),
-                          onSelectionToggle: () => _toggle(file),
-                          onLongPress: () => _toggle(file),
+                        return PhotoToolFilePanel(
+                          child: ScannedFileTile(
+                            file: file,
+                            selectionMode: true,
+                            selected: _selection.contains(file),
+                            // A normal row tap opens details. Once selection is
+                            // active, row taps join the selection workflow; the
+                            // checkbox and long press can start it.
+                            onTap: _selection.isNotEmpty
+                                ? () => _toggle(file)
+                                : () => showFileDetails(context, file),
+                            onSelectionToggle: () => _toggle(file),
+                            onLongPress: () => _toggle(file),
+                          ),
                         );
                       },
                     ),
@@ -312,12 +336,11 @@ class _SortBar extends StatelessWidget {
           for (final FileListSort option in FileListSort.values)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
+              child: PhotoToolChoiceChip(
                 key: Key('sort_chip_${option.name}'),
-                label: Text(option.shortLabel),
+                label: option.shortLabel,
                 selected: option == selected,
-                onSelected: (_) => onSelected(option),
-                visualDensity: VisualDensity.compact,
+                onSelected: () => onSelected(option),
               ),
             ),
         ],
@@ -345,9 +368,21 @@ class _CategoryHeader extends StatelessWidget {
     final Color accent = colorForCategory(category);
 
     return Container(
+      margin: const EdgeInsets.fromLTRB(16, 6, 16, 4),
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
-      color: accent.withValues(alpha: 0.08),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 15),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: PhotoToolUi.isDark(context)
+              ? const <Color>[Color(0xFF102B5B), Color(0xFF17243B)]
+              : <Color>[
+                  accent.withValues(alpha: 0.11),
+                  PhotoToolUi.orange(context).withValues(alpha: 0.08),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: PhotoToolUi.border(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -395,10 +430,28 @@ class _EmptyCategory extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(
-              filtered ? Icons.search_off_rounded : iconForCategory(category),
-              size: 52,
-              color: colors.onSurfaceVariant,
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                color: PhotoToolUi.isDark(context)
+                    ? const Color(0xFF182945)
+                    : const Color(0xFFEAF2FF),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: PhosphorIcon(
+                  filtered
+                      ? PhosphorIconsDuotone.magnifyingGlassMinus
+                      : premiumIconForCategory(category),
+                  size: 38,
+                  color: filtered
+                      ? colors.onSurfaceVariant
+                      : colorForCategory(category),
+                  duotoneSecondaryColor: PhotoToolUi.orange(context),
+                  duotoneSecondaryOpacity: 0.85,
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Text(

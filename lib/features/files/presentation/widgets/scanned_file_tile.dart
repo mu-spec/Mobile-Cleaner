@@ -5,6 +5,8 @@ import 'package:mobile_cleaner/core/utils/date_formatter.dart';
 import 'package:mobile_cleaner/core/utils/duration_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_thumbnail.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// A single row in a file list: thumbnail/icon, name, size, and date.
 class ScannedFileTile extends StatelessWidget {
@@ -40,7 +42,7 @@ class ScannedFileTile extends StatelessWidget {
 
     return ListTile(
       key: Key('file_tile_${file.id}'),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       leading: FileThumbnail(file: file),
       title: Text(
         file.name,
@@ -71,9 +73,8 @@ class ScannedFileTile extends StatelessWidget {
               key: Key('file_date_${file.id}'),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colors.onSurfaceVariant),
             );
 
             if (stackMetadata) {
@@ -88,9 +89,8 @@ class ScannedFileTile extends StatelessWidget {
                 Flexible(child: size),
                 Text(
                   '  ·  ',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colors.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: colors.onSurfaceVariant),
                 ),
                 Expanded(child: date),
               ],
@@ -131,6 +131,10 @@ void showFileDetails(BuildContext context, ScannedFile file) {
     context: context,
     showDragHandle: true,
     isScrollControlled: true,
+    backgroundColor: PhotoToolUi.surface(context),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
     builder: (BuildContext sheetContext) {
       return SafeArea(
         child: SingleChildScrollView(
@@ -144,14 +148,42 @@ void showFileDetails(BuildContext context, ScannedFile file) {
                   FileThumbnail(file: file, size: 54),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: Text(
-                      file.name,
-                      style: Theme.of(sheetContext).textTheme.titleMedium,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          file.name,
+                          style: Theme.of(sheetContext).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: <Widget>[
+                            PhosphorIcon(
+                              PhosphorIconsDuotone.shieldCheck,
+                              size: 15,
+                              color: PhotoToolUi.primary(sheetContext),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'File details',
+                              style: Theme.of(sheetContext).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(sheetContext)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
+              Divider(color: PhotoToolUi.border(sheetContext)),
+              const SizedBox(height: 12),
               _DetailRow(
                 label: 'Type',
                 value: file.mimeType ?? file.category.label,
@@ -191,9 +223,7 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final Text labelText = Text(
       label,
-      style: TextStyle(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
+      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
     );
 
     return Padding(

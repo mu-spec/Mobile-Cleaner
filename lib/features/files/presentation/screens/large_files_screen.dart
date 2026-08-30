@@ -11,8 +11,10 @@ import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/large_files_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:mobile_cleaner/features/settings/presentation/providers/settings_provider.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Large Files: find the biggest space users above a size threshold.
 ///
@@ -40,14 +42,27 @@ class _LargeFilesScreenState extends ConsumerState<LargeFilesScreen> {
     );
 
     return Scaffold(
+      backgroundColor: PhotoToolUi.background(context),
       appBar: AppBar(
-        title: const Text('Large Files'),
+        backgroundColor: PhotoToolUi.background(context),
+        surfaceTintColor: Colors.transparent,
+        title: const Text(
+          'Large Files',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
         actions: <Widget>[
           IconButton(
             key: const Key('large_files_rescan'),
             tooltip: 'Rescan',
             onPressed: () => ref.invalidate(largeFileScanProvider),
-            icon: const Icon(Icons.refresh_rounded),
+            style: IconButton.styleFrom(
+              backgroundColor: PhotoToolUi.isDark(context)
+                  ? const Color(0xFF182945)
+                  : const Color(0xFFEAF2FF),
+              foregroundColor: PhotoToolUi.primary(context),
+              side: BorderSide(color: PhotoToolUi.border(context)),
+            ),
+            icon: const PhosphorIcon(PhosphorIconsRegular.arrowsClockwise),
           ),
           const SizedBox(width: 8),
         ],
@@ -107,12 +122,11 @@ class _FilterBar extends StatelessWidget {
           for (final LargeFileFilter option in LargeFileFilter.values)
             Padding(
               padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
+              child: PhotoToolChoiceChip(
                 key: Key('large_filter_${option.name}'),
-                label: Text(option.label),
+                label: option.label,
                 selected: option == selected,
-                onSelected: (_) => onSelected(option),
-                visualDensity: VisualDensity.compact,
+                onSelected: () => onSelected(option),
               ),
             ),
         ],
@@ -135,13 +149,13 @@ class _LargeFileList extends StatelessWidget {
       children: <Widget>[
         _TotalCard(summary: summary),
         const SizedBox(height: 16),
-        Text(
-          'Biggest first',
-          style: Theme.of(context).textTheme.titleMedium,
+        const PhotoToolSectionHeader(
+          title: 'Biggest first',
+          subtitle: 'Review the files using the most storage.',
+          icon: PhosphorIconsDuotone.chartBarHorizontal,
         ),
-        const SizedBox(height: 4),
         for (final ScannedFile file in summary.files)
-          ScannedFileTile(file: file),
+          PhotoToolFilePanel(child: ScannedFileTile(file: file)),
       ],
     );
   }
@@ -159,6 +173,14 @@ class _TotalCard extends StatelessWidget {
 
     return Card(
       key: const Key('large_files_total_card'),
+      color: PhotoToolUi.surface(context),
+      surfaceTintColor: Colors.transparent,
+      elevation: PhotoToolUi.isDark(context) ? 0 : 2,
+      shadowColor: const Color(0xFF102B5B).withValues(alpha: 0.12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: PhotoToolUi.border(context)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -176,7 +198,7 @@ class _TotalCard extends StatelessWidget {
               key: const Key('large_files_total_bytes'),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: colors.primary,
+                color: PhotoToolUi.orange(context),
               ),
             ),
             const SizedBox(height: 4),
@@ -265,10 +287,12 @@ class _EmptyLargeFiles extends StatelessWidget {
       padding: const EdgeInsets.all(32),
       children: <Widget>[
         const SizedBox(height: 60),
-        Icon(
-          Icons.check_circle_outline_rounded,
-          size: 56,
-          color: colors.primary,
+        PhosphorIcon(
+          PhosphorIconsDuotone.checkCircle,
+          size: 64,
+          color: PhotoToolUi.primary(context),
+          duotoneSecondaryColor: PhotoToolUi.orange(context),
+          duotoneSecondaryOpacity: 0.9,
         ),
         const SizedBox(height: 16),
         Text(

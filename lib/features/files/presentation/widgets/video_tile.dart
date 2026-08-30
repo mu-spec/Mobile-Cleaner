@@ -41,7 +41,7 @@ class VideoTile extends StatelessWidget {
 
     return ListTile(
       key: Key('video_tile_${file.id}'),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       leading: SizedBox(
         width: _thumbSize,
         height: _thumbSize,

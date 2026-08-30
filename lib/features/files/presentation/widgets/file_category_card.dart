@@ -21,17 +21,18 @@ IconData iconForCategory(FileCategory category) {
 /// Accent colour used for a category tile.
 Color colorForCategory(FileCategory category) {
   return switch (category) {
-    FileCategory.images => const Color(0xFF0891B2),
-    FileCategory.videos => const Color(0xFF7C3AED),
-    FileCategory.audio => const Color(0xFFDB2777),
-    FileCategory.documents => const Color(0xFF0F766E),
-    FileCategory.downloads => const Color(0xFFF59E0B),
-    FileCategory.apks => const Color(0xFF16A34A),
+    FileCategory.images => const Color(0xFF2369E8),
+    FileCategory.videos => const Color(0xFF5C55D9),
+    FileCategory.audio => const Color(0xFFDE5C88),
+    FileCategory.documents => const Color(0xFF167C77),
+    FileCategory.downloads => const Color(0xFFF39A19),
+    FileCategory.apks => const Color(0xFF2DA868),
     FileCategory.other => const Color(0xFF64748B),
   };
 }
 
-IconData _premiumIconForCategory(FileCategory category) {
+/// Duotone icon shared by the Files dashboard and category browsers.
+IconData premiumIconForCategory(FileCategory category) {
   return switch (category) {
     FileCategory.images => PhosphorIconsDuotone.imagesSquare,
     FileCategory.videos => PhosphorIconsDuotone.videoCamera,
@@ -66,7 +67,7 @@ class FileCategoryCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurfaceElevated : AppColors.card,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : AppColors.border,
         ),
@@ -74,8 +75,8 @@ class FileCategoryCard extends StatelessWidget {
           if (!isDark)
             BoxShadow(
               color: AppColors.navy.withValues(alpha: 0.045),
-              blurRadius: 18,
-              offset: const Offset(0, 7),
+              blurRadius: 24,
+              offset: const Offset(0, 9),
             ),
         ],
       ),
@@ -93,25 +94,33 @@ class FileCategoryCard extends StatelessWidget {
                   children: <Widget>[
                     Container(
                       key: Key('category_icon_${summary.category.key}'),
-                      width: 42,
-                      height: 42,
+                      width: 50,
+                      height: 50,
                       decoration: BoxDecoration(
-                        color: accent.withValues(
-                          alpha: isDark
-                              ? 0.17
-                              : empty
-                              ? 0.09
-                              : 0.14,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: <Color>[
+                            accent.withValues(alpha: isDark ? 0.28 : 0.18),
+                            accent.withValues(alpha: isDark ? 0.12 : 0.07),
+                          ],
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(15),
                         border: Border.all(
-                          color: accent.withValues(alpha: isDark ? 0.22 : 0.06),
+                          color: accent.withValues(alpha: isDark ? 0.34 : 0.13),
                         ),
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.12),
+                            blurRadius: 14,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                       ),
                       child: Center(
                         child: PhosphorIcon(
-                          _premiumIconForCategory(summary.category),
-                          size: 25,
+                          premiumIconForCategory(summary.category),
+                          size: 29,
                           color: empty ? colors.onSurfaceVariant : accent,
                           duotoneSecondaryColor: Color.lerp(
                             accent,
@@ -123,10 +132,18 @@ class FileCategoryCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20,
-                      color: colors.onSurfaceVariant,
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: isDark ? 0.12 : 0.07),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 13,
+                        color: empty ? colors.onSurfaceVariant : accent,
+                      ),
                     ),
                   ],
                 ),

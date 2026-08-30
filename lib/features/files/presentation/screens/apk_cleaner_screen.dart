@@ -11,8 +11,10 @@ import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/apk_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// APK Cleaner: find installer packages left on the device and remove them.
 ///
@@ -70,7 +72,10 @@ class _ApkCleanerScreenState extends ConsumerState<ApkCleanerScreen> {
     final bool selecting = _selection.isNotEmpty;
 
     return Scaffold(
+      backgroundColor: PhotoToolUi.background(context),
       appBar: AppBar(
+        backgroundColor: PhotoToolUi.background(context),
+        surfaceTintColor: Colors.transparent,
         leading: selecting
             ? IconButton(
                 key: const Key('apk_cancel_selection'),
@@ -82,13 +87,17 @@ class _ApkCleanerScreenState extends ConsumerState<ApkCleanerScreen> {
         title: Text(
           selecting ? '${_selection.count} selected' : 'APK Cleaner',
           key: const Key('apk_title'),
+          style: const TextStyle(fontWeight: FontWeight.w800),
         ),
         actions: <Widget>[
           if (!selecting) ...<Widget>[
             PopupMenuButton<FileListSort>(
               key: const Key('apk_sort_button'),
               tooltip: 'Sort',
-              icon: const Icon(Icons.sort_rounded),
+              icon: PhosphorIcon(
+                PhosphorIconsRegular.slidersHorizontal,
+                color: PhotoToolUi.primary(context),
+              ),
               initialValue: _sort,
               onSelected: (FileListSort value) =>
                   setState(() => _sort = value),
@@ -122,7 +131,14 @@ class _ApkCleanerScreenState extends ConsumerState<ApkCleanerScreen> {
               key: const Key('apk_rescan'),
               tooltip: 'Rescan',
               onPressed: () => ref.invalidate(apkScanProvider),
-              icon: const Icon(Icons.refresh_rounded),
+              style: IconButton.styleFrom(
+                backgroundColor: PhotoToolUi.isDark(context)
+                    ? const Color(0xFF182945)
+                    : const Color(0xFFEAF2FF),
+                foregroundColor: PhotoToolUi.primary(context),
+                side: BorderSide(color: PhotoToolUi.border(context)),
+              ),
+              icon: const PhosphorIcon(PhosphorIconsRegular.arrowsClockwise),
             ),
           ],
           const SizedBox(width: 8),
@@ -235,12 +251,14 @@ class _ApkList extends StatelessWidget {
 
         // Each row shows the installer's name, size, and date.
         final ScannedFile file = summary.files[index - headerCount];
-        return ScannedFileTile(
-          file: file,
-          selectionMode: true,
-          selected: selection.contains(file),
-          onTap: () => onToggle(file),
-          onLongPress: () => showFileDetails(context, file),
+        return PhotoToolFilePanel(
+          child: ScannedFileTile(
+            file: file,
+            selectionMode: true,
+            selected: selection.contains(file),
+            onTap: () => onToggle(file),
+            onLongPress: () => showFileDetails(context, file),
+          ),
         );
       },
     );
@@ -259,6 +277,14 @@ class _TotalCard extends StatelessWidget {
 
     return Card(
       key: const Key('apk_total_card'),
+      color: PhotoToolUi.surface(context),
+      surfaceTintColor: Colors.transparent,
+      elevation: PhotoToolUi.isDark(context) ? 0 : 2,
+      shadowColor: const Color(0xFF102B5B).withValues(alpha: 0.12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: PhotoToolUi.border(context)),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -276,7 +302,7 @@ class _TotalCard extends StatelessWidget {
               key: const Key('apk_total_bytes'),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w800,
-                color: colors.primary,
+                color: PhotoToolUi.orange(context),
               ),
             ),
             const SizedBox(height: 4),
@@ -291,8 +317,8 @@ class _TotalCard extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: <Widget>[
-                Icon(
-                  Icons.info_outline_rounded,
+                PhosphorIcon(
+                  PhosphorIconsDuotone.info,
                   size: 15,
                   color: colors.onSurfaceVariant,
                 ),
@@ -328,10 +354,12 @@ class _EmptyApks extends StatelessWidget {
       padding: const EdgeInsets.all(32),
       children: <Widget>[
         const SizedBox(height: 60),
-        Icon(
-          Icons.check_circle_outline_rounded,
-          size: 56,
-          color: colors.primary,
+        PhosphorIcon(
+          PhosphorIconsDuotone.checkCircle,
+          size: 64,
+          color: PhotoToolUi.primary(context),
+          duotoneSecondaryColor: PhotoToolUi.orange(context),
+          duotoneSecondaryOpacity: 0.9,
         ),
         const SizedBox(height: 16),
         Text(
