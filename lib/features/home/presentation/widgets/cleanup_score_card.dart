@@ -55,30 +55,7 @@ class _UnavailableScore extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.sm),
         child: Row(
           children: <Widget>[
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: dark
-                    ? AppColors.darkInfoSurface
-                    : HomeUpperStyle.softBlue,
-                borderRadius: BorderRadius.circular(13),
-              ),
-              alignment: Alignment.center,
-              child: loading
-                  ? const SizedBox(
-                      width: 21,
-                      height: 21,
-                      child: CircularProgressIndicator(strokeWidth: 2.5),
-                    )
-                  : const PhosphorIcon(
-                      PhosphorIconsDuotone.chartDonut,
-                      size: 25,
-                      color: HomeUpperStyle.primaryBlue,
-                      duotoneSecondaryColor: HomeUpperStyle.orange,
-                      duotoneSecondaryOpacity: 0.72,
-                    ),
-            ),
+            _CleanupScoreIcon(loading: loading),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
               child: Column(
@@ -105,6 +82,110 @@ class _UnavailableScore extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A compact health-gauge mark for the score's not-yet-calculated state.
+///
+/// The layered tile gives the symbol enough presence to read as a first-class
+/// Home feature, while the orange status light ties it to cleanup actions.
+class _CleanupScoreIcon extends StatelessWidget {
+  const _CleanupScoreIcon({required this.loading});
+
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool dark = Theme.of(context).brightness == Brightness.dark;
+    final Color blue = dark
+        ? AppColors.darkPrimary
+        : HomeUpperStyle.primaryBlue;
+    final Color orange = dark ? AppColors.darkOrange : HomeUpperStyle.orange;
+
+    return Semantics(
+      label: loading ? 'Calculating cleanup score' : 'Cleanup score gauge',
+      child: Container(
+        key: const Key('cleanup_score_icon_tile'),
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: dark
+                ? <Color>[
+                    AppColors.darkPrimaryContainer,
+                    AppColors.darkInfoSurface,
+                  ]
+                : <Color>[const Color(0xFFF4F8FF), HomeUpperStyle.softBlue],
+          ),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: blue.withValues(alpha: dark ? 0.34 : 0.16)),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: blue.withValues(alpha: dark ? 0.14 : 0.10),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: <Widget>[
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: blue.withValues(alpha: dark ? 0.10 : 0.06),
+              ),
+            ),
+            PhosphorIcon(
+              PhosphorIconsDuotone.gauge,
+              key: const Key('cleanup_score_icon'),
+              size: 28,
+              color: blue,
+              duotoneSecondaryColor: HomeUpperStyle.radarCyan,
+              duotoneSecondaryOpacity: dark ? 0.82 : 0.70,
+            ),
+            Positioned(
+              right: 5,
+              top: 5,
+              child: Container(
+                width: 12,
+                height: 12,
+                padding: const EdgeInsets.all(2.5),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: dark
+                      ? AppColors.darkSurfaceElevated
+                      : HomeUpperStyle.card,
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: orange.withValues(alpha: 0.28),
+                      blurRadius: 5,
+                    ),
+                  ],
+                ),
+                child: loading
+                    ? CircularProgressIndicator(
+                        key: const Key('cleanup_score_icon_loading'),
+                        strokeWidth: 1.5,
+                        color: orange,
+                      )
+                    : DecoratedBox(
+                        key: const Key('cleanup_score_icon_accent'),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: orange,
+                        ),
+                      ),
               ),
             ),
           ],

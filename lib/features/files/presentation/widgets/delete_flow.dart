@@ -368,22 +368,44 @@ class _CleanupHero extends StatelessWidget {
           Expanded(
             flex: 4,
             child: Stack(
+              key: const Key('cleanup_review_illustration_frame'),
               alignment: Alignment.center,
+              clipBehavior: Clip.hardEdge,
               children: <Widget>[
                 Container(
-                  width: 104,
-                  height: 104,
+                  width: 118,
+                  height: 118,
                   decoration: BoxDecoration(
-                    color: AppColors.cleanupOrange.withValues(alpha: 0.2),
+                    gradient: RadialGradient(
+                      colors: <Color>[
+                        Colors.white.withValues(alpha: 0.13),
+                        AppColors.cleanupOrange.withValues(alpha: 0.12),
+                      ],
+                    ),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.10),
+                    ),
+                    boxShadow: <BoxShadow>[
+                      BoxShadow(
+                        color: AppColors.cleanupOrange.withValues(alpha: 0.16),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
                   ),
                 ),
-                Image.asset(
-                  'assets/images/cleanup_summary_bin.png',
-                  width: 126,
-                  height: 126,
-                  fit: BoxFit.contain,
-                  semanticLabel: 'Cleanup basket',
+                Transform.scale(
+                  scale: 1.75,
+                  child: Image.asset(
+                    'assets/images/cleanup_summary_bin.png',
+                    key: const Key('cleanup_review_illustration'),
+                    width: 126,
+                    height: 126,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.high,
+                    semanticLabel: 'Cleanup basket',
+                  ),
                 ),
               ],
             ),

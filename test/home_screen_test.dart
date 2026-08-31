@@ -23,6 +23,7 @@ import 'package:mobile_cleaner/features/home/presentation/screens/home_screen.da
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 const int _mib = 1024 * 1024;
 const int _gib = 1024 * 1024 * 1024;
@@ -334,6 +335,24 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('cleanup_score_value')), findsNothing);
+
+      final Container iconTile = tester.widget<Container>(
+        find.byKey(const Key('cleanup_score_icon_tile')),
+      );
+      final BoxDecoration iconDecoration =
+          iconTile.decoration! as BoxDecoration;
+      expect(iconDecoration.gradient, isA<LinearGradient>());
+      expect(iconDecoration.border, isNotNull);
+      expect(
+        tester
+            .widget<PhosphorIcon>(find.byKey(const Key('cleanup_score_icon')))
+            .icon,
+        PhosphorIconsDuotone.gauge,
+      );
+      expect(
+        find.byKey(const Key('cleanup_score_icon_accent')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('real recommendation shown inside Smart Scan card', (

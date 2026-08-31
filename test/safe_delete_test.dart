@@ -405,6 +405,30 @@ void main() {
       expect(find.textContaining('cannot be restored'), findsOneWidget);
     });
 
+    testWidgets('Review hero enlarges the cleanup artwork for clarity', (
+      WidgetTester tester,
+    ) async {
+      await _pump(tester, _FakeDelete());
+
+      await tester.tap(find.byKey(const Key('apk_select_all')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('apk_selection_delete')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('cleanup_review_illustration')),
+        findsOneWidget,
+      );
+      final Transform scale = tester.widget<Transform>(
+        find.descendant(
+          of: find.byKey(const Key('cleanup_review_illustration_frame')),
+          matching: find.byType(Transform),
+        ),
+      );
+      expect(scale.transform.getMaxScaleOnAxis(), closeTo(1.75, 0.001));
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('Cancel deletes nothing', (WidgetTester tester) async {
       final _FakeDelete deleter = _FakeDelete();
       await _pump(tester, deleter);
