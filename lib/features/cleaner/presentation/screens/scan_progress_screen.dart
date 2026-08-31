@@ -371,11 +371,13 @@ class _PremiumScanRing extends StatelessWidget {
   Widget build(BuildContext context) {
     final int percent = (progress * 100).round().clamp(0, 100);
     return Semantics(
+      key: const Key('scan_progress_semantics'),
       value: '$percent percent',
-      label: 'Storage scan progress',
+      label: 'Scan progress',
       child: SizedBox.square(
         dimension: 228,
         child: CustomPaint(
+          key: const Key('scan_progress_wave'),
           painter: _PremiumScanPainter(
             progress: progress,
             rotation: rotation,
@@ -390,19 +392,9 @@ class _PremiumScanRing extends StatelessWidget {
                       Icons.check_rounded,
                       key: Key('scan_complete_icon'),
                       size: 68,
-                      color: AppColors.success,
+                      color: Colors.white,
                     )
-                  : Text(
-                      '$percent%',
-                      key: const Key('scan_progress_percent'),
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : HomeUpperStyle.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -1.8,
-                      ),
-                    ),
+                  : const SizedBox.shrink(),
             ),
           ),
         ),
@@ -427,6 +419,7 @@ class _PremiumScanPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final Offset center = size.center(Offset.zero);
+    final Color orange = isDark ? AppColors.darkOrange : HomeUpperStyle.orange;
     final Rect glowRect = Rect.fromCircle(
       center: center,
       radius: size.width * 0.47,
@@ -435,16 +428,34 @@ class _PremiumScanPainter extends CustomPainter {
       center: center,
       radius: size.width * 0.405,
     );
+    final double innerRadius = size.width * 0.35;
+    final Rect innerRect = Rect.fromCircle(center: center, radius: innerRadius);
 
     canvas.drawCircle(
       center,
       size.width * 0.465,
       Paint()
         ..color = isDark
-            ? AppColors.darkPrimary.withValues(alpha: 0.07)
-            : HomeUpperStyle.primaryBlue.withValues(alpha: 0.055)
+            ? orange.withValues(alpha: 0.08)
+            : orange.withValues(alpha: 0.06)
         ..style = PaintingStyle.fill,
     );
+    canvas.drawCircle(
+      center,
+      innerRadius,
+      Paint()
+        ..color = isDark
+            ? AppColors.darkInfoSurface.withValues(alpha: 0.76)
+            : const Color(0xFFF2F7FF),
+    );
+
+    _paintLiquidWave(
+      canvas: canvas,
+      center: center,
+      radius: innerRadius,
+      bounds: innerRect,
+    );
+
     canvas.drawCircle(
       center,
       size.width * 0.405,
@@ -460,14 +471,14 @@ class _PremiumScanPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 15
       ..strokeCap = StrokeCap.round
-      ..shader = const SweepGradient(
+      ..shader = SweepGradient(
         startAngle: 0,
         endAngle: math.pi * 2,
         colors: <Color>[
-          HomeUpperStyle.deepBlue,
-          HomeUpperStyle.primaryBlue,
-          HomeUpperStyle.radarCyan,
-          HomeUpperStyle.deepBlue,
+          orange,
+          const Color(0xFFFFB23E),
+          const Color(0xFFFF6B00),
+          orange,
         ],
       ).createShader(progressRect);
     canvas.drawArc(
@@ -487,13 +498,146 @@ class _PremiumScanPainter extends CustomPainter {
         ..shader = SweepGradient(
           colors: <Color>[
             Colors.transparent,
-            HomeUpperStyle.radarCyan.withValues(alpha: 0.2),
-            HomeUpperStyle.radarCyan,
+            orange.withValues(alpha: 0.18),
+            orange,
           ],
           stops: const <double>[0, 0.72, 1],
           transform: GradientRotation(angle),
         ).createShader(glowRect);
       canvas.drawArc(glowRect, angle, math.pi * 0.58, false, glowPaint);
+    }
+  }
+
+  void _paintLiquidWave({
+    required Canvas canvas,
+    required Offset center,
+    required double radius,
+    required Rect bounds,
+  }) {
+    final double phase = rotation * math.pi * 2;
+    final double baseline = bounds.bottom - bounds.height * progress;
+
+    canvas.save();
+    canvas.clipPath(
+      Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
+    );
+
+    final Path backWave = _waveFillPath(
+      bounds: bounds,
+      baseline: baseline + 5,
+      amplitude: 6,
+      phase: phase + math.pi * 0.82,
+      frequency: 1.3,
+    );
+    canvas.drawPath(
+      backWave,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: <Color>[
+            HomeUpperStyle.radarCyan.withValues(alpha: isDark ? 0.62 : 0.52),
+            HomeUpperStyle.primaryBlue.withValues(alpha: isDark ? 0.82 : 0.72),
+          ],
+        ).createShader(bounds),
+    );
+
+    final Path frontWave = _waveFillPath(
+      bounds: bounds,
+      baseline: baseline,
+      amplitude: 7,
+      phase: -phase,
+      frequency: 1.18,
+    );
+    canvas.drawPath(
+      frontWave,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: <Color>[
+            HomeUpperStyle.radarCyan,
+            HomeUpperStyle.primaryBlue,
+            HomeUpperStyle.deepBlue,
+          ],
+          stops: <double>[0, 0.48, 1],
+        ).createShader(bounds),
+    );
+
+    _paintWaveBubbles(
+      canvas: canvas,
+      center: center,
+      radius: radius,
+      baseline: baseline,
+      phase: phase,
+    );
+    canvas.restore();
+
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = isDark
+            ? AppColors.darkPrimary.withValues(alpha: 0.28)
+            : HomeUpperStyle.primaryBlue.withValues(alpha: 0.14),
+    );
+  }
+
+  Path _waveFillPath({
+    required Rect bounds,
+    required double baseline,
+    required double amplitude,
+    required double phase,
+    required double frequency,
+  }) {
+    final Path path = Path();
+    const int segments = 48;
+    for (int index = 0; index <= segments; index++) {
+      final double fraction = index / segments;
+      final double x = bounds.left + bounds.width * fraction;
+      final double y =
+          baseline +
+          math.sin(fraction * math.pi * 2 * frequency + phase) * amplitude;
+      if (index == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path
+      ..lineTo(bounds.right, bounds.bottom + amplitude)
+      ..lineTo(bounds.left, bounds.bottom + amplitude)
+      ..close();
+    return path;
+  }
+
+  void _paintWaveBubbles({
+    required Canvas canvas,
+    required Offset center,
+    required double radius,
+    required double baseline,
+    required double phase,
+  }) {
+    final List<Offset> bubbles = <Offset>[
+      Offset(center.dx - radius * 0.42, center.dy + radius * 0.48),
+      Offset(
+        center.dx + radius * 0.30,
+        center.dy + radius * 0.22 + math.sin(phase) * 3,
+      ),
+      Offset(
+        center.dx - radius * 0.08,
+        center.dy + radius * 0.64 + math.cos(phase) * 2,
+      ),
+    ];
+    final Paint bubblePaint = Paint()
+      ..color = Colors.white.withValues(alpha: isDark ? 0.28 : 0.36);
+    for (int index = 0; index < bubbles.length; index++) {
+      final Offset bubble = bubbles[index];
+      if (bubble.dy > baseline + 10) {
+        canvas.drawCircle(bubble, index == 1 ? 3 : 2, bubblePaint);
+      }
     }
   }
 

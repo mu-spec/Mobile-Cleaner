@@ -3,13 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/app/theme/app_colors.dart';
+import 'package:mobile_cleaner/app/theme/app_tokens.dart';
 import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/domain/smart_scan_result.dart';
 import 'package:mobile_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
 import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
+import 'package:mobile_cleaner/features/home/domain/cleanup_score.dart';
+import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Smart Scan: runs the large files, old downloads, and APK checks together.
 ///
@@ -21,6 +26,13 @@ class CleanScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<SmartScanResult> scan = ref.watch(smartScanProvider);
+    final AsyncValue<CompletedCleanupAnalysis?> analysis = ref.watch(
+      cleanupAnalysisProvider,
+    );
+
+    Future<void> runCompleteScan() async {
+      await ref.read(recommendationsProvider.notifier).scan();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -30,7 +42,7 @@ class CleanScreen extends ConsumerWidget {
           IconButton(
             key: const Key('smart_scan_rescan'),
             tooltip: 'Scan again',
-            onPressed: () => refreshSmartScan(ref),
+            onPressed: runCompleteScan,
             icon: const Icon(Icons.refresh_rounded),
           ),
           const SizedBox(width: 8),
@@ -38,20 +50,25 @@ class CleanScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () async {
-            refreshSmartScan(ref);
-            await ref.read(smartScanProvider.future);
-          },
+          onRefresh: runCompleteScan,
           child: scan.when(
             loading: () => const FilesScanningView(),
             error: (Object error, StackTrace stackTrace) => FilesErrorView(
               error: error,
-              onRetry: () => refreshSmartScan(ref),
+              onRetry: runCompleteScan,
               onPermissions: () => context.push(AppRoutes.permissions),
             ),
-            data: (SmartScanResult result) => result.isEmpty
-                ? const _NothingFound()
-                : _ScanFindings(result: result),
+            data: (SmartScanResult result) {
+              final CompletedCleanupAnalysis? completed =
+                  analysis.asData?.value;
+              final CleanupScore? score =
+                  completed != null && completed.scannedAt == result.scannedAt
+                  ? completed.score
+                  : null;
+              return result.isEmpty
+                  ? _NothingFound(score: score)
+                  : _ScanFindings(result: result, score: score);
+            },
           ),
         ),
       ),
@@ -60,9 +77,10 @@ class CleanScreen extends ConsumerWidget {
 }
 
 class _ScanFindings extends StatelessWidget {
-  const _ScanFindings({required this.result});
+  const _ScanFindings({required this.result, required this.score});
 
   final SmartScanResult result;
+  final CleanupScore? score;
 
   void _openTool(BuildContext context, SmartScanCategory category) {
     final String route = switch (category) {
@@ -83,6 +101,10 @@ class _ScanFindings extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       children: <Widget>[
+        if (score != null) ...<Widget>[
+          _CompletedScanScoreCard(score: score!),
+          const SizedBox(height: 16),
+        ],
         _RecoverableCard(
           result: result,
           onOpenTool: (SmartScanCategory category) =>
@@ -109,6 +131,145 @@ class _ScanFindings extends StatelessWidget {
         for (final ScannedFile file in result.uniqueFiles.take(5))
           ScannedFileTile(file: file),
       ],
+    );
+  }
+}
+
+/// Prominent summary of the score already produced by the completed scan.
+///
+/// This widget is intentionally presentation-only: it receives a
+/// [CleanupScore] and never invokes [CleanupScoreCalculator].
+class _CompletedScanScoreCard extends StatelessWidget {
+  const _CompletedScanScoreCard({required this.score});
+
+  final CleanupScore score;
+
+  Color _scoreColor(BuildContext context) {
+    if (score.value >= CleanupScoreCalculator.excellentMinimum) {
+      return AppColors.success;
+    }
+    if (score.value >= CleanupScoreCalculator.goodMinimum) {
+      return Theme.of(context).brightness == Brightness.dark
+          ? AppColors.darkPrimary
+          : HomeUpperStyle.primaryBlue;
+    }
+    return Theme.of(context).brightness == Brightness.dark
+        ? AppColors.darkOrange
+        : HomeUpperStyle.orange;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool dark = theme.brightness == Brightness.dark;
+    final Color scoreColor = _scoreColor(context);
+
+    return Semantics(
+      label: 'Cleanup score ${score.value} out of 100, ${score.label.label}',
+      child: Container(
+        key: const Key('smart_scan_cleanup_score_card'),
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: dark
+                ? const <Color>[
+                    Color(0xFF14243A),
+                    AppColors.darkSurfaceElevated,
+                  ]
+                : const <Color>[Color(0xFFF2F7FF), Color(0xFFFFFAF2)],
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(
+            color: dark
+                ? AppColors.darkBorder
+                : HomeUpperStyle.primaryBlue.withValues(alpha: 0.14),
+          ),
+          boxShadow: dark
+              ? null
+              : <BoxShadow>[
+                  BoxShadow(
+                    color: HomeUpperStyle.deepBlue.withValues(alpha: 0.08),
+                    blurRadius: 22,
+                    offset: const Offset(0, 9),
+                  ),
+                ],
+        ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Cleanup Score',
+                    key: const Key('smart_scan_cleanup_score_title'),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: dark
+                          ? theme.colorScheme.onSurface
+                          : HomeUpperStyle.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${score.value} / 100',
+                    key: const Key('smart_scan_cleanup_score_value'),
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      color: scoreColor,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: scoreColor.withValues(alpha: dark ? 0.18 : 0.11),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      child: Text(
+                        score.label.label,
+                        key: const Key('smart_scan_cleanup_score_label'),
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: scoreColor,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Container(
+              width: 68,
+              height: 68,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: scoreColor.withValues(alpha: dark ? 0.16 : 0.10),
+                border: Border.all(
+                  color: scoreColor.withValues(alpha: dark ? 0.34 : 0.22),
+                ),
+              ),
+              alignment: Alignment.center,
+              child: PhosphorIcon(
+                PhosphorIconsDuotone.gauge,
+                size: 36,
+                color: scoreColor,
+                duotoneSecondaryColor: HomeUpperStyle.orange,
+                duotoneSecondaryOpacity: 0.72,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -245,7 +406,9 @@ class _RecoverableRow extends StatelessWidget {
 }
 
 class _NothingFound extends StatelessWidget {
-  const _NothingFound();
+  const _NothingFound({required this.score});
+
+  final CleanupScore? score;
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +419,11 @@ class _NothingFound extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.all(32),
       children: <Widget>[
-        const SizedBox(height: 60),
+        if (score != null) ...<Widget>[
+          _CompletedScanScoreCard(score: score!),
+          const SizedBox(height: 40),
+        ] else
+          const SizedBox(height: 60),
         Icon(
           Icons.check_circle_outline_rounded,
           size: 64,

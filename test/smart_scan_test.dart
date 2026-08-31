@@ -14,6 +14,9 @@ import 'package:mobile_cleaner/features/files/domain/large_file_filter.dart';
 import 'package:mobile_cleaner/features/files/domain/large_file_summary.dart';
 import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
 import 'package:mobile_cleaner/features/files/domain/smart_scan_result.dart';
+import 'package:mobile_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
+import 'package:mobile_cleaner/features/home/domain/cleanup_score.dart';
+import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
 const int _mib = 1024 * 1024;
@@ -142,6 +145,31 @@ SmartScanResult _resultFrom(List<ScannedFile> files) {
   );
 }
 
+Future<ProviderContainer> _pumpCompletedAnalysis(
+  WidgetTester tester, {
+  required SmartScanResult result,
+  required CompletedCleanupAnalysis analysis,
+}) async {
+  await tester.binding.setSurfaceSize(const Size(420, 1200));
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+
+  final ProviderContainer container = ProviderContainer(
+    overrides: [smartScanProvider.overrideWith((ref) async => result)],
+  );
+  addTearDown(container.dispose);
+  container.read(cleanupAnalysisProvider.notifier).complete(analysis);
+
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: container,
+      child: const MaterialApp(home: CleanScreen()),
+    ),
+  );
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
+  return container;
+}
+
 void main() {
   group('SmartScanCategory', () {
     test('covers exactly the three required checks', () {
@@ -262,6 +290,89 @@ void main() {
   });
 
   group('Smart Scan screen', () {
+    testWidgets('does not fabricate a Cleanup Score without a full scan', (
+      WidgetTester tester,
+    ) async {
+      await _pumpSmartScan(tester);
+
+      expect(
+        find.byKey(const Key('smart_scan_cleanup_score_card')),
+        findsNothing,
+      );
+    });
+
+    testWidgets(
+      'renders the exact completed analysis without calculating another score',
+      (WidgetTester tester) async {
+        final SmartScanResult result = _resultFrom(_fixture());
+        const CleanupScore suppliedScore = CleanupScore(
+          value: 72,
+          label: CleanupScoreLabel.needsAttention,
+          opportunityBytes: 987654321,
+          weightedOpportunityBytes: 456789123,
+          breakdown: <CleanupScoreBreakdown>[],
+        );
+        await _pumpCompletedAnalysis(
+          tester,
+          result: result,
+          analysis: CompletedCleanupAnalysis(
+            score: suppliedScore,
+            recommendations: const [],
+            scannedAt: result.scannedAt,
+          ),
+        );
+
+        expect(
+          find.byKey(const Key('smart_scan_cleanup_score_card')),
+          findsOneWidget,
+        );
+        expect(
+          tester
+              .widget<Text>(
+                find.byKey(const Key('smart_scan_cleanup_score_value')),
+              )
+              .data,
+          '72 / 100',
+        );
+        expect(
+          tester
+              .widget<Text>(
+                find.byKey(const Key('smart_scan_cleanup_score_label')),
+              )
+              .data,
+          'Needs Attention',
+        );
+        expect(find.byKey(const Key('smart_scan_total_card')), findsOneWidget);
+      },
+    );
+
+    testWidgets('never labels newer findings with an older scan score', (
+      WidgetTester tester,
+    ) async {
+      final SmartScanResult result = _resultFrom(_fixture());
+      await _pumpCompletedAnalysis(
+        tester,
+        result: result,
+        analysis: CompletedCleanupAnalysis(
+          score: const CleanupScore(
+            value: 12,
+            label: CleanupScoreLabel.cleanupRecommended,
+            opportunityBytes: 1,
+            weightedOpportunityBytes: 1,
+            breakdown: <CleanupScoreBreakdown>[],
+          ),
+          recommendations: const [],
+          scannedAt: result.scannedAt.subtract(const Duration(seconds: 1)),
+        ),
+      );
+
+      expect(
+        find.byKey(const Key('smart_scan_cleanup_score_card')),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('smart_scan_total_card')), findsOneWidget);
+    });
+
     testWidgets('shows the Potentially Recoverable heading', (
       WidgetTester tester,
     ) async {

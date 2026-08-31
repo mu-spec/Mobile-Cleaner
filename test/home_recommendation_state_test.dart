@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_cleaner/app/router/app_router.dart';
+import 'package:mobile_cleaner/features/cleaner/presentation/screens/clean_screen.dart';
 import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
 import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:mobile_cleaner/features/files/domain/file_category.dart';
@@ -11,6 +13,7 @@ import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
 import 'package:mobile_cleaner/features/home/domain/recommendation_engine.dart';
 import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:mobile_cleaner/features/home/presentation/recommendation_destination.dart';
+import 'package:mobile_cleaner/features/home/presentation/widgets/cleanup_score_card.dart';
 import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
 import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
 
@@ -20,8 +23,12 @@ const int _gib = 1024 * 1024 * 1024;
 class _CountingScanner implements FileScannerRepository {
   _CountingScanner(this.files);
 
-  final List<ScannedFile> files;
+  List<ScannedFile> files;
   int calls = 0;
+
+  void replaceFiles(List<ScannedFile> replacement) {
+    files = replacement;
+  }
 
   @override
   Future<FileScanResult> scan([
@@ -169,6 +176,90 @@ void main() {
       );
       expect(found.first.kind, RecommendationKind.apkInstallerReview);
       expect(found.first.reclaimableBytes, 700 * _mib);
+    },
+  );
+
+  testWidgets(
+    'results and Home share the latest score and a later scan replaces it',
+    (WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(420, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final _CountingScanner scanner = _CountingScanner(<ScannedFile>[]);
+      final ProviderContainer container = _container(scanner);
+      addTearDown(container.dispose);
+      final RecommendationsController controller = container.read(
+        recommendationsProvider.notifier,
+      );
+
+      await controller.scan();
+      final CompletedCleanupAnalysis first = container
+          .read(cleanupAnalysisProvider)
+          .requireValue!;
+      expect(first.score.value, 100);
+
+      scanner.replaceFiles(<ScannedFile>[
+        for (int index = 0; index < 25; index++)
+          _file(
+            id: 'replacement-shot-$index',
+            name: 'Screenshot_replacement_$index.png',
+            bytes: 40 * _mib,
+            category: FileCategory.images,
+            mimeType: 'image/png',
+            relativePath: 'Pictures/Screenshots/',
+          ),
+      ]);
+      await controller.scan();
+
+      final CompletedCleanupAnalysis latest = container
+          .read(cleanupAnalysisProvider)
+          .requireValue!;
+      expect(latest.score.value, lessThan(first.score.value));
+      expect(latest.scannedAt, isNot(first.scannedAt));
+      final int callsAfterScan = scanner.calls;
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: CleanScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const Key('smart_scan_cleanup_score_value')),
+            )
+            .data,
+        '${latest.score.value} / 100',
+      );
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const Key('smart_scan_cleanup_score_label')),
+            )
+            .data,
+        latest.score.label.label,
+      );
+      expect(scanner.calls, callsAfterScan);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Scaffold(body: CleanupScoreCard(onOpen: (_) {})),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        tester.widget<Text>(find.byKey(const Key('cleanup_score_value'))).data,
+        '${latest.score.value}',
+      );
+      expect(scanner.calls, callsAfterScan);
     },
   );
 

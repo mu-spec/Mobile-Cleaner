@@ -225,13 +225,14 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.byKey(const Key('scan_progress_ring')), findsOneWidget);
-    expect(find.byKey(const Key('scan_progress_percent')), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_percent')), findsNothing);
+    expect(find.byKey(const Key('scan_progress_wave')), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 1600));
-    final Text progressText = tester.widget<Text>(
-      find.byKey(const Key('scan_progress_percent')),
+    final Semantics progressSemantics = tester.widget<Semantics>(
+      find.byKey(const Key('scan_progress_semantics')),
     );
-    expect(progressText.data, isNot('0%'));
+    expect(progressSemantics.properties.value, isNot('0 percent'));
 
     await tester.pump(const Duration(milliseconds: 1500));
     await tester.pump(const Duration(milliseconds: 700));
@@ -342,7 +343,12 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 3000));
 
-    expect(find.text('90%'), findsOneWidget);
+    expect(find.text('90%'), findsNothing);
+    final Semantics progressSemantics = tester.widget<Semantics>(
+      find.byKey(const Key('scan_progress_semantics')),
+    );
+    expect(progressSemantics.properties.value, '90 percent');
+    expect(find.byKey(const Key('scan_progress_wave')), findsOneWidget);
     expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
     expect(find.byType(CleanScreen), findsNothing);
 
@@ -550,6 +556,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
     expect(find.text('Scanning your storage'), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_wave')), findsWidgets);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pump(const Duration(milliseconds: 500));
@@ -565,6 +572,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.text('Scanning your photos'), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_wave')), findsWidgets);
     final Finder activePhotoScan = find.ancestor(
       of: find.text('Scanning your photos'),
       matching: find.byKey(const Key('scan_progress_screen')),
@@ -587,6 +595,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.text('Scanning your files'), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_wave')), findsWidgets);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pump(const Duration(milliseconds: 500));
@@ -603,6 +612,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.text('Analyzing your apps'), findsOneWidget);
+    expect(find.byKey(const Key('scan_progress_wave')), findsWidgets);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pump(const Duration(milliseconds: 500));
