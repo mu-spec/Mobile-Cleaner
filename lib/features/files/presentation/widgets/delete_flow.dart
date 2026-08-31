@@ -558,9 +558,7 @@ class _CleaningScreen extends StatelessWidget {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 22),
-                  _GradientProgressBar(value: value),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 26),
                   Container(
                     decoration: BoxDecoration(
                       color: Theme.of(context).brightness == Brightness.dark
@@ -704,39 +702,6 @@ class _CleaningRingPainter extends CustomPainter {
   @override
   bool shouldRepaint(_CleaningRingPainter oldDelegate) =>
       oldDelegate.progress != progress;
-}
-
-class _GradientProgressBar extends StatelessWidget {
-  const _GradientProgressBar({required this.value});
-
-  final double value;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(99),
-      child: Container(
-        key: const Key('cleanup_progress_bar'),
-        height: 8,
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        alignment: Alignment.centerLeft,
-        child: FractionallySizedBox(
-          widthFactor: value,
-          child: const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: <Color>[
-                  AppColors.cleanupOrange,
-                  AppColors.actionBlue,
-                  AppColors.brandBlue,
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _CleaningGroupRow extends StatelessWidget {

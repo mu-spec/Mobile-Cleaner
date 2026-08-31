@@ -467,7 +467,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.byKey(const Key('delete_progress')), findsOneWidget);
-      expect(find.byKey(const Key('cleanup_progress_bar')), findsOneWidget);
+      expect(find.byKey(const Key('cleanup_progress_bar')), findsNothing);
       expect(find.text('Cleaning...'), findsWidgets);
 
       await tester.pumpAndSettle();
