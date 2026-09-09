@@ -45,11 +45,10 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Container(
-                width: 112,
-                height: 112,
+                width: 136,
+                height: 136,
                 decoration: BoxDecoration(
-                  color: colors.onPrimary,
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(34),
                   boxShadow: const <BoxShadow>[
                     BoxShadow(
                       color: Color(0x33000000),
@@ -58,10 +57,13 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ],
                 ),
-                child: Icon(
-                  Icons.cleaning_services_rounded,
-                  size: 58,
-                  color: colors.primary,
+                child: Image.asset(
+                  'assets/branding/phone_cleaner_icon.png',
+                  width: 136,
+                  height: 136,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                  semanticLabel: 'Mobile Cleaner app icon',
                 ),
               ),
               const SizedBox(height: 28),

@@ -2,8 +2,8 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_background" />
     <item
-        android:width="112dp"
-        android:height="112dp"
-        android:drawable="@drawable/splash_mark"
+        android:width="136dp"
+        android:height="136dp"
+        android:drawable="@drawable/phone_cleaner_splash"
         android:gravity="center" />
 </layer-list>
