@@ -39,6 +39,7 @@
         android:label="Mobile Cleaner"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:allowBackup="false"
         android:fullBackupContent="false"
         tools:ignore="DataExtractionRules">

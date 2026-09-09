@@ -49,7 +49,8 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: false
-  image_path: assets/icons/app_icon.png
-  adaptive_icon_background: '#0F766E'
-  adaptive_icon_foreground: assets/icons/app_icon_foreground.png
+  image_path: assets/branding/phone_cleaner_icon.png
+  adaptive_icon_background: '#087CF2'
+  adaptive_icon_foreground: assets/branding/phone_cleaner_icon.png
+  adaptive_icon_foreground_inset: 20
   min_sdk_android: 24
