@@ -331,7 +331,7 @@ void main() {
       expect(find.byKey(const Key('settings_defaults_note')), findsOneWidget);
     });
 
-    testWidgets('the privacy policy opens and states the key promise', (
+    testWidgets('the privacy policy row hands off to the external browser', (
       WidgetTester tester,
     ) async {
       await _pumpSettings(tester);
@@ -340,9 +340,25 @@ void main() {
       await tester.tap(find.byKey(const Key('open_privacy_policy')));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('privacy_policy_sheet')), findsOneWidget);
-      expect(find.text('Nothing leaves your device'), findsOneWidget);
+      // The test harness has no url_launcher plugin, so the launch raises.
+      // That is the failure path requirement: Settings must stay standing
+      // and say so briefly instead of throwing.
       expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('privacy_policy_error')), findsOneWidget);
+      expect(find.text('Unable to open Privacy Policy.'), findsOneWidget);
+
+      // The policy is no longer rendered in-app; it now lives behind the link.
+      expect(find.byKey(const Key('privacy_policy_sheet')), findsNothing);
+    });
+
+    testWidgets('there is exactly one privacy policy row', (
+      WidgetTester tester,
+    ) async {
+      await _pumpSettings(tester);
+
+      await _scrollTo(tester, find.byKey(const Key('open_privacy_policy')));
+      expect(find.byKey(const Key('open_privacy_policy')), findsOneWidget);
+      expect(find.text('Privacy policy'), findsOneWidget);
     });
 
     testWidgets('about opens and is honest about limits', (

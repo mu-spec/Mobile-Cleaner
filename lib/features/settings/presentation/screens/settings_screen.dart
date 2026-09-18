@@ -13,6 +13,7 @@ import 'package:phone_storage_cleaner/features/onboarding/data/onboarding_prefer
 import 'package:phone_storage_cleaner/features/settings/domain/app_settings.dart';
 import 'package:phone_storage_cleaner/features/settings/presentation/providers/settings_provider.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Settings.
 ///
@@ -127,7 +128,7 @@ class SettingsScreen extends ConsumerWidget {
                   tileKey: const Key('open_privacy_policy'),
                   icon: _SettingsIcons.privacy,
                   title: 'Privacy policy',
-                  onTap: () => showPrivacyPolicy(context),
+                  onTap: () => openPrivacyPolicy(context),
                 ),
               ],
             ),
@@ -638,72 +639,35 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
   }
 }
 
-/// The privacy policy, shown in-app.
+/// Opens the published privacy policy in the user's own browser.
 ///
-/// Held in the app rather than behind a link: the policy describes behaviour
-/// that is verifiable in this build, and a web page could change independently
-/// of the code it describes. It also means the policy is readable offline,
-/// which matters for an app that requests storage access.
-void showPrivacyPolicy(BuildContext context) {
-  showModalBottomSheet<void>(
-    context: context,
-    showDragHandle: true,
-    isScrollControlled: true,
-    builder: (BuildContext sheetContext) => DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.8,
-      maxChildSize: 0.95,
-      builder: (BuildContext context, ScrollController controller) => ListView(
-        key: const Key('privacy_policy_sheet'),
-        controller: controller,
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-        children: const <Widget>[
-          _PolicyTitle('Privacy Policy'),
-          _PolicySection(
-            heading: 'Nothing leaves your device',
-            body:
-                'Phone Storage Cleaner has no internet permission. Your files, '
-                'file names, photos, thumbnails, and the results of every '
-                'scan stay on this phone. Nothing is uploaded, shared, or '
-                'sent to any server.',
-          ),
-          _PolicySection(
-            heading: 'No accounts, no tracking',
-            body:
-                'There is no sign-in, no analytics, no advertising, and '
-                'no third-party tracking. The app does not collect a '
-                'device identifier.',
-          ),
-          _PolicySection(
-            heading: 'What is stored on this phone',
-            body:
-                'Your settings, and a cleanup history holding only a '
-                'date, a file count, and a size for each cleanup. No file '
-                'names are recorded. Clearing the history in Cleanup '
-                'History removes it.',
-          ),
-          _PolicySection(
-            heading: 'Why permissions are requested',
-            body:
-                'Media and storage access is what lets the app list your '
-                'files and calculate their sizes. Usage Access, if you '
-                'grant it, is used only to read app sizes. Both are '
-                'optional, and the app tells you what it cannot do '
-                'without them.',
-          ),
-          _PolicySection(
-            heading: 'Deleting is always your decision',
-            body:
-                'Nothing is deleted automatically. Every removal is shown '
-                'to you first, requires an explicit confirmation, and may '
-                'ask for a second confirmation from Android itself. '
-                'Deletion is permanent and is not recoverable from this '
-                'app.',
-          ),
-        ],
+/// The app performs no request of its own: the URL is handed to the system
+/// browser, so this needs no INTERNET permission. A device with no browser
+/// raises rather than returning false, so both outcomes are folded into one
+/// short in-app message and tapping this row can never crash Settings.
+Future<void> openPrivacyPolicy(BuildContext context) async {
+  bool opened = false;
+  try {
+    // externalApplication forces the real browser. The in-app WebView mode
+    // would render the same page inside this app and add nothing.
+    opened = await launchUrl(
+      Uri.parse(AppConstants.privacyPolicyUrl),
+      mode: LaunchMode.externalApplication,
+    );
+  } on Exception {
+    opened = false;
+  }
+  if (opened || !context.mounted) {
+    return;
+  }
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      const SnackBar(
+        key: Key('privacy_policy_error'),
+        content: Text('Unable to open Privacy Policy.'),
       ),
-    ),
-  );
+    );
 }
 
 /// What the app does, and what it will not do.

@@ -19,6 +19,10 @@ dependencies:
   permission_handler: ^13.0.1
   phosphor_icons: ^3.0.1
   shared_preferences: ^2.5.5
+  # Opens the published privacy policy in the user's own browser. Deliberately
+  # not used to fetch anything: handing an https URL to the system browser
+  # needs no INTERNET permission in this app.
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
