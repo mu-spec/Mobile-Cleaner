@@ -91,7 +91,7 @@ nothing else.
 
 ## Files changed
 
-- `android/app/src/main/kotlin/com/mobilecleaner/app/FileScannerBridge.kt` —
+- `android/app/src/main/kotlin/com/KoreAppsTek/PhoneStorageCleaner/FileScannerBridge.kt` —
   `queryWithLimit`, `Bundle` import, richer `SCAN_FAILED` detail
 - `lib/features/files/presentation/widgets/files_status_views.dart` —
   error detail line

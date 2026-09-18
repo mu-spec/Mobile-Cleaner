@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
-import 'package:mobile_cleaner/features/apps/domain/app_inventory.dart';
-import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
-import 'package:mobile_cleaner/features/apps/presentation/screens/app_details_screen.dart';
-import 'package:mobile_cleaner/features/apps/presentation/screens/apps_screen.dart';
+import 'package:phone_storage_cleaner/features/apps/data/installed_apps_repository.dart';
+import 'package:phone_storage_cleaner/features/apps/domain/app_inventory.dart';
+import 'package:phone_storage_cleaner/features/apps/domain/installed_app.dart';
+import 'package:phone_storage_cleaner/features/apps/presentation/screens/app_details_screen.dart';
+import 'package:phone_storage_cleaner/features/apps/presentation/screens/apps_screen.dart';
 
 const int _mib = 1024 * 1024;
 

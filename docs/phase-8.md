@@ -27,7 +27,7 @@ shows type, exact size, the **absolute** modified date, and full location.
 
 ### Thumbnails
 
-New `ThumbnailLoader.kt` on channel `com.mobilecleaner.app/thumbnails`:
+New `ThumbnailLoader.kt` on channel `com.KoreAppsTek.PhoneStorageCleaner/thumbnails`:
 
 - `contentResolver.loadThumbnail` on Android 10+, with the legacy
   `MediaStore.{Images,Video}.Thumbnails` APIs as a pre-Q fallback,

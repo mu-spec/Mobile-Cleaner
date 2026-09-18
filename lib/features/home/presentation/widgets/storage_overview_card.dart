@@ -2,13 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/route_observer.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
-import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
-import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
+import 'package:phone_storage_cleaner/app/route_observer.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phone_storage_cleaner/features/storage/domain/storage_info.dart';
+import 'package:phone_storage_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Storage Overview: the first and most important card on Home.

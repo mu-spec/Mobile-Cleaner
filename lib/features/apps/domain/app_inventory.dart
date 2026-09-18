@@ -1,4 +1,4 @@
-import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
+import 'package:phone_storage_cleaner/features/apps/domain/installed_app.dart';
 
 /// Orderings offered by the Apps section.
 enum AppSort {

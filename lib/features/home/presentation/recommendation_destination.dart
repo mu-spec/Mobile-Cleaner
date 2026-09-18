@@ -1,6 +1,6 @@
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/features/home/domain/cleanup_score.dart';
-import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/features/home/domain/cleanup_score.dart';
+import 'package:phone_storage_cleaner/features/home/domain/recommendation.dart';
 
 /// Existing review screen owned by each recommendation category.
 String recommendationRoute(RecommendationKind kind) => switch (kind) {

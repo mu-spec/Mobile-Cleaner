@@ -4,26 +4,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/app/app.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
-import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
-import 'package:mobile_cleaner/features/apps/presentation/screens/apps_screen.dart';
-import 'package:mobile_cleaner/features/cleaner/presentation/screens/clean_screen.dart';
-import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
-import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
-import 'package:mobile_cleaner/features/files/data/perceptual_hash_repository.dart';
-import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/presentation/screens/files_screen.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
-import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
-import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
-import 'package:mobile_cleaner/features/settings/presentation/screens/settings_screen.dart';
-import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
-import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
+import 'package:phone_storage_cleaner/app/app.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/features/apps/data/installed_apps_repository.dart';
+import 'package:phone_storage_cleaner/features/apps/domain/installed_app.dart';
+import 'package:phone_storage_cleaner/features/apps/presentation/screens/apps_screen.dart';
+import 'package:phone_storage_cleaner/features/cleaner/presentation/screens/clean_screen.dart';
+import 'package:phone_storage_cleaner/features/files/data/file_hash_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/perceptual_hash_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/thumbnail_repository.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/screens/files_screen.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phone_storage_cleaner/features/permissions/data/permission_gateway.dart';
+import 'package:phone_storage_cleaner/features/permissions/domain/app_permission_status.dart';
+import 'package:phone_storage_cleaner/features/settings/presentation/screens/settings_screen.dart';
+import 'package:phone_storage_cleaner/features/storage/data/storage_repository.dart';
+import 'package:phone_storage_cleaner/features/storage/domain/storage_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -58,7 +58,7 @@ void main() {
           ),
           ..._offlineDataOverrides,
         ],
-        child: const MobileCleanerApp(),
+        child: const PhoneStorageCleanerApp(),
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
@@ -147,7 +147,7 @@ void main() {
           ),
           ..._offlineDataOverrides,
         ],
-        child: const MobileCleanerApp(),
+        child: const PhoneStorageCleanerApp(),
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
@@ -203,7 +203,7 @@ void main() {
           ),
           ..._offlineDataOverrides,
         ],
-        child: const MobileCleanerApp(),
+        child: const PhoneStorageCleanerApp(),
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
@@ -276,7 +276,7 @@ void main() {
             const _OneFakeApp(),
           ),
         ],
-        child: const MobileCleanerApp(),
+        child: const PhoneStorageCleanerApp(),
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
@@ -328,7 +328,7 @@ void main() {
             const _OneFakeApp(),
           ),
         ],
-        child: const MobileCleanerApp(),
+        child: const PhoneStorageCleanerApp(),
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
@@ -383,7 +383,7 @@ void main() {
             _EmptyFileScannerRepository(),
           ),
         ],
-        child: const MobileCleanerApp(),
+        child: const PhoneStorageCleanerApp(),
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
@@ -436,7 +436,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: _offlineDataOverrides,
-        child: const MobileCleanerApp(),
+        child: const PhoneStorageCleanerApp(),
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
@@ -493,7 +493,7 @@ void main() {
             _FakePermissionGateway(AppPermissionStatus.granted),
           ),
         ],
-        child: const MobileCleanerApp(),
+        child: const PhoneStorageCleanerApp(),
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));
@@ -539,7 +539,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: _offlineDataOverrides,
-        child: const MobileCleanerApp(),
+        child: const PhoneStorageCleanerApp(),
       ),
     );
     await tester.pump(const Duration(milliseconds: 1000));

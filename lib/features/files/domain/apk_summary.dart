@@ -1,6 +1,6 @@
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Installer packages found on the device, plus the space they occupy.
 class ApkSummary {

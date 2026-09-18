@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/core/utils/duration_formatter.dart';
-import 'package:mobile_cleaner/features/files/data/delete_repository.dart';
-import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
-import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
-import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/domain/video_sort.dart';
-import 'package:mobile_cleaner/features/files/domain/video_summary.dart';
-import 'package:mobile_cleaner/features/files/presentation/screens/videos_screen.dart';
+import 'package:phone_storage_cleaner/core/utils/duration_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/data/delete_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/thumbnail_repository.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/video_sort.dart';
+import 'package:phone_storage_cleaner/features/files/domain/video_summary.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/screens/videos_screen.dart';
 
 const int _mib = 1024 * 1024;
 

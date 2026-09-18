@@ -2,27 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/app/theme/app_theme.dart';
-import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
-import 'package:mobile_cleaner/features/files/data/delete_repository.dart';
-import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
-import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
-import 'package:mobile_cleaner/features/files/data/perceptual_hash_repository.dart';
-import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
-import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/history/data/cleanup_history_repository.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_entry.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_history.dart';
-import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
-import 'package:mobile_cleaner/features/home/presentation/screens/home_screen.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
-import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
-import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/app/theme/app_theme.dart';
+import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/features/apps/data/installed_apps_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/delete_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/file_hash_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/perceptual_hash_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/thumbnail_repository.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/history/data/cleanup_history_repository.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_entry.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_history.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/screens/home_screen.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_section.dart';
+import 'package:phone_storage_cleaner/features/storage/data/storage_repository.dart';
+import 'package:phone_storage_cleaner/features/storage/domain/storage_info.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 const int _mib = 1024 * 1024;
@@ -205,7 +205,7 @@ void main() {
     ) async {
       await _pumpHome(tester);
 
-      expect(find.text('Mobile Cleaner'), findsOneWidget);
+      expect(find.text('Phone Storage Cleaner'), findsOneWidget);
       expect(find.text('Clean smarter. Keep what matters.'), findsOneWidget);
       // The in-header Settings button was removed for a cleaner Home;
       // Settings stays available through bottom navigation.

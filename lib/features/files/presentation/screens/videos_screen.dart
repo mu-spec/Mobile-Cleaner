@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/core/utils/duration_formatter.dart';
-import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
-import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/domain/video_sort.dart';
-import 'package:mobile_cleaner/features/files/domain/video_summary.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/videos_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/delete_flow.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/video_tile.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/core/utils/duration_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_selection.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/video_sort.dart';
+import 'package:phone_storage_cleaner/features/files/domain/video_summary.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/videos_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/delete_flow.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/selection_action_bar.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/video_tile.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Videos: the dedicated section for reviewing video files.

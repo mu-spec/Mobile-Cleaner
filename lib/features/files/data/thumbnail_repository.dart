@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Loads thumbnail bytes for media files.
 ///
@@ -17,7 +17,8 @@ class PlatformThumbnailRepository implements ThumbnailRepository {
   PlatformThumbnailRepository({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const String _channelName = 'com.mobilecleaner.app/thumbnails';
+  static const String _channelName =
+      'com.KoreAppsTek.PhoneStorageCleaner/thumbnails';
 
   /// Cap on cached thumbnails.
   ///

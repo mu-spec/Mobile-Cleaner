@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Computes perceptual hashes so visually similar photos can be grouped.
 ///
@@ -21,7 +21,8 @@ class PlatformPerceptualHashRepository implements PerceptualHashRepository {
   PlatformPerceptualHashRepository({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const String _channelName = 'com.mobilecleaner.app/perceptual_hash';
+  static const String _channelName =
+      'com.KoreAppsTek.PhoneStorageCleaner/perceptual_hash';
 
   /// Must not exceed `PerceptualHashBridge.MAX_FILES_PER_CALL`, which
   /// silently drops anything beyond its cap.

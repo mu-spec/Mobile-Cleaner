@@ -3,18 +3,18 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
-import 'package:mobile_cleaner/features/cleaner/domain/scan_launch_target.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/duplicates_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/file_scan_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/photo_cleanup_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/screenshot_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/videos_provider.dart';
-import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
+import 'package:phone_storage_cleaner/features/cleaner/domain/scan_launch_target.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/duplicates_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/file_scan_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/photo_cleanup_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/screenshot_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/videos_provider.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
 /// Runs a real storage scan behind a deliberately paced premium progress UI.
 ///

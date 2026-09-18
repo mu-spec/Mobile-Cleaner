@@ -2,18 +2,18 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/core/ui/haptics.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/files/data/delete_repository.dart';
-import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/presentation/screens/cleanup_complete_screen.dart';
-import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
-import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
-import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/ui/haptics.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/data/delete_repository.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_selection.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/screens/cleanup_complete_screen.dart';
+import 'package:phone_storage_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:phone_storage_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Opens the shared three-screen cleanup experience used by every cleaner.

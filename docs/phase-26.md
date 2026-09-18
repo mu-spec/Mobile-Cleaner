@@ -50,7 +50,7 @@ cannot reset the others** — also tested.
 
 ## No theme flash on launch
 
-`MobileCleanerApp` became a `ConsumerWidget` and falls back to
+`PhoneStorageCleanerApp` became a `ConsumerWidget` and falls back to
 `ThemeMode.system` while preferences load. That load resolves during the splash
 screen, so a saved Light or Dark choice is applied before any real content is
 visible.

@@ -1,5 +1,5 @@
-import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/download_age_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Downloads older than one [DownloadAgeFilter], plus the space they occupy.
 class DownloadsSummary {

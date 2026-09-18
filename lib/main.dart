@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/app.dart';
+import 'package:phone_storage_cleaner/app/app.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,5 +12,5 @@ void main() {
   PaintingBinding.instance.imageCache.maximumSizeBytes = 24 * 1024 * 1024;
   PaintingBinding.instance.imageCache.maximumSize = 400;
 
-  runApp(const ProviderScope(child: MobileCleanerApp()));
+  runApp(const ProviderScope(child: PhoneStorageCleanerApp()));
 }

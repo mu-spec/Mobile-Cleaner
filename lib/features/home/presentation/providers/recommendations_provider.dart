@@ -1,23 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/duplicate_group.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/domain/screenshot_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/screenshot_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/smart_scan_result.dart';
-import 'package:mobile_cleaner/features/files/domain/video_sort.dart';
-import 'package:mobile_cleaner/features/files/domain/video_summary.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/apk_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/downloads_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/duplicates_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/large_files_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/screenshot_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/videos_provider.dart';
-import 'package:mobile_cleaner/features/home/domain/cleanup_score.dart';
-import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
-import 'package:mobile_cleaner/features/home/domain/recommendation_engine.dart';
-import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
-import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
+import 'package:phone_storage_cleaner/features/files/domain/duplicate_group.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/screenshot_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/screenshot_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/smart_scan_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/video_sort.dart';
+import 'package:phone_storage_cleaner/features/files/domain/video_summary.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/apk_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/downloads_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/duplicates_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/large_files_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/screenshot_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/videos_provider.dart';
+import 'package:phone_storage_cleaner/features/home/domain/cleanup_score.dart';
+import 'package:phone_storage_cleaner/features/home/domain/recommendation.dart';
+import 'package:phone_storage_cleaner/features/home/domain/recommendation_engine.dart';
+import 'package:phone_storage_cleaner/features/storage/domain/storage_info.dart';
+import 'package:phone_storage_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 
 /// The one completed analyzer snapshot used to produce both Home features.
 class CleanupScanData {

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
-import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_duotone_icon.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/features/home/domain/recommendation.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_duotone_icon.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_section.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Home's recommendations: fixed rules over the real scan results.

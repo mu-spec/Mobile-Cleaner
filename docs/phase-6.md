@@ -47,8 +47,8 @@ and `truncated` for diagnostics.
 
 ### Native scanner
 
-`android/app/src/main/kotlin/com/mobilecleaner/app/FileScannerBridge.kt` —
-a MediaStore-backed bridge on channel `com.mobilecleaner.app/file_scanner`,
+`android/app/src/main/kotlin/com/KoreAppsTek/PhoneStorageCleaner/FileScannerBridge.kt` —
+a MediaStore-backed bridge on channel `com.KoreAppsTek.PhoneStorageCleaner/file_scanner`,
 registered from `MainActivity`.
 
 - Images / Videos / Audio: the respective `MediaStore.*.Media` collections.

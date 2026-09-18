@@ -1,4 +1,4 @@
-# Mobile Cleaner UI V2.1 — Home Screen Redesign
+# Phone Storage Cleaner UI V2.1 — Home Screen Redesign
 
 Presentation-only milestone. No storage calculation, scan algorithm, native
 bridge, permission, deletion, or persistence code changed.
@@ -36,7 +36,7 @@ Dark mode keeps seed-derived tones — cards use the dark surface, not white.
 - Theme: blue scheme, one card language, refined bottom navigation (white
   surface, blue selection, gray rest, subtle top divider). Destinations are
   untouched; labels scale down within their own slot instead of clipping.
-- Home header: compact "Mobile Cleaner" identity + tagline, with Settings in
+- Home header: compact "Phone Storage Cleaner" identity + tagline, with Settings in
   a subtle rounded surface. Same key, same route.
 - Storage Overview: two-column hierarchy — strong blue used-percentage left
   and a two-colour donut right. Blue is the real used fraction and orange is

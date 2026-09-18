@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/app/theme/app_theme.dart';
-import 'package:mobile_cleaner/core/constants/app_constants.dart';
-import 'package:mobile_cleaner/features/settings/domain/app_settings.dart';
-import 'package:mobile_cleaner/features/settings/presentation/providers/settings_provider.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/app/theme/app_theme.dart';
+import 'package:phone_storage_cleaner/core/constants/app_constants.dart';
+import 'package:phone_storage_cleaner/features/settings/domain/app_settings.dart';
+import 'package:phone_storage_cleaner/features/settings/presentation/providers/settings_provider.dart';
 
-class MobileCleanerApp extends ConsumerWidget {
-  const MobileCleanerApp({super.key});
+class PhoneStorageCleanerApp extends ConsumerWidget {
+  const PhoneStorageCleanerApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

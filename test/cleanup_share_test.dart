@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/features/files/data/cleanup_share_service.dart';
+import 'package:phone_storage_cleaner/features/files/data/cleanup_share_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +26,7 @@ void main() {
     expect(opened, isTrue);
     expect(received?.method, 'shareText');
     expect(received?.arguments, <String, String>{
-      'subject': 'My Mobile Cleaner result',
+      'subject': 'My Phone Storage Cleaner result',
       'text': 'Freed 3.6 GB',
     });
   });

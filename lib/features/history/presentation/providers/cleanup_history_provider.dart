@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/history/data/cleanup_history_repository.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_entry.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_history.dart';
+import 'package:phone_storage_cleaner/features/history/data/cleanup_history_repository.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_entry.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_history.dart';
 
 /// The stored cleanup log.
 final FutureProvider<CleanupHistory> cleanupHistoryProvider =

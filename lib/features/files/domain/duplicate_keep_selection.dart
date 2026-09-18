@@ -1,5 +1,5 @@
-import 'package:mobile_cleaner/features/files/domain/photo_copy_group.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/photo_copy_group.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Which copy of each duplicate set the user wants to keep.
 ///

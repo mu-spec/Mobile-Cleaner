@@ -1,6 +1,6 @@
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/home/domain/recommendation.dart';
 
 /// Turns scan findings into advice, using fixed rules.
 ///

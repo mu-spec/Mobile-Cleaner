@@ -19,6 +19,6 @@ The app reads `Environment.getDataDirectory()` through Android `StatFs`, which r
 ## Device acceptance test
 
 1. Open Android Settings → Storage and note total and available storage.
-2. Open Mobile Cleaner → Home.
+2. Open Phone Storage Cleaner → Home.
 3. Compare Total and Free values, allowing for rounding and storage changes between readings.
 4. Confirm Used equals Total minus Free and the circular percentage matches Used divided by Total.

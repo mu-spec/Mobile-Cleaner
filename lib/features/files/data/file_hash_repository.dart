@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Computes content hashes so exact duplicates can be proven.
 ///
@@ -18,7 +18,8 @@ class PlatformFileHashRepository implements FileHashRepository {
   PlatformFileHashRepository({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const String _channelName = 'com.mobilecleaner.app/hash';
+  static const String _channelName =
+      'com.KoreAppsTek.PhoneStorageCleaner/hash';
 
   /// Must not exceed `FileHashBridge.MAX_FILES_PER_CALL` on the native side,
   /// which silently drops anything beyond its cap.

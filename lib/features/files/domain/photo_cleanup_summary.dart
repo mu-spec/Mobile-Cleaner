@@ -1,8 +1,8 @@
-import 'package:mobile_cleaner/features/files/domain/duplicate_group.dart';
-import 'package:mobile_cleaner/features/files/domain/large_photo_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/domain/screenshot_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/similar_photo_group.dart';
+import 'package:phone_storage_cleaner/features/files/domain/duplicate_group.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_photo_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/screenshot_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/similar_photo_group.dart';
 
 /// The photo tools listed on the Photos tab, in display order.
 enum PhotoCleanupTool {

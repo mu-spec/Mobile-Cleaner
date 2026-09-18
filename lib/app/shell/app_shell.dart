@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/navigation/exit_confirmation.dart';
-import 'package:mobile_cleaner/app/route_observer.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/features/cleaner/domain/scan_launch_target.dart';
+import 'package:phone_storage_cleaner/app/navigation/exit_confirmation.dart';
+import 'package:phone_storage_cleaner/app/route_observer.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/features/cleaner/domain/scan_launch_target.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({required this.navigationShell, super.key});

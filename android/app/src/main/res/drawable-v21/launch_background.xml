@@ -4,6 +4,6 @@
     <item
         android:width="136dp"
         android:height="136dp"
-        android:drawable="@drawable/phone_cleaner_splash"
+        android:drawable="@drawable/phone_storage_cleaner_splash"
         android:gravity="center" />
 </layer-list>

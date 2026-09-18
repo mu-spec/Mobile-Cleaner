@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
+import 'package:phone_storage_cleaner/features/permissions/domain/app_permission_status.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 abstract interface class AppPermissionGateway {

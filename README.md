@@ -1,11 +1,11 @@
-# Mobile Cleaner
+# Phone Storage Cleaner
 
 A safe, fast, and transparent Android storage cleaner built with Flutter.
 
 ## Phase 0 status
 
 - Flutter project created on Flutter 3.47 / Dart 3.13
-- Android application ID: `com.mobilecleaner.app`
+- Android application ID: `com.KoreAppsTek.PhoneStorageCleaner`
 - Feature-first, Clean Architecture-ready folder structure
 - Material 3 light and dark theme system
 - Declarative routing with `go_router`

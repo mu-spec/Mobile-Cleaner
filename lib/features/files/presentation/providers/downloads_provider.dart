@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
-import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/downloads_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
+import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:phone_storage_cleaner/features/files/domain/download_age_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/downloads_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
 
 /// One scan of the Downloads folder for the cleaner.
 ///

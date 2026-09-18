@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:mobile_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
 
 /// Shared spacing and sizing for the Home screen.
 ///

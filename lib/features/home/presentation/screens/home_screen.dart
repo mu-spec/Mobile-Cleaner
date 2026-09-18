@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/navigation/exit_confirmation.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/features/cleaner/domain/scan_launch_target.dart';
-import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
-import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
-import 'package:mobile_cleaner/features/home/domain/recommendation.dart';
-import 'package:mobile_cleaner/features/home/presentation/recommendation_destination.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/cleanup_score_card.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
-import 'package:mobile_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
+import 'package:phone_storage_cleaner/app/navigation/exit_confirmation.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/features/cleaner/domain/scan_launch_target.dart';
+import 'package:phone_storage_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
+import 'package:phone_storage_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
+import 'package:phone_storage_cleaner/features/home/domain/recommendation.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/recommendation_destination.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/cleanup_score_card.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_section.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/quick_tools_section.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/smart_scan_cta.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/storage_overview_card.dart';
+import 'package:phone_storage_cleaner/features/storage/presentation/providers/storage_overview_provider.dart';
 
 /// UI V2.1 Home.
 ///
@@ -157,7 +157,7 @@ class _HomeHeaderTitle extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Text(
-          'Mobile Cleaner',
+          'Phone Storage Cleaner',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.titleMedium?.copyWith(

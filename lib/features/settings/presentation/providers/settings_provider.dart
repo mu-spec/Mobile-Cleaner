@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/settings/data/settings_repository.dart';
-import 'package:mobile_cleaner/features/settings/domain/app_settings.dart';
+import 'package:phone_storage_cleaner/features/settings/data/settings_repository.dart';
+import 'package:phone_storage_cleaner/features/settings/domain/app_settings.dart';
 
 /// The stored preferences.
 ///

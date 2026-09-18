@@ -44,7 +44,8 @@ class PlatformStorageAccessRepository implements StorageAccessRepository {
   PlatformStorageAccessRepository({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const String _channelName = 'com.mobilecleaner.app/saf';
+  static const String _channelName =
+      'com.KoreAppsTek.PhoneStorageCleaner/saf';
 
   final MethodChannel _channel;
 

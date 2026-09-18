@@ -1,6 +1,6 @@
-import 'package:mobile_cleaner/features/files/domain/perceptual_hash.dart';
-import 'package:mobile_cleaner/features/files/domain/photo_copy_group.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/perceptual_hash.dart';
+import 'package:phone_storage_cleaner/features/files/domain/photo_copy_group.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// A set of photos that look alike without being byte-identical.
 ///

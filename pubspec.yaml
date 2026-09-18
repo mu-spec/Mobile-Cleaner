@@ -1,4 +1,4 @@
-name: mobile_cleaner
+name: phone_storage_cleaner
 description: A safe, fast, and transparent Android storage cleaner.
 publish_to: none
 version: 1.0.0+1
@@ -50,8 +50,8 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: false
-  image_path: assets/branding/phone_cleaner_icon.png
+  image_path: assets/branding/phone_storage_cleaner_icon.png
   adaptive_icon_background: '#087CF2'
-  adaptive_icon_foreground: assets/branding/phone_cleaner_icon.png
+  adaptive_icon_foreground: assets/branding/phone_storage_cleaner_icon.png
   adaptive_icon_foreground_inset: 20
   min_sdk_android: 24

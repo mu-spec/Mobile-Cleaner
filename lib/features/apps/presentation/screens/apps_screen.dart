@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/core/utils/date_formatter.dart';
-import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
-import 'package:mobile_cleaner/features/apps/domain/app_inventory.dart';
-import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
-import 'package:mobile_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
-import 'package:mobile_cleaner/features/apps/presentation/screens/app_details_screen.dart';
-import 'package:mobile_cleaner/features/apps/presentation/widgets/app_icon.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:phone_storage_cleaner/app/navigation/root_back_button.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/core/utils/date_formatter.dart';
+import 'package:phone_storage_cleaner/features/apps/data/installed_apps_repository.dart';
+import 'package:phone_storage_cleaner/features/apps/domain/app_inventory.dart';
+import 'package:phone_storage_cleaner/features/apps/domain/installed_app.dart';
+import 'package:phone_storage_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
+import 'package:phone_storage_cleaner/features/apps/presentation/screens/app_details_screen.dart';
+import 'package:phone_storage_cleaner/features/apps/presentation/widgets/app_icon.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/files_status_views.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Installed apps arranged as the supplied reference: sort controls, one

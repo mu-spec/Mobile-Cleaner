@@ -81,7 +81,7 @@ Two actions are disabled up front rather than allowed to fail:
 - **Uninstall** on system apps — Android refuses, so the row says so instead
 - **Open** where there is no launcher intent
 
-This app also excludes **itself** from the list. Listing Mobile Cleaner with an
+This app also excludes **itself** from the list. Listing Phone Storage Cleaner with an
 Uninstall button would be a trap, not a feature.
 
 ## Files

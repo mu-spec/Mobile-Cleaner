@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
+import 'package:phone_storage_cleaner/features/apps/domain/installed_app.dart';
 
 /// What one read of the installed-app list returned.
 class InstalledAppsSnapshot {
@@ -56,7 +56,8 @@ class PlatformInstalledAppsRepository implements InstalledAppsRepository {
   PlatformInstalledAppsRepository({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const String _channelName = 'com.mobilecleaner.app/installed_apps';
+  static const String _channelName =
+      'com.KoreAppsTek.PhoneStorageCleaner/installed_apps';
 
   final MethodChannel _channel;
 

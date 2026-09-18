@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/large_file_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/screenshot_filter.dart';
-import 'package:mobile_cleaner/features/settings/data/settings_repository.dart';
-import 'package:mobile_cleaner/features/settings/domain/app_settings.dart';
-import 'package:mobile_cleaner/features/settings/presentation/screens/settings_screen.dart';
+import 'package:phone_storage_cleaner/features/files/domain/download_age_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_file_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/screenshot_filter.dart';
+import 'package:phone_storage_cleaner/features/settings/data/settings_repository.dart';
+import 'package:phone_storage_cleaner/features/settings/domain/app_settings.dart';
+import 'package:phone_storage_cleaner/features/settings/presentation/screens/settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _StubSettings implements SettingsRepository {
@@ -364,7 +364,7 @@ void main() {
 
       await _scrollTo(tester, find.byKey(const Key('setting_app_version')));
       expect(find.byKey(const Key('setting_app_version')), findsOneWidget);
-      expect(find.text('About Mobile Cleaner'), findsOneWidget);
+      expect(find.text('About Phone Storage Cleaner'), findsOneWidget);
     });
   });
 }

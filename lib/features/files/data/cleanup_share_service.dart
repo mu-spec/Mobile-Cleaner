@@ -8,7 +8,8 @@ class CleanupShareService {
   CleanupShareService({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const String _channelName = 'com.mobilecleaner.app/share';
+  static const String _channelName =
+      'com.KoreAppsTek.PhoneStorageCleaner/share';
 
   final MethodChannel _channel;
 
@@ -18,7 +19,7 @@ class CleanupShareService {
     }
     try {
       return await _channel.invokeMethod<bool>('shareText', <String, String>{
-            'subject': 'My Mobile Cleaner result',
+            'subject': 'My Phone Storage Cleaner result',
             'text': summary,
           }) ??
           false;

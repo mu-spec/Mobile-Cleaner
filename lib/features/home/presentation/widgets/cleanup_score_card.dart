@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/home/domain/cleanup_score.dart';
-import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/home/domain/cleanup_score.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Compact Home explanation of the most recently completed Smart Scan.

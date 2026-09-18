@@ -1,4 +1,4 @@
-package com.mobilecleaner.app
+package com.KoreAppsTek.PhoneStorageCleaner
 
 import android.content.Intent
 import android.os.Environment
@@ -9,7 +9,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private companion object {
-        const val STORAGE_CHANNEL = "com.mobilecleaner.app/storage"
+        const val STORAGE_CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/storage"
     }
 
     private var thumbnailLoader: ThumbnailLoader? = null

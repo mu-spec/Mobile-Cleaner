@@ -2,11 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/core/ui/success_check.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/files/data/cleanup_share_service.dart';
-import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/ui/success_check.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/data/cleanup_share_service.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Final stage of the shared cleanup flow.
@@ -35,7 +35,7 @@ class CleanupCompleteScreen extends StatelessWidget {
 
   Future<void> _share(BuildContext context) async {
     final String summary =
-        'Mobile Cleaner removed ${result.deletedCount} '
+        'Phone Storage Cleaner removed ${result.deletedCount} '
         '${result.deletedCount == 1 ? 'item' : 'items'} and freed '
         '${ByteFormatter.format(result.freedBytes)}.';
     final bool opened = await CleanupShareService().shareCleanupSummary(

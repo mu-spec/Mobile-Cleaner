@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/files/domain/file_selection.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_selection.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Persistent bottom action bar shown while files are selected.

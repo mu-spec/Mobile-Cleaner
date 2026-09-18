@@ -1,4 +1,4 @@
-import 'package:mobile_cleaner/core/utils/file_age.dart';
+import 'package:phone_storage_cleaner/core/utils/file_age.dart';
 
 /// Age thresholds offered by the Downloads cleaner.
 ///

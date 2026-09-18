@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launcher/display name. Referenced by AndroidManifest android:label so the
+         product name lives in exactly one place on the Android side. -->
+    <string name="app_name">Phone Storage Cleaner</string>
+</resources>

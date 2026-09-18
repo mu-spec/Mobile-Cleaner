@@ -2,26 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/app/theme/app_theme.dart';
-import 'package:mobile_cleaner/core/errors/app_failure.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/files/data/delete_repository.dart';
-import 'package:mobile_cleaner/features/files/data/file_scanner_repository.dart';
-import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
-import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
-import 'package:mobile_cleaner/features/files/domain/duplicate_detector.dart';
-import 'package:mobile_cleaner/features/files/domain/duplicate_group.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/history/data/cleanup_history_repository.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_entry.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_history.dart';
-import 'package:mobile_cleaner/features/settings/data/settings_repository.dart';
-import 'package:mobile_cleaner/features/settings/domain/app_settings.dart';
-import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
-import 'package:mobile_cleaner/features/storage/presentation/widgets/storage_indicator.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/app/theme/app_theme.dart';
+import 'package:phone_storage_cleaner/core/errors/app_failure.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/data/delete_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/thumbnail_repository.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/duplicate_detector.dart';
+import 'package:phone_storage_cleaner/features/files/domain/duplicate_group.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/history/data/cleanup_history_repository.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_entry.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_history.dart';
+import 'package:phone_storage_cleaner/features/settings/data/settings_repository.dart';
+import 'package:phone_storage_cleaner/features/settings/domain/app_settings.dart';
+import 'package:phone_storage_cleaner/features/storage/domain/storage_info.dart';
+import 'package:phone_storage_cleaner/features/storage/presentation/widgets/storage_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const int _mib = 1024 * 1024;
@@ -125,7 +125,7 @@ void main() {
 
     test('a revoked permission mid-session does not crash deletion', () async {
       final MethodChannel channel = MethodChannel(
-        'com.mobilecleaner.app/delete',
+        'com.KoreAppsTek.PhoneStorageCleaner/delete',
       );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall call) async {

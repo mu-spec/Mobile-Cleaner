@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_entry.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_history.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_entry.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_history.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Stores the cleanup log on this device.

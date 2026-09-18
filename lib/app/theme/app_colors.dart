@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Mobile Cleaner's controlled premium colour vocabulary.
+/// Phone Storage Cleaner's controlled premium colour vocabulary.
 ///
 /// Deep blue owns major brand moments; bright blue is interactive; orange is
 /// reserved for cleanup/recoverable-space emphasis. Green means success and

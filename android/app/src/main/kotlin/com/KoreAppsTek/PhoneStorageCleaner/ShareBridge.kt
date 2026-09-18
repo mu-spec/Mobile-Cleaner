@@ -1,4 +1,4 @@
-package com.mobilecleaner.app
+package com.KoreAppsTek.PhoneStorageCleaner
 
 import android.content.Context
 import android.content.Intent
@@ -8,7 +8,7 @@ import io.flutter.plugin.common.MethodChannel
 /** Opens Android's chooser so the user can pick WhatsApp or any share app. */
 class ShareBridge(private val context: Context) : MethodChannel.MethodCallHandler {
     companion object {
-        const val CHANNEL = "com.mobilecleaner.app/share"
+        const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/share"
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {

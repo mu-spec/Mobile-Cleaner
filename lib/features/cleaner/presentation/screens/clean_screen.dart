@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/domain/smart_scan_result.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
-import 'package:mobile_cleaner/features/home/domain/cleanup_score.dart';
-import 'package:mobile_cleaner/features/home/presentation/providers/recommendations_provider.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phone_storage_cleaner/app/navigation/root_back_button.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/smart_scan_result.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/smart_scan_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
+import 'package:phone_storage_cleaner/features/home/domain/cleanup_score.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/providers/recommendations_provider.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Smart Scan: runs the large files, old downloads, and APK checks together.

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/core/errors/app_failure.dart';
-import 'package:mobile_cleaner/features/files/data/delete_repository.dart';
-import 'package:mobile_cleaner/features/files/data/file_scanner_channel.dart';
-import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
-import 'package:mobile_cleaner/features/storage/data/storage_repository.dart';
+import 'package:phone_storage_cleaner/core/errors/app_failure.dart';
+import 'package:phone_storage_cleaner/features/files/data/delete_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/file_scanner_channel.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:phone_storage_cleaner/features/storage/data/storage_repository.dart';
 
 ScannedFile _file(String id) => ScannedFile(
   id: id,
@@ -158,7 +158,7 @@ void main() {
 
   group('Repositories degrade instead of crashing', () {
     test('storage reports unavailable when the channel is missing', () async {
-      _absentChannel('com.mobilecleaner.app/storage');
+      _absentChannel('com.KoreAppsTek.PhoneStorageCleaner/storage');
 
       await expectLater(
         PlatformStorageRepository().getStorageInfo(),
@@ -174,7 +174,7 @@ void main() {
 
     test('storage rejects nonsense values rather than showing them', () async {
       final MethodChannel channel = MethodChannel(
-        'com.mobilecleaner.app/storage',
+        'com.KoreAppsTek.PhoneStorageCleaner/storage',
       );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall call) async {
@@ -189,7 +189,7 @@ void main() {
 
     test('the scanner reports unavailable rather than an empty library',
         () async {
-      _absentChannel('com.mobilecleaner.app/file_scanner');
+      _absentChannel('com.KoreAppsTek.PhoneStorageCleaner/file_scanner');
 
       // Returning "no files" here would look like a spotlessly clean device.
       await expectLater(
@@ -211,7 +211,7 @@ void main() {
 
     test('a failed delete reports every file, and throws nothing', () async {
       final MethodChannel channel = _throwingChannel(
-        'com.mobilecleaner.app/delete',
+        'com.KoreAppsTek.PhoneStorageCleaner/delete',
         PlatformException(code: 'DELETE_FAILED', message: 'Denied.'),
       );
       final List<ScannedFile> files = <ScannedFile>[_file('1'), _file('2')];
@@ -228,7 +228,7 @@ void main() {
 
     test('deleting with no delete channel fails safely', () async {
       final MethodChannel channel = _absentChannel(
-        'com.mobilecleaner.app/delete',
+        'com.KoreAppsTek.PhoneStorageCleaner/delete',
       );
 
       final DeleteResult result = await PlatformDeleteRepository(
@@ -241,7 +241,7 @@ void main() {
 
     test('deleting nothing is a no-op, not an error', () async {
       final DeleteResult result = await PlatformDeleteRepository(
-        channel: _absentChannel('com.mobilecleaner.app/delete'),
+        channel: _absentChannel('com.KoreAppsTek.PhoneStorageCleaner/delete'),
       ).deleteFiles(const <ScannedFile>[]);
 
       expect(result.deletedCount, 0);

@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/data/photo_quality_repository.dart';
-import 'package:mobile_cleaner/features/files/domain/best_photo_scorer.dart';
-import 'package:mobile_cleaner/features/files/domain/photo_quality.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/domain/similar_photo_group.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/similar_photos_provider.dart';
+import 'package:phone_storage_cleaner/features/files/data/photo_quality_repository.dart';
+import 'package:phone_storage_cleaner/features/files/domain/best_photo_scorer.dart';
+import 'package:phone_storage_cleaner/features/files/domain/photo_quality.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/similar_photo_group.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/similar_photos_provider.dart';
 
 /// Measurements for every photo that landed in a similar group.
 ///

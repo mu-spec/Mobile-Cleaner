@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/storage/domain/storage_info.dart';
+import 'package:phone_storage_cleaner/features/storage/domain/storage_info.dart';
 
 abstract interface class StorageRepository {
   Future<StorageInfo> getStorageInfo();
@@ -11,7 +11,7 @@ final Provider<StorageRepository> storageRepositoryProvider =
 
 class PlatformStorageRepository implements StorageRepository {
   static const MethodChannel _channel = MethodChannel(
-    'com.mobilecleaner.app/storage',
+    'com.KoreAppsTek.PhoneStorageCleaner/storage',
   );
 
   @override

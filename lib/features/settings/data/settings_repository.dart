@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/large_file_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/screenshot_filter.dart';
-import 'package:mobile_cleaner/features/settings/domain/app_settings.dart';
+import 'package:phone_storage_cleaner/features/files/domain/download_age_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_file_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/screenshot_filter.dart';
+import 'package:phone_storage_cleaner/features/settings/domain/app_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Stores user preferences on this device.

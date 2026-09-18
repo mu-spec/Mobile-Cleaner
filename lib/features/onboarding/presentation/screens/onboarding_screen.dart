@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/navigation/exit_confirmation.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/features/onboarding/data/onboarding_preferences.dart';
+import 'package:phone_storage_cleaner/app/navigation/exit_confirmation.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/features/onboarding/data/onboarding_preferences.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

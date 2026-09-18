@@ -2,10 +2,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/thumbnail_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/thumbnail_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/file_category_card.dart';
 
 /// Leading visual for a file row.
 ///

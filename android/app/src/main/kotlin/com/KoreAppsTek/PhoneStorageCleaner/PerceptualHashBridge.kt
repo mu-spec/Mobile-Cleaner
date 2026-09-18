@@ -1,4 +1,4 @@
-package com.mobilecleaner.app
+package com.KoreAppsTek.PhoneStorageCleaner
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -42,7 +42,7 @@ import java.util.concurrent.RejectedExecutionException
 class PerceptualHashBridge(private val context: Context) : MethodChannel.MethodCallHandler {
 
     companion object {
-        const val CHANNEL = "com.mobilecleaner.app/perceptual_hash"
+        const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/perceptual_hash"
 
         /** dHash needs one extra column to difference against. */
         private const val DHASH_WIDTH = 9

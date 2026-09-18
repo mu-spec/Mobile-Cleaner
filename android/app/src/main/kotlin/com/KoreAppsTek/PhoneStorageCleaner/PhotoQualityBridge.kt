@@ -1,4 +1,4 @@
-package com.mobilecleaner.app
+package com.KoreAppsTek.PhoneStorageCleaner
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -42,7 +42,7 @@ import java.util.concurrent.RejectedExecutionException
 class PhotoQualityBridge(private val context: Context) : MethodChannel.MethodCallHandler {
 
     companion object {
-        const val CHANNEL = "com.mobilecleaner.app/photo_quality"
+        const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/photo_quality"
 
         /**
          * Side length the sharpness measurement works at. Large enough to hold

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/core/constants/app_constants.dart';
-import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/large_file_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/screenshot_filter.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
-import 'package:mobile_cleaner/features/onboarding/data/onboarding_preferences.dart';
-import 'package:mobile_cleaner/features/settings/domain/app_settings.dart';
-import 'package:mobile_cleaner/features/settings/presentation/providers/settings_provider.dart';
+import 'package:phone_storage_cleaner/app/navigation/root_back_button.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/constants/app_constants.dart';
+import 'package:phone_storage_cleaner/features/files/domain/download_age_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_file_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/screenshot_filter.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phone_storage_cleaner/features/onboarding/data/onboarding_preferences.dart';
+import 'package:phone_storage_cleaner/features/settings/domain/app_settings.dart';
+import 'package:phone_storage_cleaner/features/settings/presentation/providers/settings_provider.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Settings.
@@ -137,7 +137,7 @@ class SettingsScreen extends ConsumerWidget {
                 _ActionTile(
                   tileKey: const Key('open_about'),
                   icon: _SettingsIcons.about,
-                  title: 'About Mobile Cleaner',
+                  title: 'About Phone Storage Cleaner',
                   value: AppConstants.appVersion,
                   valueKey: const Key('setting_app_version'),
                   onTap: () => showAboutSheet(context),
@@ -662,7 +662,7 @@ void showPrivacyPolicy(BuildContext context) {
           _PolicySection(
             heading: 'Nothing leaves your device',
             body:
-                'Mobile Cleaner has no internet permission. Your files, '
+                'Phone Storage Cleaner has no internet permission. Your files, '
                 'file names, photos, thumbnails, and the results of every '
                 'scan stay on this phone. Nothing is uploaded, shared, or '
                 'sent to any server.',

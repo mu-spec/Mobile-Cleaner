@@ -1,4 +1,4 @@
-package com.mobilecleaner.app
+package com.KoreAppsTek.PhoneStorageCleaner
 
 import android.content.ContentResolver
 import android.content.ContentUris
@@ -27,7 +27,7 @@ class FileScannerBridge(
     private val safScanner = SafDocumentScanner(context)
 
     companion object {
-        const val CHANNEL = "com.mobilecleaner.app/file_scanner"
+        const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/file_scanner"
 
         private const val CATEGORY_IMAGES = "images"
         private const val CATEGORY_VIDEOS = "videos"

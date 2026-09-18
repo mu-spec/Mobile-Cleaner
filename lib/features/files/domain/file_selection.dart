@@ -1,4 +1,4 @@
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// An immutable set of selected files, keyed by URI.
 ///

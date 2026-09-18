@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
 
 /// Thin wrapper around the Android MediaStore method channel.
 ///
@@ -22,7 +22,8 @@ class MethodChannelFileScanner implements FileScannerChannel {
   MethodChannelFileScanner({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const String _channelName = 'com.mobilecleaner.app/file_scanner';
+  static const String _channelName =
+      'com.KoreAppsTek.PhoneStorageCleaner/file_scanner';
 
   final MethodChannel _channel;
 

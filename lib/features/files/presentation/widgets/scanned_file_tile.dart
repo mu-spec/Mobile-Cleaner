@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_cleaner/core/ui/haptics.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/core/utils/date_formatter.dart';
-import 'package:mobile_cleaner/core/utils/duration_formatter.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/file_thumbnail.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
+import 'package:phone_storage_cleaner/core/ui/haptics.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/core/utils/date_formatter.dart';
+import 'package:phone_storage_cleaner/core/utils/duration_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/file_thumbnail.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// A single row in a file list: thumbnail/icon, name, size, and date.

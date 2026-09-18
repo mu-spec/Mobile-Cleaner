@@ -1,6 +1,6 @@
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/large_file_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_file_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// The files matching one [LargeFileFilter], plus the space they occupy.
 class LargeFileSummary {

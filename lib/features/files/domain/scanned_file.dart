@@ -1,4 +1,4 @@
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
 
 /// A single user-visible file discovered by the scanner.
 ///

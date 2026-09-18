@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/features/cleaner/domain/scan_launch_target.dart';
-import 'package:mobile_cleaner/features/permissions/data/permission_gateway.dart';
-import 'package:mobile_cleaner/features/permissions/data/permission_preferences.dart';
-import 'package:mobile_cleaner/features/permissions/domain/app_permission_status.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/features/cleaner/domain/scan_launch_target.dart';
+import 'package:phone_storage_cleaner/features/permissions/data/permission_gateway.dart';
+import 'package:phone_storage_cleaner/features/permissions/data/permission_preferences.dart';
+import 'package:phone_storage_cleaner/features/permissions/domain/app_permission_status.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 class PermissionEducationScreen extends ConsumerStatefulWidget {
@@ -547,7 +547,7 @@ _PermissionCopy _permissionCopy(ScanLaunchTarget? target) => switch (target) {
         'Find screenshots, duplicates, and large photos while keeping every '
         'decision in your hands.',
     grantedDescription:
-        'Mobile Cleaner can now scan supported photos on this device.',
+        'Phone Storage Cleaner can now scan supported photos on this device.',
   ),
   ScanLaunchTarget.files ||
   ScanLaunchTarget.largeVideos => const _PermissionCopy(
@@ -558,7 +558,7 @@ _PermissionCopy _permissionCopy(ScanLaunchTarget? target) => switch (target) {
         'Review large files, downloads, videos, audio, and installers using '
         'real storage information from this device.',
     grantedDescription:
-        'Mobile Cleaner can now scan supported file categories on this device.',
+        'Phone Storage Cleaner can now scan supported file categories on this device.',
   ),
   ScanLaunchTarget.apps => const _PermissionCopy(
     eyebrow: 'APP ANALYSIS',
@@ -568,7 +568,7 @@ _PermissionCopy _permissionCopy(ScanLaunchTarget? target) => switch (target) {
         'Connect installed-app insights with related storage cleanup while '
         'keeping all analysis on this device.',
     grantedDescription:
-        'Mobile Cleaner can now analyze installed apps and related storage.',
+        'Phone Storage Cleaner can now analyze installed apps and related storage.',
   ),
   ScanLaunchTarget.smartScan => const _PermissionCopy(
     eyebrow: 'SMART CLEANUP',
@@ -578,7 +578,7 @@ _PermissionCopy _permissionCopy(ScanLaunchTarget? target) => switch (target) {
         'Scan supported storage categories and build safe cleanup suggestions '
         'from real files on this device.',
     grantedDescription:
-        'Mobile Cleaner is ready to run a complete on-device Smart Scan.',
+        'Phone Storage Cleaner is ready to run a complete on-device Smart Scan.',
   ),
   null => const _PermissionCopy(
     eyebrow: 'PRIVATE ACCESS',
@@ -587,7 +587,8 @@ _PermissionCopy _permissionCopy(ScanLaunchTarget? target) => switch (target) {
     description:
         'See what uses space and review supported files without uploading '
         'anything from this device.',
-    grantedDescription: 'Mobile Cleaner can now analyze supported media and storage categories.',
+    grantedDescription:
+        'Phone Storage Cleaner can now analyze supported media and storage categories.',
   ),
 };
 

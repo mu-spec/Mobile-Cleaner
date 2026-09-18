@@ -1,5 +1,5 @@
-import 'package:mobile_cleaner/features/files/domain/photo_quality.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/photo_quality.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Why one photo was suggested over the others in its group.
 enum BestPhotoReason {

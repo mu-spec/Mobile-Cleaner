@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/core/constants/app_constants.dart';
-import 'package:mobile_cleaner/features/onboarding/data/onboarding_preferences.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/core/constants/app_constants.dart';
+import 'package:phone_storage_cleaner/features/onboarding/data/onboarding_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -58,12 +58,12 @@ class _SplashScreenState extends State<SplashScreen> {
                   ],
                 ),
                 child: Image.asset(
-                  'assets/branding/phone_cleaner_icon.png',
+                  'assets/branding/phone_storage_cleaner_icon.png',
                   width: 136,
                   height: 136,
                   fit: BoxFit.contain,
                   filterQuality: FilterQuality.high,
-                  semanticLabel: 'Mobile Cleaner app icon',
+                  semanticLabel: 'Phone Storage Cleaner app icon',
                 ),
               ),
               const SizedBox(height: 28),

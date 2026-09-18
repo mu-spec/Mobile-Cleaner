@@ -1,14 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/apk_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/download_age_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/downloads_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/large_file_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/large_file_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/smart_scan_result.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/apk_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/downloads_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/large_files_provider.dart';
+import 'package:phone_storage_cleaner/features/files/domain/apk_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/download_age_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/downloads_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_file_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_file_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/smart_scan_result.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/apk_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/downloads_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/large_files_provider.dart';
 
 /// Runs all three checks and combines their findings.
 ///

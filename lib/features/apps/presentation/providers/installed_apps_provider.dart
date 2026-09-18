@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/apps/data/installed_apps_repository.dart';
-import 'package:mobile_cleaner/features/apps/domain/app_inventory.dart';
+import 'package:phone_storage_cleaner/features/apps/data/installed_apps_repository.dart';
+import 'package:phone_storage_cleaner/features/apps/domain/app_inventory.dart';
 
 /// One read of the installed-app list.
 ///

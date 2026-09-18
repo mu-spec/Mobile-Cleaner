@@ -1,7 +1,7 @@
-import 'package:mobile_cleaner/features/files/domain/apk_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/downloads_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/large_file_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/apk_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/downloads_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_file_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// The three checks Smart Scan runs.
 enum SmartScanCategory {

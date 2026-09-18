@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/navigation/root_back_button.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/file_scan_result.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/file_scan_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/screens/category_files_screen.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/folder_access_banner.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
+import 'package:phone_storage_cleaner/app/navigation/root_back_button.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/file_scan_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/screens/category_files_screen.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/file_category_card.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/folder_access_banner.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Files tab: folder access, real categories, then cleanup shortcuts.

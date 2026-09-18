@@ -1,5 +1,5 @@
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/domain/screenshot_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/screenshot_filter.dart';
 
 /// Screenshots in one [ScreenshotGroup], plus the space they occupy.
 class ScreenshotSummary {

@@ -1,4 +1,4 @@
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// One file that could not be deleted, and why.
 class DeleteFailure {

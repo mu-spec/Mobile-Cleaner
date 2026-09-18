@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_cleaner/core/errors/app_failure.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
+import 'package:phone_storage_cleaner/core/errors/app_failure.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Shown while a scan is in flight.

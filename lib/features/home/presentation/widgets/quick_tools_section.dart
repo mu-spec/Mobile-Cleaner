@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/app/theme/app_tokens.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_section.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_section.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Four equal Phosphor-Duotone shortcut tiles in one compact premium row.

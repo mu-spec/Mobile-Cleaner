@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/features/files/data/storage_access_repository.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/file_scan_provider.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/features/files/data/storage_access_repository.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/file_scan_provider.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Reference-style prompt for Android's optional folder access.
@@ -108,7 +108,7 @@ class _FolderAccessBannerState extends ConsumerState<FolderAccessBanner> {
                     const SizedBox(height: 8),
                     Text(
                       'Android hides files other apps saved. Grant access to '
-                      'a folder and Mobile Cleaner can include its documents, '
+                      'a folder and Phone Storage Cleaner can include its documents, '
                       'archives, and installers.',
                       key: const Key('folder_access_description'),
                       style: theme.textTheme.bodySmall?.copyWith(

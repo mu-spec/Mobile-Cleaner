@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/core/ui/empty_state.dart';
-import 'package:mobile_cleaner/core/ui/haptics.dart';
-import 'package:mobile_cleaner/core/ui/responsive.dart';
-import 'package:mobile_cleaner/core/ui/success_check.dart';
+import 'package:phone_storage_cleaner/core/ui/empty_state.dart';
+import 'package:phone_storage_cleaner/core/ui/haptics.dart';
+import 'package:phone_storage_cleaner/core/ui/responsive.dart';
+import 'package:phone_storage_cleaner/core/ui/success_check.dart';
 
 /// Records haptic calls made through the platform channel.
 List<String> _captureHaptics() {

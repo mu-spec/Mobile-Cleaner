@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/photo_quality.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/photo_quality.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Measures sharpness and resolution so a best shot can be suggested.
 ///
@@ -23,7 +23,8 @@ class PlatformPhotoQualityRepository implements PhotoQualityRepository {
   PlatformPhotoQualityRepository({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const String _channelName = 'com.mobilecleaner.app/photo_quality';
+  static const String _channelName =
+      'com.KoreAppsTek.PhoneStorageCleaner/photo_quality';
 
   /// Must not exceed `PhotoQualityBridge.MAX_FILES_PER_CALL`, which silently
   /// drops anything beyond its cap.

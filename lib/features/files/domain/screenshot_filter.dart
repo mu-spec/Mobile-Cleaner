@@ -1,6 +1,6 @@
-import 'package:mobile_cleaner/core/utils/file_age.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/core/utils/file_age.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Age buckets offered by the Screenshot cleaner.
 enum ScreenshotGroup {

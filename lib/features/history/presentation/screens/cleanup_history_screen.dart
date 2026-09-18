@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/core/utils/date_formatter.dart';
-import 'package:mobile_cleaner/features/history/data/cleanup_history_repository.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_history.dart';
-import 'package:mobile_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/core/utils/date_formatter.dart';
+import 'package:phone_storage_cleaner/features/history/data/cleanup_history_repository.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_history.dart';
+import 'package:phone_storage_cleaner/features/history/presentation/providers/cleanup_history_provider.dart';
 
 /// Cleanup History: what has been removed, and when.
 ///

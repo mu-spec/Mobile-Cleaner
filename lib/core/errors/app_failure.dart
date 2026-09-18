@@ -103,7 +103,8 @@ class AppFailure {
     if (code.contains('PERMISSION') || code.contains('DENIED')) {
       return AppFailure(
         kind: FailureKind.permissionDenied,
-        message: 'Mobile Cleaner needs access to your files to continue.',
+        message:
+            'Phone Storage Cleaner needs access to your files to continue.',
         action: 'Review permissions',
         technicalDetail: detail,
       );

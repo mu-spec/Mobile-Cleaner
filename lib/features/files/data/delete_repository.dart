@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/delete_result.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Deletes files the user selected and confirmed.
 ///
@@ -18,7 +18,8 @@ class PlatformDeleteRepository implements DeleteRepository {
   PlatformDeleteRepository({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const String _channelName = 'com.mobilecleaner.app/delete';
+  static const String _channelName =
+      'com.KoreAppsTek.PhoneStorageCleaner/delete';
 
   final MethodChannel _channel;
 

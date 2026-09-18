@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Shared visual language for every tool opened from the Photos dashboard.

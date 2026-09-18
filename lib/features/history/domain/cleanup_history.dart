@@ -1,4 +1,4 @@
-import 'package:mobile_cleaner/features/history/domain/cleanup_entry.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_entry.dart';
 
 /// Every cleanup recorded on one calendar day, combined.
 ///

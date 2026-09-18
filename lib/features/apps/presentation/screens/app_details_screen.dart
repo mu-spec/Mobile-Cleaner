@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_cleaner/app/theme/app_colors.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/apps/domain/installed_app.dart';
-import 'package:mobile_cleaner/features/apps/presentation/widgets/app_icon.dart';
+import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/apps/domain/installed_app.dart';
+import 'package:phone_storage_cleaner/features/apps/presentation/widgets/app_icon.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 enum _AppDetailMenuAction { open, settings, uninstall }

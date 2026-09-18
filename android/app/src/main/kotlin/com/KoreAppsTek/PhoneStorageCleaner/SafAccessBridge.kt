@@ -1,4 +1,4 @@
-package com.mobilecleaner.app
+package com.KoreAppsTek.PhoneStorageCleaner
 
 import android.app.Activity
 import android.content.Context
@@ -23,7 +23,7 @@ import io.flutter.plugin.common.MethodChannel
 class SafAccessBridge(private val context: Context) : MethodChannel.MethodCallHandler {
 
     companion object {
-        const val CHANNEL = "com.mobilecleaner.app/saf"
+        const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/saf"
         const val REQUEST_CODE_OPEN_TREE = 4711
 
         /**

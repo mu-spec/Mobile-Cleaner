@@ -1,4 +1,4 @@
-package com.mobilecleaner.app
+package com.KoreAppsTek.PhoneStorageCleaner
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -24,7 +24,7 @@ import java.util.concurrent.RejectedExecutionException
 class ThumbnailLoader(private val context: Context) : MethodChannel.MethodCallHandler {
 
     companion object {
-        const val CHANNEL = "com.mobilecleaner.app/thumbnails"
+        const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/thumbnails"
 
         private const val DEFAULT_SIZE = 128
         private const val MAX_SIZE = 512

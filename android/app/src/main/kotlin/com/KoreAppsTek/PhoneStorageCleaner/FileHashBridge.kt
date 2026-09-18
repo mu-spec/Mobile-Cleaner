@@ -1,4 +1,4 @@
-package com.mobilecleaner.app
+package com.KoreAppsTek.PhoneStorageCleaner
 
 import android.content.Context
 import android.net.Uri
@@ -28,7 +28,7 @@ import java.util.concurrent.RejectedExecutionException
 class FileHashBridge(private val context: Context) : MethodChannel.MethodCallHandler {
 
     companion object {
-        const val CHANNEL = "com.mobilecleaner.app/hash"
+        const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/hash"
 
         /** SHA-256: collisions are not a practical concern for file identity. */
         private const val ALGORITHM = "SHA-256"

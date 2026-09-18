@@ -1,4 +1,4 @@
-package com.mobilecleaner.app
+package com.KoreAppsTek.PhoneStorageCleaner
 
 import android.Manifest
 import android.app.Activity
@@ -40,7 +40,7 @@ import java.io.File
 class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandler {
 
     companion object {
-        const val CHANNEL = "com.mobilecleaner.app/delete"
+        const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/delete"
         const val REQUEST_CODE_DELETE = 4712
         const val REQUEST_CODE_WRITE_PERMISSION = 4713
 

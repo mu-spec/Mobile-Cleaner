@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile_cleaner/app/router/app_router.dart';
-import 'package:mobile_cleaner/core/ui/responsive.dart';
-import 'package:mobile_cleaner/core/utils/byte_formatter.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/large_file_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/large_file_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/large_files_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/file_category_card.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/files_status_views.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
-import 'package:mobile_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
-import 'package:mobile_cleaner/features/settings/presentation/providers/settings_provider.dart';
+import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/core/ui/responsive.dart';
+import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_file_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_file_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/large_files_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/file_category_card.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/files_status_views.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/widgets/scanned_file_tile.dart';
+import 'package:phone_storage_cleaner/features/settings/presentation/providers/settings_provider.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Large Files: find the biggest space users above a size threshold.

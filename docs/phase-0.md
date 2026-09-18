@@ -4,9 +4,9 @@
 
 | Item | Value |
 |---|---|
-| Product name | Mobile Cleaner |
-| Flutter project | `mobile_cleaner` |
-| Android application ID | `com.mobilecleaner.app` |
+| Product name | Phone Storage Cleaner |
+| Flutter project | `phone_storage_cleaner` |
+| Android application ID | `com.KoreAppsTek.PhoneStorageCleaner` |
 | Initial version | `1.0.0+1` |
 | Minimum Android SDK | Flutter stable default (24 at creation) |
 | UI foundation | Material 3, system light/dark mode |

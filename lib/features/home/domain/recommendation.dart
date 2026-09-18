@@ -1,4 +1,4 @@
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// The kinds of advice Home can give.
 ///

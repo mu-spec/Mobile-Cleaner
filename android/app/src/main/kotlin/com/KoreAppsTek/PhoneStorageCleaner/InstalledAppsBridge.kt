@@ -1,4 +1,4 @@
-package com.mobilecleaner.app
+package com.KoreAppsTek.PhoneStorageCleaner
 
 import android.app.Activity
 import android.app.AppOpsManager
@@ -65,7 +65,7 @@ class InstalledAppsBridge(private val context: Context) :
     MethodChannel.MethodCallHandler {
 
     companion object {
-        const val CHANNEL = "com.mobilecleaner.app/installed_apps"
+        const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/installed_apps"
 
         /** Icons are rendered at this size before being sent to Dart. */
         private const val ICON_SIZE = 96

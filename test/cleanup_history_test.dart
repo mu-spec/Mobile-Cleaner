@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/features/history/data/cleanup_history_repository.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_entry.dart';
-import 'package:mobile_cleaner/features/history/domain/cleanup_history.dart';
-import 'package:mobile_cleaner/features/history/presentation/screens/cleanup_history_screen.dart';
-import 'package:mobile_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
+import 'package:phone_storage_cleaner/features/history/data/cleanup_history_repository.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_entry.dart';
+import 'package:phone_storage_cleaner/features/history/domain/cleanup_history.dart';
+import 'package:phone_storage_cleaner/features/history/presentation/screens/cleanup_history_screen.dart';
+import 'package:phone_storage_cleaner/features/history/presentation/widgets/cleanup_history_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const int _mib = 1024 * 1024;

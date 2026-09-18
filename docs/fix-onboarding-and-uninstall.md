@@ -53,7 +53,7 @@ A restored backup can still be sitting in your Google account. Before
 retesting:
 
 ```
-adb shell bmgr wipe com.google.android.gms/.backup.BackupTransportService com.mobilecleaner.app
+adb shell bmgr wipe com.google.android.gms/.backup.BackupTransportService com.KoreAppsTek.PhoneStorageCleaner
 ```
 
 Or simply: uninstall, then **turn off backup for the app** in Google Drive

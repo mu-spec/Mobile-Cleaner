@@ -1,11 +1,11 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_cleaner/features/files/data/file_hash_repository.dart';
-import 'package:mobile_cleaner/features/files/data/perceptual_hash_repository.dart';
-import 'package:mobile_cleaner/features/files/data/photo_quality_repository.dart';
-import 'package:mobile_cleaner/features/files/data/thumbnail_repository.dart';
-import 'package:mobile_cleaner/features/files/domain/file_category.dart';
-import 'package:mobile_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/files/data/file_hash_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/perceptual_hash_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/photo_quality_repository.dart';
+import 'package:phone_storage_cleaner/features/files/data/thumbnail_repository.dart';
+import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
+import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 ScannedFile _file(int i, {FileCategory category = FileCategory.images}) =>
     ScannedFile(
@@ -56,7 +56,7 @@ void main() {
   group('Large libraries are not silently truncated', () {
     test('hashing 900 files reaches the native side in full', () async {
       final _BatchRecorder recorder = _BatchRecorder(
-        'com.mobilecleaner.app/hash',
+        'com.KoreAppsTek.PhoneStorageCleaner/hash',
         'hashFiles',
         (List<Object?> uris) => <Object?, Object?>{
           for (final Object? uri in uris) uri: 'hash_$uri',
@@ -76,7 +76,7 @@ void main() {
 
     test('no batch exceeds the native cap', () async {
       final _BatchRecorder recorder = _BatchRecorder(
-        'com.mobilecleaner.app/hash',
+        'com.KoreAppsTek.PhoneStorageCleaner/hash',
         'hashFiles',
         (List<Object?> uris) => <Object?, Object?>{
           for (final Object? uri in uris) uri: 'h',
@@ -97,7 +97,7 @@ void main() {
 
     test('perceptual hashing chunks too', () async {
       final _BatchRecorder recorder = _BatchRecorder(
-        'com.mobilecleaner.app/perceptual_hash',
+        'com.KoreAppsTek.PhoneStorageCleaner/perceptual_hash',
         'hashImages',
         (List<Object?> uris) => <Object?, Object?>{
           for (final Object? uri in uris) uri: '${'a' * 16}${'b' * 16}',
@@ -115,7 +115,7 @@ void main() {
 
     test('photo quality chunks too', () async {
       final _BatchRecorder recorder = _BatchRecorder(
-        'com.mobilecleaner.app/photo_quality',
+        'com.KoreAppsTek.PhoneStorageCleaner/photo_quality',
         'analyzePhotos',
         (List<Object?> uris) => <Object?, Object?>{
           for (final Object? uri in uris)
@@ -138,7 +138,7 @@ void main() {
     test('a mid-way failure keeps what earlier batches produced', () async {
       int calls = 0;
       final MethodChannel channel = MethodChannel(
-        'com.mobilecleaner.app/hash',
+        'com.KoreAppsTek.PhoneStorageCleaner/hash',
       );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall call) async {
@@ -166,7 +166,7 @@ void main() {
   group('Caching avoids repeat work', () {
     test('a second hash request does no platform work', () async {
       final _BatchRecorder recorder = _BatchRecorder(
-        'com.mobilecleaner.app/hash',
+        'com.KoreAppsTek.PhoneStorageCleaner/hash',
         'hashFiles',
         (List<Object?> uris) => <Object?, Object?>{
           for (final Object? uri in uris) uri: 'h',
@@ -186,7 +186,7 @@ void main() {
 
     test('only uncached files are re-requested', () async {
       final _BatchRecorder recorder = _BatchRecorder(
-        'com.mobilecleaner.app/hash',
+        'com.KoreAppsTek.PhoneStorageCleaner/hash',
         'hashFiles',
         (List<Object?> uris) => <Object?, Object?>{
           for (final Object? uri in uris) uri: 'h',
@@ -210,7 +210,7 @@ void main() {
 
     test('the cache never exceeds its entry cap', () async {
       final MethodChannel channel = MethodChannel(
-        'com.mobilecleaner.app/thumbnails',
+        'com.KoreAppsTek.PhoneStorageCleaner/thumbnails',
       );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
@@ -234,7 +234,7 @@ void main() {
 
     test('the cache never exceeds its byte cap', () async {
       final MethodChannel channel = MethodChannel(
-        'com.mobilecleaner.app/thumbnails',
+        'com.KoreAppsTek.PhoneStorageCleaner/thumbnails',
       );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
@@ -265,7 +265,7 @@ void main() {
     test('a repeat request is served from cache', () async {
       int calls = 0;
       final MethodChannel channel = MethodChannel(
-        'com.mobilecleaner.app/thumbnails',
+        'com.KoreAppsTek.PhoneStorageCleaner/thumbnails',
       );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall call) async {
@@ -286,7 +286,7 @@ void main() {
     test('simultaneous requests for one file share a single decode', () async {
       int calls = 0;
       final MethodChannel channel = MethodChannel(
-        'com.mobilecleaner.app/thumbnails',
+        'com.KoreAppsTek.PhoneStorageCleaner/thumbnails',
       );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall call) async {
@@ -310,7 +310,7 @@ void main() {
     test('a file with no thumbnail costs no platform call', () async {
       int calls = 0;
       final MethodChannel channel = MethodChannel(
-        'com.mobilecleaner.app/thumbnails',
+        'com.KoreAppsTek.PhoneStorageCleaner/thumbnails',
       );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall call) async {
@@ -330,7 +330,7 @@ void main() {
     test('a failed thumbnail is remembered, not retried forever', () async {
       int calls = 0;
       final MethodChannel channel = MethodChannel(
-        'com.mobilecleaner.app/thumbnails',
+        'com.KoreAppsTek.PhoneStorageCleaner/thumbnails',
       );
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall call) async {

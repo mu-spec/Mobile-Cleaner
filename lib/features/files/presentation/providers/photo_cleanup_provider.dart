@@ -1,15 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_cleaner/features/files/domain/duplicate_group.dart';
-import 'package:mobile_cleaner/features/files/domain/large_photo_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/large_photo_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/photo_cleanup_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/screenshot_filter.dart';
-import 'package:mobile_cleaner/features/files/domain/screenshot_summary.dart';
-import 'package:mobile_cleaner/features/files/domain/similar_photo_group.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/large_photos_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/photo_duplicates_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/screenshot_provider.dart';
-import 'package:mobile_cleaner/features/files/presentation/providers/similar_photos_provider.dart';
+import 'package:phone_storage_cleaner/features/files/domain/duplicate_group.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_photo_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/large_photo_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/photo_cleanup_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/screenshot_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/screenshot_summary.dart';
+import 'package:phone_storage_cleaner/features/files/domain/similar_photo_group.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/large_photos_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/photo_duplicates_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/screenshot_provider.dart';
+import 'package:phone_storage_cleaner/features/files/presentation/providers/similar_photos_provider.dart';
 
 /// The Photos tab dashboard.
 ///
