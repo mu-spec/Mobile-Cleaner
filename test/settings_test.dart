@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:phone_storage_cleaner/core/constants/app_constants.dart';
 import 'package:phone_storage_cleaner/features/files/domain/download_age_filter.dart';
 import 'package:phone_storage_cleaner/features/files/domain/large_file_filter.dart';
 import 'package:phone_storage_cleaner/features/files/domain/screenshot_filter.dart';
@@ -331,24 +333,76 @@ void main() {
       expect(find.byKey(const Key('settings_defaults_note')), findsOneWidget);
     });
 
-    testWidgets('the privacy policy row hands off to the external browser', (
+    testWidgets('privacy policy row launches the published URL externally', (
       WidgetTester tester,
     ) async {
+      final List<Uri> launched = <Uri>[];
+      debugLaunchExternalUri = (Uri uri) async {
+        launched.add(uri);
+        return true;
+      };
+      addTearDown(() => debugLaunchExternalUri = null);
+
       await _pumpSettings(tester);
 
       await _scrollTo(tester, find.byKey(const Key('open_privacy_policy')));
       await tester.tap(find.byKey(const Key('open_privacy_policy')));
-      await tester.pumpAndSettle();
 
-      // The test harness has no url_launcher plugin, so the launch raises.
-      // That is the failure path requirement: Settings must stay standing
-      // and say so briefly instead of throwing.
+      // Controlled pumps, never pumpAndSettle: settle keeps advancing the
+      // clock while frames are scheduled, which can run the SnackBar's four
+      // second display and its dismissal before an assertion sees it. 300ms
+      // clears the 250ms entrance and stops well short of the display time.
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(launched.single, Uri.parse(AppConstants.privacyPolicyUrl));
+      expect(find.byKey(const Key('privacy_policy_error')), findsNothing);
       expect(tester.takeException(), isNull);
+
+      // The policy is no longer rendered in-app; it lives behind the link.
+      expect(find.byKey(const Key('privacy_policy_sheet')), findsNothing);
+    });
+
+    testWidgets('a failed launch shows the message and does not throw', (
+      WidgetTester tester,
+    ) async {
+      debugLaunchExternalUri = (Uri uri) async => false;
+      addTearDown(() => debugLaunchExternalUri = null);
+
+      await _pumpSettings(tester);
+
+      await _scrollTo(tester, find.byKey(const Key('open_privacy_policy')));
+      await tester.tap(find.byKey(const Key('open_privacy_policy')));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
       expect(find.byKey(const Key('privacy_policy_error')), findsOneWidget);
       expect(find.text('Unable to open Privacy Policy.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
 
-      // The policy is no longer rendered in-app; it now lives behind the link.
-      expect(find.byKey(const Key('privacy_policy_sheet')), findsNothing);
+    testWidgets('a throwing launch is caught, not rethrown', (
+      WidgetTester tester,
+    ) async {
+      debugLaunchExternalUri = (Uri uri) async {
+        // What a device with no browser-capable handler surfaces.
+        throw MissingPluginException('no browser registered');
+      };
+      addTearDown(() => debugLaunchExternalUri = null);
+
+      await _pumpSettings(tester);
+
+      await _scrollTo(tester, find.byKey(const Key('open_privacy_policy')));
+      await tester.tap(find.byKey(const Key('open_privacy_policy')));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byKey(const Key('privacy_policy_error')), findsOneWidget);
+      expect(find.text('Unable to open Privacy Policy.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('there is exactly one privacy policy row', (

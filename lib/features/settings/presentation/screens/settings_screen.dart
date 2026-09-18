@@ -639,6 +639,21 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
   }
 }
 
+/// Test seam for [openPrivacyPolicy].
+///
+/// A widget test has no browser, so left alone the outcome would depend on
+/// whichever url_launcher plugin the host happens to register. Tests set
+/// this to drive both paths deterministically and clear it afterwards;
+/// production leaves it null and always uses [_launchInExternalBrowser].
+Future<bool> Function(Uri uri)? debugLaunchExternalUri;
+
+/// Hands [uri] to the system browser.
+///
+/// externalApplication forces the real browser. The in-app WebView mode
+/// would render the same page inside this app and add nothing.
+Future<bool> _launchInExternalBrowser(Uri uri) =>
+    launchUrl(uri, mode: LaunchMode.externalApplication);
+
 /// Opens the published privacy policy in the user's own browser.
 ///
 /// The app performs no request of its own: the URL is handed to the system
@@ -646,14 +661,11 @@ class _ChoiceTile<T extends Enum> extends StatelessWidget {
 /// raises rather than returning false, so both outcomes are folded into one
 /// short in-app message and tapping this row can never crash Settings.
 Future<void> openPrivacyPolicy(BuildContext context) async {
+  final Future<bool> Function(Uri uri) launch =
+      debugLaunchExternalUri ?? _launchInExternalBrowser;
   bool opened = false;
   try {
-    // externalApplication forces the real browser. The in-app WebView mode
-    // would render the same page inside this app and add nothing.
-    opened = await launchUrl(
-      Uri.parse(AppConstants.privacyPolicyUrl),
-      mode: LaunchMode.externalApplication,
-    );
+    opened = await launch(Uri.parse(AppConstants.privacyPolicyUrl));
   } on Exception {
     opened = false;
   }
