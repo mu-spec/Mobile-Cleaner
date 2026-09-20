@@ -29,6 +29,21 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Ship arm64-v8a only. Play has required 64-bit since 2019, and
+        // dropping armeabi-v7a and x86_64 removes native payload the vast
+        // majority of installs would never use.
+        //
+        // The clear() is required, not cosmetic. Since Flutter 3.35 the
+        // Flutter Gradle Plugin pre-populates this set with armeabi-v7a,
+        // arm64-v8a and x86_64 for non-debuggable builds, *before* this
+        // file is evaluated. Adding to that set would leave all three in
+        // place, so the bundle would silently keep the other two ABIs.
+        // This is the form the Flutter migration guide prescribes.
+        ndk {
+            abiFilters.clear()
+            abiFilters.addAll(listOf("arm64-v8a"))
+        }
     }
 
     signingConfigs {
