@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
 import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
@@ -508,12 +509,14 @@ class PhotoToolLoadingState extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.description,
+    this.scanProgress,
     super.key,
   });
 
   final IconData icon;
   final String title;
   final String description;
+  final ScanSnapshot? scanProgress;
 
   @override
   Widget build(BuildContext context) {
@@ -523,7 +526,10 @@ class PhotoToolLoadingState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            const CircularFileScanner(size: 92),
+            CircularFileScanner(size: 92, scanId: scanProgress?.id,
+              progress: scanProgress?.fraction,
+              active: scanProgress == null || scanProgress!.outcome == ScanOutcome.running,
+              completed: scanProgress?.successful ?? false),
             const SizedBox(height: 22),
             Text(
               title,
@@ -533,7 +539,9 @@ class PhotoToolLoadingState extends StatelessWidget {
             ),
             const SizedBox(height: 7),
             Text(
-              description,
+              scanProgress != null && scanProgress!.processed > 0
+                  ? '${scanProgress!.stage} · ${scanProgress!.processed}${scanProgress!.total == null ? '' : ' / ${scanProgress!.total}'} ${scanProgress!.unit}'
+                  : description,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,

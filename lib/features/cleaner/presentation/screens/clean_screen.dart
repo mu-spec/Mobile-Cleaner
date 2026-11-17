@@ -5,6 +5,7 @@ import 'package:phone_storage_cleaner/app/navigation/root_back_button.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
 import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
 import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 import 'package:phone_storage_cleaner/features/files/domain/smart_scan_result.dart';
@@ -52,7 +53,7 @@ class CleanScreen extends ConsumerWidget {
         child: RefreshIndicator(
           onRefresh: runCompleteScan,
           child: scan.when(
-            loading: () => const FilesScanningView(),
+            loading: () => FilesScanningView(scanProgress: ref.watch(scanProgressProvider('clean')).value),
             error: (Object error, StackTrace stackTrace) => FilesErrorView(
               error: error,
               onRetry: runCompleteScan,

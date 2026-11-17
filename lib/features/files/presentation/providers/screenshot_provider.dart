@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
@@ -11,15 +12,17 @@ import 'package:phone_storage_cleaner/features/files/domain/screenshot_summary.d
 /// usually small, so filtering by size would hide most of them.
 final FutureProvider<FileScanResult> screenshotScanProvider =
     FutureProvider<FileScanResult>((ref) {
-      return ref
-          .watch(fileScannerRepositoryProvider)
-          .scan(
-            const FileScanRequest(
-              categories: <FileCategory>[FileCategory.images],
-              limitPerCategory: 1000,
-              sortOrder: FileSortOrder.dateDesc,
-            ),
-          );
+      return observeScan(ref, 'discovery:screenshots', () async {
+        return ref
+            .watch(fileScannerRepositoryProvider)
+            .scan(
+              const FileScanRequest(
+                categories: <FileCategory>[FileCategory.images],
+                limitPerCategory: 1000,
+                sortOrder: FileSortOrder.dateDesc,
+              ),
+            );
+      }, numeric: true);
     });
 
 /// Screenshots and their combined size for one age group.
@@ -31,8 +34,12 @@ final screenshotSummaryProvider =
       ref,
       ScreenshotGroup group,
     ) async {
-      final FileScanResult result = await ref.watch(
-        screenshotScanProvider.future,
-      );
-      return ScreenshotSummary.from(result.files, group);
+      return observeScan(ref, 'screenshots', () async {
+        final FileScanResult result = await scanDependency(
+          ref,
+          'discovery:screenshots',
+          ref.watch(screenshotScanProvider.future),
+        );
+        return ScreenshotSummary.from(result.files, group);
+      }, numeric: true);
     });

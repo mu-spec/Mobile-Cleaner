@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/domain/duplicate_group.dart';
 import 'package:phone_storage_cleaner/features/files/domain/large_photo_filter.dart';
 import 'package:phone_storage_cleaner/features/files/domain/large_photo_summary.dart';
@@ -22,25 +23,41 @@ import 'package:phone_storage_cleaner/features/files/presentation/providers/simi
 /// the slowest one rather than the sum.
 final FutureProvider<PhotoCleanupSummary> photoCleanupProvider =
     FutureProvider<PhotoCleanupSummary>((ref) async {
-      final Future<DuplicateScanResult> duplicates = ref.watch(
-        photoDuplicatesProvider.future,
-      );
-      final Future<ScreenshotSummary> screenshots = ref.watch(
-        screenshotSummaryProvider(ScreenshotGroup.defaultGroup).future,
-      );
-      final Future<LargePhotoSummary> largePhotos = ref.watch(
-        largePhotoSummaryProvider(LargePhotoFilter.defaultFilter).future,
-      );
-      final Future<SimilarPhotoScanResult> similar = ref.watch(
-        similarPhotosProvider(SimilarityStrength.defaultStrength).future,
-      );
+      return observeScan(ref, 'photos', () async {
+        final Future<DuplicateScanResult> duplicates = scanDependency(
+          ref,
+          'photoDuplicates',
+          ref.watch(photoDuplicatesProvider.future),
+        );
+        final Future<ScreenshotSummary> screenshots = scanDependency(
+          ref,
+          'screenshots',
+          ref.watch(
+            screenshotSummaryProvider(ScreenshotGroup.defaultGroup).future,
+          ),
+        );
+        final Future<LargePhotoSummary> largePhotos = scanDependency(
+          ref,
+          'largePhotos',
+          ref.watch(
+            largePhotoSummaryProvider(LargePhotoFilter.defaultFilter).future,
+          ),
+        );
+        final Future<SimilarPhotoScanResult> similar = scanDependency(
+          ref,
+          'similar',
+          ref.watch(
+            similarPhotosProvider(SimilarityStrength.defaultStrength).future,
+          ),
+        );
 
-      return PhotoCleanupSummary.from(
-        duplicates: await duplicates,
-        screenshots: await screenshots,
-        largePhotos: await largePhotos,
-        similarPhotos: await similar,
-      );
+        return PhotoCleanupSummary.from(
+          duplicates: await duplicates,
+          screenshots: await screenshots,
+          largePhotos: await largePhotos,
+          similarPhotos: await similar,
+        );
+      }, numeric: false);
     });
 
 /// Invalidates every scan the Photos tab depends on, forcing a fresh look.

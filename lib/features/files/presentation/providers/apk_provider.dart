@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:phone_storage_cleaner/features/files/domain/apk_summary.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
@@ -12,18 +13,20 @@ import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dar
 /// reliable than trusting a single category.
 final FutureProvider<FileScanResult> apkScanProvider =
     FutureProvider<FileScanResult>((ref) {
-      return ref
-          .watch(fileScannerRepositoryProvider)
-          .scan(
-            const FileScanRequest(
-              categories: <FileCategory>[
-                FileCategory.apks,
-                FileCategory.downloads,
-                FileCategory.documents,
-              ],
-              limitPerCategory: 500,
-            ),
-          );
+      return observeScan(ref, 'discovery:apks', () async {
+        return ref
+            .watch(fileScannerRepositoryProvider)
+            .scan(
+              const FileScanRequest(
+                categories: <FileCategory>[
+                  FileCategory.apks,
+                  FileCategory.downloads,
+                  FileCategory.documents,
+                ],
+                limitPerCategory: 500,
+              ),
+            );
+      }, numeric: false);
     });
 
 /// Installers and their combined size, in the requested order.
@@ -34,6 +37,12 @@ final apkSummaryProvider = FutureProvider.family<ApkSummary, FileListSort>((
   ref,
   FileListSort sort,
 ) async {
-  final FileScanResult result = await ref.watch(apkScanProvider.future);
-  return ApkSummary.from(result.files, sort: sort);
+  return observeScan(ref, 'apks', () async {
+    final FileScanResult result = await scanDependency(
+      ref,
+      'discovery:apks',
+      ref.watch(apkScanProvider.future),
+    );
+    return ApkSummary.from(result.files, sort: sort);
+  }, numeric: false);
 });

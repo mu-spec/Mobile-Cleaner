@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/apps/data/installed_apps_repository.dart';
 import 'package:phone_storage_cleaner/features/apps/domain/app_inventory.dart';
 
@@ -8,7 +9,9 @@ import 'package:phone_storage_cleaner/features/apps/domain/app_inventory.dart';
 /// once and re-sorted in memory rather than repeated per sort or filter.
 final FutureProvider<InstalledAppsSnapshot> installedAppsProvider =
     FutureProvider<InstalledAppsSnapshot>((ref) {
-      return ref.watch(installedAppsRepositoryProvider).getInstalledApps();
+      return observeScan(ref, 'discovery:apps', () async {
+        return ref.watch(installedAppsRepositoryProvider).getInstalledApps();
+      }, numeric: true);
     });
 
 /// Sort and filter applied to one cached read.
@@ -17,17 +20,21 @@ final appInventoryProvider =
       ref,
       (AppSort, AppFilter) options,
     ) async {
-      final InstalledAppsSnapshot snapshot = await ref.watch(
-        installedAppsProvider.future,
-      );
+      return observeScan(ref, 'apps', () async {
+        final InstalledAppsSnapshot snapshot = await scanDependency(
+          ref,
+          'discovery:apps',
+          ref.watch(installedAppsProvider.future),
+        );
 
-      return AppInventory.from(
-        snapshot.apps,
-        sort: options.$1,
-        filter: options.$2,
-        hasUsageAccess: snapshot.hasUsageAccess,
-        sizeDetailSupported: snapshot.sizeDetailSupported,
-      );
+        return AppInventory.from(
+          snapshot.apps,
+          sort: options.$1,
+          filter: options.$2,
+          hasUsageAccess: snapshot.hasUsageAccess,
+          sizeDetailSupported: snapshot.sizeDetailSupported,
+        );
+      }, numeric: true);
     });
 
 /// Re-reads the installed app list.

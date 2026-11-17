@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
 import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
@@ -221,7 +222,7 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
           : null,
       body: SafeArea(
         child: files.when(
-          loading: () => const FilesScanningView(),
+          loading: () => FilesScanningView(scanProgress: ref.watch(scanProgressProvider('files')).value),
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(fileScanProvider),

@@ -23,6 +23,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.concurrent.CancellationException
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 
@@ -61,7 +62,7 @@ import java.util.concurrent.RejectedExecutionException
  * confirmation, and the deletion all belong to Android. Nothing here removes
  * an app, and there is no silent path that could.
  */
-class InstalledAppsBridge(private val context: Context) :
+class InstalledAppsBridge(private val context: Context, private val progressBridge: ScanProgressBridge) :
     MethodChannel.MethodCallHandler {
 
     companion object {
@@ -102,40 +103,50 @@ class InstalledAppsBridge(private val context: Context) :
 
     private fun getInstalledApps(call: MethodCall, result: MethodChannel.Result) {
         val includeIcons = call.argument<Boolean>("includeIcons") ?: true
+        val progress = progressBridge.request(call)
 
         try {
             executor.execute {
                 val apps = try {
-                    readApps(includeIcons)
+                    readApps(includeIcons, progress)
+                } catch (cancelled: CancellationException) {
+                    progress.finish("cancelled")
+                    mainHandler.post { result.error("SCAN_CANCELLED", "Scan cancelled.", null) }
+                    return@execute
                 } catch (error: Throwable) {
+                    progress.incomplete()
                     // OutOfMemoryError is conceivable while rasterising icons.
                     emptyList()
                 }
+                progress.finish()
                 mainHandler.post {
                     result.success(
-                        mapOf(
+                        progress.wrap(mapOf(
                             "apps" to apps,
                             "hasUsageAccess" to hasUsageAccess(),
                             // Below API 26 there is no StorageStatsManager at
                             // all, so Usage Access would not help either.
                             "sizeDetailSupported" to
                                 (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O),
-                        ),
+                        )),
                     )
                 }
             }
         } catch (rejected: RejectedExecutionException) {
+            progress.finish("cancelled")
             result.success(
-                mapOf(
+                progress.wrap(mapOf(
                     "apps" to emptyList<Map<String, Any?>>(),
                     "hasUsageAccess" to false,
                     "sizeDetailSupported" to false,
-                ),
+                )),
             )
         }
     }
 
-    private fun readApps(includeIcons: Boolean): List<Map<String, Any?>> {
+    private fun readApps(includeIcons: Boolean, progress: NativeScanProgress): List<Map<String, Any?>> {
+        progress.check()
+        progress.update("Discovering launchable apps", 0, units = "apps checked", force = true)
         val packageManager = context.getPackageManager()
 
         // Only apps with a launcher entry. This is the `<queries>` contract:
@@ -153,24 +164,19 @@ class InstalledAppsBridge(private val context: Context) :
             null
         }
 
-        val seen = mutableSetOf<String>()
+        val packages = resolved.mapNotNull { it.activityInfo?.packageName }
+            .filter { it != context.getPackageName() }.distinct()
         val apps = mutableListOf<Map<String, Any?>>()
-
-        for (info in resolved) {
-            val packageName = info.activityInfo?.packageName ?: continue
-            if (packageName == context.getPackageName()) {
-                // Listing ourselves and offering an Uninstall button would be
-                // a trap, not a feature.
-                continue
-            }
-            if (!seen.add(packageName)) {
-                // An app can declare several launcher activities.
-                continue
-            }
-
+        progress.numeric = true
+        progress.update("Reading installed apps", 0, packages.size, "apps checked", true)
+        var processed = 0
+        for (packageName in packages) {
+            progress.check()
+            try {
             val appInfo: ApplicationInfo = try {
                 packageManager.getApplicationInfo(packageName, 0)
             } catch (missing: PackageManager.NameNotFoundException) {
+                progress.incomplete()
                 continue
             }
 
@@ -231,6 +237,10 @@ class InstalledAppsBridge(private val context: Context) :
                     null
                 },
             )
+            } finally {
+                processed++
+                progress.update("Reading installed apps", processed, packages.size, "apps checked")
+            }
         }
 
         return apps

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
@@ -11,15 +12,17 @@ import 'package:phone_storage_cleaner/features/files/domain/large_photo_summary.
 /// platform never returns the thousands of small pictures a phone holds.
 final FutureProvider<FileScanResult> largePhotoScanProvider =
     FutureProvider<FileScanResult>((ref) {
-      return ref
-          .watch(fileScannerRepositoryProvider)
-          .scan(
-            FileScanRequest(
-              categories: const <FileCategory>[FileCategory.images],
-              minSizeBytes: LargePhotoFilter.lowestBound,
-              limitPerCategory: 500,
-            ),
-          );
+      return observeScan(ref, 'discovery:largePhotos', () async {
+        return ref
+            .watch(fileScannerRepositoryProvider)
+            .scan(
+              FileScanRequest(
+                categories: const <FileCategory>[FileCategory.images],
+                minSizeBytes: LargePhotoFilter.lowestBound,
+                limitPerCategory: 500,
+              ),
+            );
+      }, numeric: true);
     });
 
 /// Photos and their combined size for one threshold.
@@ -31,8 +34,12 @@ final largePhotoSummaryProvider =
       ref,
       LargePhotoFilter filter,
     ) async {
-      final FileScanResult result = await ref.watch(
-        largePhotoScanProvider.future,
-      );
-      return LargePhotoSummary.from(result.files, filter);
+      return observeScan(ref, 'largePhotos', () async {
+        final FileScanResult result = await scanDependency(
+          ref,
+          'discovery:largePhotos',
+          ref.watch(largePhotoScanProvider.future),
+        );
+        return LargePhotoSummary.from(result.files, filter);
+      }, numeric: true);
     });

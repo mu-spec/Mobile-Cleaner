@@ -7,11 +7,16 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.Environment
 import android.provider.MediaStore
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
+import java.util.concurrent.Executors
+import java.util.concurrent.CancellationException
+import java.util.concurrent.RejectedExecutionException
 
 /**
  * Read-only discovery of user-visible files through MediaStore.
@@ -22,9 +27,13 @@ import java.io.File
 class FileScannerBridge(
     private val context: Context,
     private val safAccess: SafAccessBridge,
+    private val progressBridge: ScanProgressBridge,
 ) : MethodChannel.MethodCallHandler {
 
     private val safScanner = SafDocumentScanner(context)
+    private val executor = Executors.newSingleThreadExecutor()
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val currentProgress = ThreadLocal<NativeScanProgress>()
 
     companion object {
         const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/file_scanner"
@@ -75,7 +84,22 @@ class FileScannerBridge(
             return
         }
 
+        val progress = progressBridge.request(call)
         try {
+            executor.execute {
+                currentProgress.set(progress)
+                try { scan(call, result, progress) }
+                finally { currentProgress.remove() }
+            }
+        } catch (rejected: RejectedExecutionException) {
+            progress.finish("cancelled")
+            result.error("SCAN_CANCELLED", "Scanner is closing.", null)
+        }
+    }
+
+    private fun scan(call: MethodCall, result: MethodChannel.Result, progress: NativeScanProgress) {
+        try {
+            progress.check()
             val requested = (call.argument<List<String>>("categories")
                 ?: listOf(
                     CATEGORY_IMAGES,
@@ -94,7 +118,10 @@ class FileScannerBridge(
             val files = mutableListOf<Map<String, Any?>>()
             var truncated = false
 
+            progress.numeric = requested.size == 1 && requested.first() in setOf(CATEGORY_IMAGES, CATEGORY_VIDEOS, CATEGORY_AUDIO)
             for (category in requested) {
+                progress.check()
+                progress.update("Discovering $category", 0, force = true)
                 val rows = when (category) {
                     CATEGORY_IMAGES -> queryMedia(
                         MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -143,8 +170,10 @@ class FileScannerBridge(
                 grantedTrees.isEmpty() &&
                 requested.any { it in NON_MEDIA_CATEGORIES }
 
-            result.success(
-                mapOf(
+            progress.check()
+            progress.finish()
+            mainHandler.post { result.success(
+                progress.wrap(mapOf(
                     "files" to files,
                     "truncated" to truncated,
                     "durationMillis" to (System.currentTimeMillis() - startedAt),
@@ -152,24 +181,29 @@ class FileScannerBridge(
                     // UI needs to know when a folder grant would reveal more.
                     "needsFolderAccess" to needsAccess,
                     "grantedFolders" to grantedTrees,
-                ),
-            )
+                )),
+            ) }
+        } catch (cancelled: CancellationException) {
+            progress.finish("cancelled")
+            mainHandler.post { result.error("SCAN_CANCELLED", "Scan cancelled.", null) }
         } catch (security: SecurityException) {
-            result.error(
+            progress.finish("failed")
+            mainHandler.post { result.error(
                 "SCAN_PERMISSION_DENIED",
                 "Storage permission is required to scan files.",
                 security.message,
-            )
+            ) }
         } catch (error: Exception) {
+            progress.finish("failed")
             // Include the exception type: a bare message is often null, which
             // left the UI showing "We could not scan your files" with nothing
             // to diagnose from. This is how the API 30 "Invalid token LIMIT"
             // failure stayed invisible until a user reported it.
-            result.error(
+            mainHandler.post { result.error(
                 "SCAN_FAILED",
                 "Unable to scan device files.",
                 "${error.javaClass.simpleName}: ${error.message}",
-            )
+            ) }
         }
     }
 
@@ -433,9 +467,14 @@ class FileScannerBridge(
             selectionArgs = if (selectionArgs.isEmpty()) null else selectionArgs,
             order = sortColumn(sortOrder),
             limit = limit,
-        ) ?: return results
+        ) ?: run { currentProgress.get()?.incomplete(); return results }
 
         cursor.use { rows ->
+            val progress = currentProgress.get()
+            // A provider returning more than the requested bound does not
+            // provide a reliable bounded work denominator.
+            val total = rows.count.takeIf { it <= limit }
+            progress?.update("Reading $category", 0, total, force = true)
             val idColumn = rows.getColumnIndex(MediaStore.MediaColumns._ID)
             val nameColumn = rows.getColumnIndex(MediaStore.MediaColumns.DISPLAY_NAME)
             val sizeColumn = rows.getColumnIndex(MediaStore.MediaColumns.SIZE)
@@ -454,6 +493,8 @@ class FileScannerBridge(
             }
 
             while (rows.moveToNext() && results.size < limit) {
+                progress?.check()
+                try {
                 val id = if (idColumn >= 0) rows.getLong(idColumn) else continue
                 val path = if (dataColumn >= 0) rows.getString(dataColumn).orEmpty() else ""
                 var name = if (nameColumn >= 0) rows.getString(nameColumn).orEmpty() else ""
@@ -491,6 +532,9 @@ class FileScannerBridge(
                         null
                     },
                 )
+                } finally {
+                    progress?.update("Reading $category", rows.position + 1, total)
+                }
             }
         }
 
@@ -505,6 +549,7 @@ class FileScannerBridge(
         sortOrder: String,
     ): List<Map<String, Any?>> {
         if (directory == null || !directory.isDirectory || !directory.canRead()) {
+            currentProgress.get()?.incomplete()
             return emptyList()
         }
 
@@ -514,17 +559,25 @@ class FileScannerBridge(
         var visited = 0
 
         while (queue.isNotEmpty() && collected.size < limit * 4 && visited < 20_000) {
+            currentProgress.get()?.check()
             val current = queue.removeFirst()
             visited++
-            val children = current.listFiles() ?: continue
+            val children = current.listFiles()
+            if (children == null) {
+                currentProgress.get()?.incomplete()
+                continue
+            }
             for (child in children) {
+                currentProgress.get()?.check()
                 if (child.isDirectory) {
                     queue.add(child)
                 } else if (child.length() > 0 && child.length() >= minSizeBytes) {
                     collected += child
                 }
             }
+            currentProgress.get()?.update("Discovering legacy downloads", visited, units = "directories checked")
         }
+        if (queue.isNotEmpty() && visited >= 20_000) currentProgress.get()?.incomplete()
 
         val sorted = when (sortOrder) {
             "date_desc" -> collected.sortedByDescending { it.lastModified() }
@@ -578,11 +631,14 @@ class FileScannerBridge(
 
         val safRows = try {
             safScanner
-                .scan(trees, minSizeBytes, limit) { name, mime, documentId ->
+                .scan(trees, minSizeBytes, limit, currentProgress.get()) { name, mime, documentId ->
                     accept(name, mime, documentId)
                 }
                 .map { row -> row + ("category" to category) }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (error: Exception) {
+            currentProgress.get()?.incomplete()
             // A broken grant must not fail the whole scan.
             emptyList()
         }
@@ -590,6 +646,7 @@ class FileScannerBridge(
         val combined = mutableListOf<Map<String, Any?>>()
         val seen = mutableSetOf<String>()
         for (row in mediaStoreRows + safRows) {
+            currentProgress.get()?.check()
             val name = (row["name"] as? String)?.lowercase().orEmpty()
             val size = (row["sizeBytes"] as? Number)?.toLong() ?: 0L
             if (!seen.add("$name:$size")) continue
@@ -664,4 +721,5 @@ class FileScannerBridge(
         val name = row["name"] as? String ?: return false
         return isDocumentLike(name, row["mimeType"] as? String)
     }
+    fun dispose() { executor.shutdown() }
 }

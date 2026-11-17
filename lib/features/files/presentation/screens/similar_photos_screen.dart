@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/ui/haptics.dart';
 import 'package:phone_storage_cleaner/core/ui/responsive.dart';
 import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
@@ -166,7 +167,7 @@ class _SimilarPhotosScreenState extends ConsumerState<SimilarPhotosScreen> {
           : null,
       body: SafeArea(
         child: similar.when(
-          loading: () => const _AnalyzingView(),
+          loading: () => _AnalyzingView(scanProgress: ref.watch(scanProgressProvider('similar')).value),
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(similarPhotoScanProvider),
@@ -729,13 +730,15 @@ class _TotalCard extends StatelessWidget {
 
 /// Decoding takes a moment, so say what is happening and that it is local.
 class _AnalyzingView extends StatelessWidget {
-  const _AnalyzingView();
+  const _AnalyzingView({this.scanProgress});
+  final ScanSnapshot? scanProgress;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       key: Key('similar_photos_analyzing'),
       child: PhotoToolLoadingState(
+        scanProgress: scanProgress,
         icon: PhosphorIconsDuotone.imagesSquare,
         title: 'Analyzing photos…',
         description: 'Comparison happens on this device. Nothing is uploaded.',

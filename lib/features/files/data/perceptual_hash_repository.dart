@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Computes perceptual hashes so visually similar photos can be grouped.
@@ -69,10 +70,12 @@ class PlatformPerceptualHashRepository implements PerceptualHashRepository {
           : start + maxUrisPerCall;
 
       try {
-        final Map<Object?, Object?>? payload = await _channel
-            .invokeMapMethod<Object?, Object?>('hashImages', <String, Object>{
-              'uris': missing.sublist(start, end),
-            });
+        final Map<Object?, Object?>? payload =
+            await NativeScanRequest.invokeMap(
+              _channel,
+              'hashImages',
+              <String, Object>{'uris': missing.sublist(start, end)},
+            );
         final Map<String, String> fresh = parseHashes(payload);
         results.addAll(fresh);
         _cache.addAll(fresh);

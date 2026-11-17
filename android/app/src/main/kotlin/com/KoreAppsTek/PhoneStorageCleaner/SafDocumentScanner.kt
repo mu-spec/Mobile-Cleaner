@@ -41,8 +41,10 @@ class SafDocumentScanner(private val context: Context) {
         treeUris: List<Uri>,
         minSizeBytes: Long,
         limit: Int,
+        progress: NativeScanProgress? = null,
         accept: (name: String, mimeType: String?, documentId: String) -> Boolean,
     ): List<Map<String, Any?>> {
+        progress?.update("Discovering granted folders", 0, force = true)
         val results = mutableListOf<Map<String, Any?>>()
         val seenDocumentIds = mutableSetOf<String>()
         var visited = 0
@@ -53,6 +55,7 @@ class SafDocumentScanner(private val context: Context) {
             val rootId = try {
                 DocumentsContract.getTreeDocumentId(treeUri)
             } catch (error: IllegalArgumentException) {
+                progress?.incomplete()
                 continue
             }
 
@@ -66,6 +69,7 @@ class SafDocumentScanner(private val context: Context) {
                 directories < MAX_DIRECTORIES &&
                 visited < MAX_VISITED_DOCUMENTS
             ) {
+                progress?.check()
                 val parentId = queue.removeFirst()
                 directories++
 
@@ -74,14 +78,20 @@ class SafDocumentScanner(private val context: Context) {
                     parentId,
                 )
 
-                val cursor: Cursor = try {
+                val cursor: Cursor? = try {
                     context.contentResolver.query(childrenUri, PROJECTION, null, null, null)
                 } catch (error: SecurityException) {
                     // The grant was revoked while scanning.
+                    progress?.incomplete()
                     null
                 } catch (error: Exception) {
+                    progress?.incomplete()
                     null
-                } ?: continue
+                }
+                if (cursor == null) {
+                    progress?.incomplete()
+                    continue
+                }
 
                 cursor.use { rows ->
                     val idColumn = rows.getColumnIndex(
@@ -101,7 +111,9 @@ class SafDocumentScanner(private val context: Context) {
                     )
 
                     while (rows.moveToNext() && results.size < limit) {
+                        progress?.check()
                         visited++
+                        try {
                         if (visited >= MAX_VISITED_DOCUMENTS) break
 
                         val documentId = if (idColumn >= 0) rows.getString(idColumn) else null
@@ -155,9 +167,13 @@ class SafDocumentScanner(private val context: Context) {
                                 .substringAfter(':', "")
                                 .substringBeforeLast('/', ""),
                         )
+                        } finally {
+                            progress?.update("Discovering granted folders", visited, units = "documents checked")
+                        }
                     }
                 }
             }
+            if (queue.isNotEmpty() && results.size < limit) progress?.incomplete()
         }
 
         return results

@@ -11,16 +11,24 @@ import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_up
 class CircularFileScanner extends StatefulWidget {
   const CircularFileScanner({
     this.progress,
+    this.scanId,
     this.active = true,
     this.completed = false,
+    this.succeeded = false,
     this.size = 228,
     super.key,
   }) : assert(progress == null || (progress >= 0 && progress <= 1)),
        assert(size > 0);
 
   final double? progress;
+
+  /// Change for a genuinely new scan; updates within one scan never rewind.
+  final Object? scanId;
   final bool active;
   final bool completed;
+
+  /// Entire operation succeeded, independently of the completion transition.
+  final bool succeeded;
   final double size;
 
   // Four former 1450 ms wave cycles: a deliberately slower, gentle orbit.
@@ -31,11 +39,16 @@ class CircularFileScanner extends StatefulWidget {
 }
 
 class _CircularFileScannerState extends State<CircularFileScanner>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _motion = AnimationController(
     vsync: this,
     duration: CircularFileScanner.motionDuration,
   );
+  late final AnimationController _fill = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 240),
+  );
+  double _confirmed = 0;
   bool _visible = true;
   bool _reduceMotion = false;
   bool _foreground = true;
@@ -46,6 +59,7 @@ class _CircularFileScannerState extends State<CircularFileScanner>
     WidgetsBinding.instance.addObserver(this);
     final AppLifecycleState? lifecycle = WidgetsBinding.instance.lifecycleState;
     _foreground = lifecycle == null || lifecycle == AppLifecycleState.resumed;
+    _acceptProgress();
   }
 
   @override
@@ -59,6 +73,11 @@ class _CircularFileScannerState extends State<CircularFileScanner>
   @override
   void didUpdateWidget(CircularFileScanner oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.scanId != widget.scanId) {
+      _confirmed = 0;
+      _fill.value = 0;
+    }
+    _acceptProgress();
     _syncMotion();
   }
 
@@ -68,7 +87,26 @@ class _CircularFileScannerState extends State<CircularFileScanner>
     _syncMotion();
   }
 
+  void _acceptProgress() {
+    final next = widget.completed || widget.succeeded ? 1.0 : widget.progress;
+    // A child reaching its total is not authorization to finish the ring.
+    if (next != null &&
+        (next < 1 || widget.completed || widget.succeeded) &&
+        next > _confirmed) {
+      _confirmed = next;
+    }
+  }
+
   void _syncMotion() {
+    if (_visible && _foreground) {
+      if (_reduceMotion || !widget.active || widget.completed) {
+        _fill.value = _confirmed;
+      } else if (_fill.value < _confirmed) {
+        _fill.animateTo(_confirmed, curve: Curves.easeOutCubic);
+      }
+    } else {
+      _fill.stop();
+    }
     final bool shouldAnimate =
         widget.active &&
         !widget.completed &&
@@ -88,20 +126,25 @@ class _CircularFileScannerState extends State<CircularFileScanner>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _motion.dispose();
+    _fill.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final bool dark = Theme.of(context).brightness == Brightness.dark;
-    final double? progress = widget.completed ? 1 : widget.progress;
+    final double? progress = widget.completed
+        ? 1
+        : widget.progress == null
+        ? null
+        : _confirmed;
     return Semantics(
       key: const Key('scan_progress_semantics'),
       label: 'Scan progress',
       value: widget.completed
           ? 'Scan complete'
           : progress != null
-          ? '${(progress * 100).round()} percent'
+          ? '${(progress * 100).floor()} percent'
           : widget.active
           ? 'Scanning'
           : 'Scan paused',
@@ -114,7 +157,7 @@ class _CircularFileScannerState extends State<CircularFileScanner>
               key: const Key('circular_file_scanner_paint'),
               painter: _FileScannerPainter(
                 motion: _motion,
-                progress: progress,
+                fill: _fill,
                 completed: widget.completed,
                 blue: dark ? AppColors.darkPrimary : HomeUpperStyle.primaryBlue,
                 orange: dark ? AppColors.darkOrange : HomeUpperStyle.orange,
@@ -144,16 +187,16 @@ class _CircularFileScannerState extends State<CircularFileScanner>
 class _FileScannerPainter extends CustomPainter {
   _FileScannerPainter({
     required this.motion,
-    required this.progress,
+    required this.fill,
     required this.completed,
     required this.blue,
     required this.orange,
     required this.surface,
     required this.track,
-  }) : super(repaint: motion);
+  }) : super(repaint: Listenable.merge([motion, fill]));
 
   final Animation<double> motion;
-  final double? progress;
+  final Animation<double> fill;
   final bool completed;
   final Color blue;
   final Color orange;
@@ -167,9 +210,8 @@ class _FileScannerPainter extends CustomPainter {
     final double radius = side * 0.43;
     final Rect ring = Rect.fromCircle(center: center, radius: radius);
     final double phase = motion.value;
-    final double start =
-        -math.pi / 2 + (progress == null ? phase * math.pi * 2 : 0);
-    final double sweep = math.pi * 2 * (progress ?? 0.24);
+    const double start = -math.pi / 2;
+    final double sweep = math.pi * 2 * fill.value;
     final Paint stroke = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = side * 0.032
@@ -177,7 +219,20 @@ class _FileScannerPainter extends CustomPainter {
 
     canvas.drawCircle(center, radius, Paint()..color = surface);
     canvas.drawCircle(center, radius, stroke..color = track);
-    canvas.drawArc(ring, start, sweep, false, stroke..color = blue);
+    if (sweep > 0) {
+      // Round end caps can overlap the remaining gap before 100%, or paint
+      // beyond the confirmed angle. Keep the blue sweep inside its exact
+      // measured bounds; the orange leading marker preserves the soft tip.
+      canvas.drawArc(
+        ring,
+        start,
+        sweep,
+        false,
+        stroke
+          ..color = blue
+          ..strokeCap = StrokeCap.butt,
+      );
+    }
     if (!completed) {
       // In determinate mode the orange marker follows actual progress.
       final double angle = start + sweep;
@@ -210,7 +265,7 @@ class _FileScannerPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _FileScannerPainter oldDelegate) =>
       oldDelegate.motion != motion ||
-      oldDelegate.progress != progress ||
+      oldDelegate.fill != fill ||
       oldDelegate.completed != completed ||
       oldDelegate.blue != blue ||
       oldDelegate.orange != orange ||

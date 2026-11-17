@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/apps/domain/installed_app.dart';
 
 /// What one read of the installed-app list returned.
@@ -66,11 +67,11 @@ class PlatformInstalledAppsRepository implements InstalledAppsRepository {
     bool includeIcons = true,
   }) async {
     try {
-      final Map<Object?, Object?>? payload = await _channel
-          .invokeMapMethod<Object?, Object?>(
-            'getInstalledApps',
-            <String, Object>{'includeIcons': includeIcons},
-          );
+      final Map<Object?, Object?>? payload = await NativeScanRequest.invokeMap(
+        _channel,
+        'getInstalledApps',
+        <String, Object>{'includeIcons': includeIcons},
+      );
       return parseSnapshot(payload);
     } on PlatformException {
       return InstalledAppsSnapshot.empty;

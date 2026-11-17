@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:phone_storage_cleaner/app/navigation/root_back_button.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
 import 'package:phone_storage_cleaner/features/files/domain/photo_cleanup_summary.dart';
 import 'package:phone_storage_cleaner/features/files/presentation/providers/photo_cleanup_provider.dart';
@@ -47,7 +48,7 @@ class PhotosScreen extends ConsumerWidget {
             await ref.read(photoCleanupProvider.future);
           },
           child: cleanup.when(
-            loading: () => const FilesScanningView(),
+            loading: () => FilesScanningView(scanProgress: ref.watch(scanProgressProvider('photos')).value),
             error: (Object error, StackTrace stackTrace) => FilesErrorView(
               error: error,
               onRetry: () => refreshPhotoCleanup(ref),

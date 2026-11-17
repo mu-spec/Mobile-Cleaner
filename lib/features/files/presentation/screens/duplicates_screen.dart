@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
 import 'package:phone_storage_cleaner/core/utils/date_formatter.dart';
 import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
@@ -124,7 +125,7 @@ class _DuplicatesScreenState extends ConsumerState<DuplicatesScreen> {
           : null,
       body: SafeArea(
         child: duplicates.when(
-          loading: () => const _HashingView(),
+          loading: () => _HashingView(scanProgress: ref.watch(scanProgressProvider('duplicates')).value),
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(duplicateScanProvider),
@@ -421,13 +422,15 @@ class _TotalCard extends StatelessWidget {
 
 /// Hashing can take a moment, so say so rather than showing a bare spinner.
 class _HashingView extends StatelessWidget {
-  const _HashingView();
+  const _HashingView({this.scanProgress});
+  final ScanSnapshot? scanProgress;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       key: Key('duplicates_scanning'),
       child: PhotoToolLoadingState(
+        scanProgress: scanProgress,
         icon: PhosphorIconsDuotone.copy,
         title: 'Comparing files…',
         description: 'Only files of matching size are read.',

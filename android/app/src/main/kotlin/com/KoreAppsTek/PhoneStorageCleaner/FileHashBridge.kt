@@ -7,6 +7,7 @@ import android.os.Looper
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.security.MessageDigest
+import java.util.concurrent.CancellationException
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 
@@ -25,7 +26,7 @@ import java.util.concurrent.RejectedExecutionException
  * unreadable file simply cannot be proven to be a duplicate, and must not be
  * offered for deletion.
  */
-class FileHashBridge(private val context: Context) : MethodChannel.MethodCallHandler {
+class FileHashBridge(private val context: Context, private val progressBridge: ScanProgressBridge) : MethodChannel.MethodCallHandler {
 
     companion object {
         const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/hash"
@@ -48,9 +49,11 @@ class FileHashBridge(private val context: Context) : MethodChannel.MethodCallHan
             return
         }
 
+        val progress = progressBridge.request(call)
         val uris = call.argument<List<String>>("uris").orEmpty()
         if (uris.isEmpty()) {
-            result.success(emptyMap<String, String>())
+            progress.finish()
+            result.success(progress.wrap(emptyMap<String, String>()))
             return
         }
 
@@ -58,10 +61,17 @@ class FileHashBridge(private val context: Context) : MethodChannel.MethodCallHan
 
         try {
             executor.execute {
+                try {
+                progress.check()
+                progress.update("Hashing files", 0, capped.size, "files checked", true)
                 val hashes = mutableMapOf<String, String>()
+                var processed = 0
                 for (raw in capped) {
+                    progress.check()
                     val hash = try {
-                        hashUri(raw)
+                        hashUri(raw, progress)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
                     } catch (error: Throwable) {
                         // OutOfMemoryError is conceivable on a hostile file.
                         null
@@ -69,24 +79,34 @@ class FileHashBridge(private val context: Context) : MethodChannel.MethodCallHan
                     // Unreadable files are omitted, never guessed at.
                     if (hash != null) {
                         hashes[raw] = hash
-                    }
+                    } else progress.incomplete()
+                    processed++
+                    progress.update("Hashing files", processed, capped.size, "files checked")
                 }
-                mainHandler.post { result.success(hashes) }
+                progress.check()
+                progress.finish()
+                mainHandler.post { result.success(progress.wrap(hashes)) }
+                } catch (cancelled: CancellationException) {
+                    progress.finish("cancelled")
+                    mainHandler.post { result.error("SCAN_CANCELLED", "Scan cancelled.", null) }
+                }
             }
         } catch (rejected: RejectedExecutionException) {
             // The activity is going away; answer rather than crash.
-            result.success(emptyMap<String, String>())
+            progress.finish("cancelled")
+            result.success(progress.wrap(emptyMap<String, String>()))
         }
     }
 
     /** Streams the file through the digest, returning lowercase hex. */
-    private fun hashUri(raw: String): String? {
+    private fun hashUri(raw: String, progress: NativeScanProgress): String? {
         val uri: Uri = Uri.parse(raw)
         val digest = MessageDigest.getInstance(ALGORITHM)
 
         context.contentResolver.openInputStream(uri)?.use { stream ->
             val buffer = ByteArray(BUFFER_BYTES)
             while (true) {
+                progress.check()
                 val read = stream.read(buffer)
                 if (read <= 0) {
                     break

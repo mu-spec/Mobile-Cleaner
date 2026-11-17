@@ -240,7 +240,9 @@ void main() {
     final Semantics progressSemantics = tester.widget<Semantics>(
       find.byKey(const Key('scan_progress_semantics')),
     );
-    expect(progressSemantics.properties.value, 'Scanning');
+    // The fake scanner has actually finished; the minimum presentation gate
+    // must no longer be mistaken for unfinished native work.
+    expect(progressSemantics.properties.value, '100 percent');
 
     await tester.pump(const Duration(milliseconds: 1500));
     await tester.pump(const Duration(milliseconds: 700));

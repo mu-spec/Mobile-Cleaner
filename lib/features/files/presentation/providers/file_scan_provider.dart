@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
@@ -7,7 +8,9 @@ import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 /// Full discovery pass across every scannable category.
 final FutureProvider<FileScanResult> fileScanProvider =
     FutureProvider<FileScanResult>((ref) {
-      return ref.watch(fileScannerRepositoryProvider).scan();
+      return observeScan(ref, 'files', () async {
+        return ref.watch(fileScannerRepositoryProvider).scan();
+      }, numeric: false);
     });
 
 /// Files belonging to one category, largest first.
@@ -19,6 +22,10 @@ final categoryFilesProvider =
       ref,
       FileCategory category,
     ) async {
-      final FileScanResult result = await ref.watch(fileScanProvider.future);
+      final FileScanResult result = await scanDependency(
+        ref,
+        'files',
+        ref.watch(fileScanProvider.future),
+      );
       return result.sortedCategory(category);
     });

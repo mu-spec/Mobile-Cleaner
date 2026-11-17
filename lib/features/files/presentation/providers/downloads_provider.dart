@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:phone_storage_cleaner/features/files/domain/download_age_filter.dart';
 import 'package:phone_storage_cleaner/features/files/domain/downloads_summary.dart';
@@ -11,15 +12,17 @@ import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dar
 /// age, not size, is what this tool filters on.
 final FutureProvider<FileScanResult> downloadsScanProvider =
     FutureProvider<FileScanResult>((ref) {
-      return ref
-          .watch(fileScannerRepositoryProvider)
-          .scan(
-            const FileScanRequest(
-              categories: <FileCategory>[FileCategory.downloads],
-              limitPerCategory: 500,
-              sortOrder: FileSortOrder.dateDesc,
-            ),
-          );
+      return observeScan(ref, 'discovery:downloads', () async {
+        return ref
+            .watch(fileScannerRepositoryProvider)
+            .scan(
+              const FileScanRequest(
+                categories: <FileCategory>[FileCategory.downloads],
+                limitPerCategory: 500,
+                sortOrder: FileSortOrder.dateDesc,
+              ),
+            );
+      }, numeric: false);
     });
 
 /// Downloads and total size for one age threshold.
@@ -31,11 +34,15 @@ final downloadsSummaryProvider =
       ref,
       DownloadAgeFilter filter,
     ) async {
-      final FileScanResult result = await ref.watch(
-        downloadsScanProvider.future,
-      );
-      return DownloadsSummary.from(
-        result.byCategory(FileCategory.downloads),
-        filter,
-      );
+      return observeScan(ref, 'downloads', () async {
+        final FileScanResult result = await scanDependency(
+          ref,
+          'discovery:downloads',
+          ref.watch(downloadsScanProvider.future),
+        );
+        return DownloadsSummary.from(
+          result.byCategory(FileCategory.downloads),
+          filter,
+        );
+      }, numeric: false);
     });

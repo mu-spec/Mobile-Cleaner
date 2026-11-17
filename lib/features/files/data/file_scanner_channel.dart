@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
 
 /// Thin wrapper around the Android MediaStore method channel.
@@ -36,15 +37,18 @@ class MethodChannelFileScanner implements FileScannerChannel {
   }) async {
     final Map<Object?, Object?>? result;
     try {
-      result = await _channel
-          .invokeMapMethod<Object?, Object?>('scanFiles', <String, Object>{
-            'categories': categories
-                .map((FileCategory category) => category.key)
-                .toList(growable: false),
-            'limitPerCategory': limitPerCategory,
-            'minSizeBytes': minSizeBytes,
-            'sortOrder': sortOrder.key,
-          });
+      result = await NativeScanRequest.invokeMap(
+        _channel,
+        'scanFiles',
+        <String, Object>{
+          'categories': categories
+              .map((FileCategory category) => category.key)
+              .toList(growable: false),
+          'limitPerCategory': limitPerCategory,
+          'minSizeBytes': minSizeBytes,
+          'sortOrder': sortOrder.key,
+        },
+      );
     } on MissingPluginException {
       // The scanner is the app's core capability, so this is surfaced rather
       // than silently returning an empty library that looks like a clean

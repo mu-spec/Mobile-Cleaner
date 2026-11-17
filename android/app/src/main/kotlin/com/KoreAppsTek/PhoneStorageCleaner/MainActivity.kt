@@ -12,6 +12,8 @@ class MainActivity : FlutterActivity() {
         const val STORAGE_CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/storage"
     }
 
+    private var scanProgress: ScanProgressBridge? = null
+    private var fileScanner: FileScannerBridge? = null
     private var thumbnailLoader: ThumbnailLoader? = null
     private var safAccess: SafAccessBridge? = null
     private var deleteBridge: DeleteBridge? = null
@@ -56,6 +58,8 @@ class MainActivity : FlutterActivity() {
             ShareBridge.CHANNEL,
         ).setMethodCallHandler(ShareBridge(applicationContext))
 
+        val progress = ScanProgressBridge(flutterEngine.dartExecutor.binaryMessenger)
+        scanProgress = progress
         val saf = SafAccessBridge(applicationContext)
         saf.activity = this
         safAccess = saf
@@ -64,10 +68,12 @@ class MainActivity : FlutterActivity() {
             SafAccessBridge.CHANNEL,
         ).setMethodCallHandler(saf)
 
+        val scanner = FileScannerBridge(applicationContext, saf, progress)
+        fileScanner = scanner
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             FileScannerBridge.CHANNEL,
-        ).setMethodCallHandler(FileScannerBridge(applicationContext, saf))
+        ).setMethodCallHandler(scanner)
 
         val deleter = DeleteBridge(applicationContext)
         deleter.activity = this
@@ -77,14 +83,14 @@ class MainActivity : FlutterActivity() {
             DeleteBridge.CHANNEL,
         ).setMethodCallHandler(deleter)
 
-        val hasher = FileHashBridge(applicationContext)
+        val hasher = FileHashBridge(applicationContext, progress)
         hashBridge = hasher
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             FileHashBridge.CHANNEL,
         ).setMethodCallHandler(hasher)
 
-        val perceptual = PerceptualHashBridge(applicationContext)
+        val perceptual = PerceptualHashBridge(applicationContext, progress)
         perceptualHashBridge = perceptual
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
@@ -98,7 +104,7 @@ class MainActivity : FlutterActivity() {
             PhotoQualityBridge.CHANNEL,
         ).setMethodCallHandler(quality)
 
-        val installedApps = InstalledAppsBridge(applicationContext)
+        val installedApps = InstalledAppsBridge(applicationContext, progress)
         installedApps.activity = this
         installedAppsBridge = installedApps
         MethodChannel(
@@ -137,6 +143,10 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        scanProgress?.dispose()
+        scanProgress = null
+        fileScanner?.dispose()
+        fileScanner = null
         thumbnailLoader?.dispose()
         thumbnailLoader = null
         safAccess?.activity = null

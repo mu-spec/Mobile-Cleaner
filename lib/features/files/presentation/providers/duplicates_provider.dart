@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/data/file_hash_repository.dart';
 import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:phone_storage_cleaner/features/files/domain/duplicate_detector.dart';
@@ -13,21 +14,23 @@ import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 /// of tiny files that could never be worth hashing.
 final FutureProvider<FileScanResult> duplicateScanProvider =
     FutureProvider<FileScanResult>((ref) {
-      return ref
-          .watch(fileScannerRepositoryProvider)
-          .scan(
-            FileScanRequest(
-              categories: const <FileCategory>[
-                FileCategory.images,
-                FileCategory.videos,
-                FileCategory.audio,
-                FileCategory.documents,
-                FileCategory.downloads,
-              ],
-              minSizeBytes: DuplicateDetector.minimumFileBytes,
-              limitPerCategory: 500,
-            ),
-          );
+      return observeScan(ref, 'discovery:duplicates', () async {
+        return ref
+            .watch(fileScannerRepositoryProvider)
+            .scan(
+              FileScanRequest(
+                categories: const <FileCategory>[
+                  FileCategory.images,
+                  FileCategory.videos,
+                  FileCategory.audio,
+                  FileCategory.documents,
+                  FileCategory.downloads,
+                ],
+                minSizeBytes: DuplicateDetector.minimumFileBytes,
+                limitPerCategory: 500,
+              ),
+            );
+      }, numeric: false);
     });
 
 /// Exact duplicates: same size, then confirmed by content hash.
@@ -37,20 +40,25 @@ final FutureProvider<FileScanResult> duplicateScanProvider =
 /// read at all.
 final FutureProvider<DuplicateScanResult> duplicatesProvider =
     FutureProvider<DuplicateScanResult>((ref) async {
-      final FileScanResult scan = await ref.watch(
-        duplicateScanProvider.future,
-      );
+      return observeScan(ref, 'duplicates', () async {
+        final FileScanResult scan = await scanDependency(
+          ref,
+          'discovery:duplicates',
+          ref.watch(duplicateScanProvider.future),
+        );
 
-      final List<ScannedFile> candidates = DuplicateDetector.candidates(
-        scan.files,
-      );
-      if (candidates.isEmpty) {
-        return DuplicateScanResult.empty;
-      }
+        final List<ScannedFile> candidates = DuplicateDetector.candidates(
+          scan.files,
+        );
+        if (candidates.isEmpty) {
+          return DuplicateScanResult.empty;
+        }
 
-      final Map<String, String> hashes = await ref
-          .watch(fileHashRepositoryProvider)
-          .hashFiles(candidates);
+        final Map<String, String> hashes = await ref
+            .watch(fileHashRepositoryProvider)
+            .hashFiles(candidates);
 
-      return DuplicateDetector.group(scan.files, hashes);
+        ScanOperation.current?.stage('Comparing exact duplicates');
+        return DuplicateDetector.group(scan.files, hashes);
+      }, numeric: false);
     });

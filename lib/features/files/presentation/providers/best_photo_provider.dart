@@ -26,9 +26,7 @@ final photoQualityProvider =
         for (final SimilarPhotoGroup group in result.groups) ...group.files,
       ];
 
-      return ref
-          .watch(photoQualityRepositoryProvider)
-          .analyzePhotos(grouped);
+      return ref.watch(photoQualityRepositoryProvider).analyzePhotos(grouped);
     });
 
 /// A recommendation per group, keyed by [SimilarPhotoGroup.key].

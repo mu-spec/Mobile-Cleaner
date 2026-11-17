@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phone_storage_cleaner/app/navigation/root_back_button.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
 import 'package:phone_storage_cleaner/core/utils/date_formatter.dart';
 import 'package:phone_storage_cleaner/features/apps/data/installed_apps_repository.dart';
@@ -145,7 +146,7 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
       ),
       body: SafeArea(
         child: inventory.when(
-          loading: () => const FilesScanningView(),
+          loading: () => FilesScanningView(scanProgress: ref.watch(scanProgressProvider('apps')).value),
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => refreshInstalledApps(ref),

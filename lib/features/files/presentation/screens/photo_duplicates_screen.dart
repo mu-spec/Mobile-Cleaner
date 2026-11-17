@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/ui/haptics.dart';
 import 'package:phone_storage_cleaner/core/ui/responsive.dart';
 import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
@@ -147,7 +148,7 @@ class _PhotoDuplicatesScreenState extends ConsumerState<PhotoDuplicatesScreen> {
           : null,
       body: SafeArea(
         child: duplicates.when(
-          loading: () => const _ComparingView(),
+          loading: () => _ComparingView(scanProgress: ref.watch(scanProgressProvider('photoDuplicates')).value),
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(photoDuplicateScanProvider),
@@ -575,13 +576,15 @@ class _TotalCard extends StatelessWidget {
 
 /// Hashing takes a moment, so explain what is happening.
 class _ComparingView extends StatelessWidget {
-  const _ComparingView();
+  const _ComparingView({this.scanProgress});
+  final ScanSnapshot? scanProgress;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       key: Key('photo_duplicates_scanning'),
       child: PhotoToolLoadingState(
+        scanProgress: scanProgress,
         icon: PhosphorIconsDuotone.copy,
         title: 'Comparing photos…',
         description: 'Only photos of matching size are read on this device.',

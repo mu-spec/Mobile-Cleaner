@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/ui/responsive.dart';
 import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
 import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
@@ -133,7 +134,8 @@ class _LargePhotosScreenState extends ConsumerState<LargePhotosScreen> {
           : null,
       body: SafeArea(
         child: summary.when(
-          loading: () => const PhotoToolLoadingState(
+          loading: () => PhotoToolLoadingState(
+            scanProgress: ref.watch(scanProgressProvider('largePhotos')).value,
             icon: PhosphorIconsDuotone.imageSquare,
             title: 'Measuring large photos…',
             description: 'Calculating real photo sizes safely on this device.',

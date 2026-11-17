@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/data/file_scanner_repository.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
@@ -13,25 +14,32 @@ import 'package:phone_storage_cleaner/features/files/domain/video_summary.dart';
 /// exists to surface.
 final FutureProvider<FileScanResult> videoScanProvider =
     FutureProvider<FileScanResult>((ref) {
-      return ref
-          .watch(fileScannerRepositoryProvider)
-          .scan(
-            const FileScanRequest(
-              categories: <FileCategory>[FileCategory.videos],
-              limitPerCategory: 500,
-            ),
-          );
+      return observeScan(ref, 'discovery:videos', () async {
+        return ref
+            .watch(fileScannerRepositoryProvider)
+            .scan(
+              const FileScanRequest(
+                categories: <FileCategory>[FileCategory.videos],
+                limitPerCategory: 500,
+              ),
+            );
+      }, numeric: true);
     });
 
 /// Videos in one ordering.
 ///
 /// Every ordering is a re-sort of the same scan, so switching sort filters in
 /// memory instead of hitting the device again.
-final videoSummaryProvider =
-    FutureProvider.family<VideoSummary, VideoSort>((
+final videoSummaryProvider = FutureProvider.family<VideoSummary, VideoSort>((
+  ref,
+  VideoSort sort,
+) async {
+  return observeScan(ref, 'videos', () async {
+    final FileScanResult result = await scanDependency(
       ref,
-      VideoSort sort,
-    ) async {
-      final FileScanResult result = await ref.watch(videoScanProvider.future);
-      return VideoSummary.from(result.files, sort);
-    });
+      'discovery:videos',
+      ref.watch(videoScanProvider.future),
+    );
+    return VideoSummary.from(result.files, sort);
+  }, numeric: true);
+});

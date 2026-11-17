@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Computes content hashes so exact duplicates can be proven.
@@ -18,8 +19,7 @@ class PlatformFileHashRepository implements FileHashRepository {
   PlatformFileHashRepository({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const String _channelName =
-      'com.KoreAppsTek.PhoneStorageCleaner/hash';
+  static const String _channelName = 'com.KoreAppsTek.PhoneStorageCleaner/hash';
 
   /// Must not exceed `FileHashBridge.MAX_FILES_PER_CALL` on the native side,
   /// which silently drops anything beyond its cap.
@@ -72,10 +72,12 @@ class PlatformFileHashRepository implements FileHashRepository {
       final List<String> batch = missing.sublist(start, end);
 
       try {
-        final Map<Object?, Object?>? payload = await _channel
-            .invokeMapMethod<Object?, Object?>('hashFiles', <String, Object>{
-              'uris': batch,
-            });
+        final Map<Object?, Object?>? payload =
+            await NativeScanRequest.invokeMap(
+              _channel,
+              'hashFiles',
+              <String, Object>{'uris': batch},
+            );
         final Map<String, String> fresh = parseHashes(payload);
         results.addAll(fresh);
         _cache.addAll(fresh);

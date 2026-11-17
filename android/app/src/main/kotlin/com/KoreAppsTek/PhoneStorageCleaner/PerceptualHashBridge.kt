@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.util.concurrent.CancellationException
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 
@@ -39,7 +40,7 @@ import java.util.concurrent.RejectedExecutionException
  * an error: an image that cannot be read must not be presented as similar to
  * anything.
  */
-class PerceptualHashBridge(private val context: Context) : MethodChannel.MethodCallHandler {
+class PerceptualHashBridge(private val context: Context, private val progressBridge: ScanProgressBridge) : MethodChannel.MethodCallHandler {
 
     companion object {
         const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/perceptual_hash"
@@ -70,9 +71,11 @@ class PerceptualHashBridge(private val context: Context) : MethodChannel.MethodC
             return
         }
 
+        val progress = progressBridge.request(call)
         val uris = call.argument<List<String>>("uris").orEmpty()
         if (uris.isEmpty()) {
-            result.success(emptyMap<String, String>())
+            progress.finish()
+            result.success(progress.wrap(emptyMap<String, String>()))
             return
         }
 
@@ -80,10 +83,17 @@ class PerceptualHashBridge(private val context: Context) : MethodChannel.MethodC
 
         try {
             executor.execute {
+                try {
+                progress.check()
+                progress.update("Fingerprinting photos", 0, capped.size, "files checked", true)
                 val hashes = mutableMapOf<String, String>()
+                var processed = 0
                 for (raw in capped) {
+                    progress.check()
                     val hash = try {
-                        hashImage(raw)
+                        hashImage(raw, progress)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
                     } catch (error: Throwable) {
                         // OutOfMemoryError is conceivable on a hostile file.
                         null
@@ -91,23 +101,34 @@ class PerceptualHashBridge(private val context: Context) : MethodChannel.MethodC
                     // Unreadable images are omitted, never guessed at.
                     if (hash != null) {
                         hashes[raw] = hash
-                    }
+                    } else progress.incomplete()
+                    processed++
+                    progress.update("Fingerprinting photos", processed, capped.size, "files checked")
                 }
-                mainHandler.post { result.success(hashes) }
+                progress.check()
+                progress.finish()
+                mainHandler.post { result.success(progress.wrap(hashes)) }
+                } catch (cancelled: CancellationException) {
+                    progress.finish("cancelled")
+                    mainHandler.post { result.error("SCAN_CANCELLED", "Scan cancelled.", null) }
+                }
             }
         } catch (rejected: RejectedExecutionException) {
             // The activity is going away; answer rather than crash.
-            result.success(emptyMap<String, String>())
+            progress.finish("cancelled")
+            result.success(progress.wrap(emptyMap<String, String>()))
         }
     }
 
     /** Returns 32 hex characters: dHash then aHash, or null if unreadable. */
-    private fun hashImage(raw: String): String? {
+    private fun hashImage(raw: String, progress: NativeScanProgress): String? {
         val uri: Uri = Uri.parse(raw)
+        progress.check()
         val decoded = decodeDownsampled(uri) ?: return null
 
         val grey = try {
             // One scaled bitmap wide enough for dHash; aHash reads a subset.
+            progress.check()
             greyscaleGrid(decoded, DHASH_WIDTH, DHASH_HEIGHT)
         } finally {
             decoded.recycle()

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/domain/apk_summary.dart';
 import 'package:phone_storage_cleaner/features/files/domain/download_age_filter.dart';
 import 'package:phone_storage_cleaner/features/files/domain/downloads_summary.dart';
@@ -20,23 +21,35 @@ import 'package:phone_storage_cleaner/features/files/presentation/providers/larg
 /// slowest one rather than their sum.
 final FutureProvider<SmartScanResult> smartScanProvider =
     FutureProvider<SmartScanResult>((ref) async {
-      // Start all three, then await together: the wait is the slowest scan
-      // rather than the sum of the three.
-      final Future<LargeFileSummary> largeFiles = ref.watch(
-        largeFileSummaryProvider(LargeFileFilter.defaultFilter).future,
-      );
-      final Future<DownloadsSummary> oldDownloads = ref.watch(
-        downloadsSummaryProvider(DownloadAgeFilter.defaultFilter).future,
-      );
-      final Future<ApkSummary> apks = ref.watch(
-        apkSummaryProvider(FileListSort.largest).future,
-      );
+      return observeScan(ref, 'clean', () async {
+        // Start all three, then await together: the wait is the slowest scan
+        // rather than the sum of the three.
+        final Future<LargeFileSummary> largeFiles = scanDependency(
+          ref,
+          'largeFiles',
+          ref.watch(
+            largeFileSummaryProvider(LargeFileFilter.defaultFilter).future,
+          ),
+        );
+        final Future<DownloadsSummary> oldDownloads = scanDependency(
+          ref,
+          'downloads',
+          ref.watch(
+            downloadsSummaryProvider(DownloadAgeFilter.defaultFilter).future,
+          ),
+        );
+        final Future<ApkSummary> apks = scanDependency(
+          ref,
+          'apks',
+          ref.watch(apkSummaryProvider(FileListSort.largest).future),
+        );
 
-      return SmartScanResult.from(
-        largeFiles: await largeFiles,
-        oldDownloads: await oldDownloads,
-        apks: await apks,
-      );
+        return SmartScanResult.from(
+          largeFiles: await largeFiles,
+          oldDownloads: await oldDownloads,
+          apks: await apks,
+        );
+      }, numeric: false);
     });
 
 /// Invalidates every scan Smart Scan depends on, forcing a fresh look.

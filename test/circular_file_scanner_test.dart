@@ -76,7 +76,8 @@ void main() {
     await tester.pumpWidget(_host(progress: 0.72));
     expect(_semanticsValue(tester), '72 percent');
     await tester.pumpWidget(_host(progress: 0));
-    expect(_semanticsValue(tester), '0 percent');
+    // A lower callback in the same scan must never rewind completed work.
+    expect(_semanticsValue(tester), '72 percent');
     await tester.pumpWidget(const SizedBox.shrink());
   });
 

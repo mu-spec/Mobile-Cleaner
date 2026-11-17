@@ -1,12 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
 import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
 import 'package:phone_storage_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
 import 'package:phone_storage_cleaner/features/cleaner/domain/scan_launch_target.dart';
+import 'package:phone_storage_cleaner/features/files/domain/screenshot_filter.dart';
+import 'package:phone_storage_cleaner/features/files/domain/video_sort.dart';
 import 'package:phone_storage_cleaner/features/files/presentation/providers/duplicates_provider.dart';
 import 'package:phone_storage_cleaner/features/files/presentation/providers/file_scan_provider.dart';
 import 'package:phone_storage_cleaner/features/files/presentation/providers/photo_cleanup_provider.dart';
@@ -17,9 +22,9 @@ import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_up
 
 /// Runs the existing real scan and preserves its presentation timing gates.
 ///
-/// Native scanning has no incremental progress API, so the scanner visual is
-/// indeterminate. Timing controllers below pace the existing screen transition
-/// only; they are never presented as measured progress.
+/// Request-scoped measured work drives the ring when a reliable denominator
+/// exists. Composite discovery remains indeterminate. Timing gates pace only
+/// the existing transition and never contribute to scanning progress.
 class ScanProgressScreen extends ConsumerStatefulWidget {
   const ScanProgressScreen({required this.target, super.key});
 
@@ -36,6 +41,10 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
   Object? _scanError;
   bool _completed = false;
   bool _running = false;
+  bool _finished = false;
+  ScanOperation? _operation;
+  ScanSnapshot? _snapshot;
+  StreamSubscription<ScanSnapshot>? _progressSubscription;
 
   @override
   void initState() {
@@ -53,6 +62,9 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
 
   @override
   void dispose() {
+    unawaited(_progressSubscription?.cancel());
+    _progressSubscription = null;
+    _operation?.cancel();
     _progressController.dispose();
     _completionController.dispose();
     super.dispose();
@@ -63,9 +75,26 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
       return;
     }
     _running = true;
+    _operation?.cancel();
+    unawaited(_progressSubscription?.cancel());
+    if (!mounted) return;
+    final operation = ScanOperation(
+      numeric:
+          widget.target == ScanLaunchTarget.screenshots ||
+          widget.target == ScanLaunchTarget.largeVideos ||
+          widget.target == ScanLaunchTarget.apps,
+    );
+    _operation = operation;
+    _snapshot = operation.snapshot;
+    _progressSubscription = operation.updates.listen((snapshot) {
+      if (mounted && identical(_operation, operation)) {
+        setState(() => _snapshot = snapshot);
+      }
+    });
     setState(() {
       _scanError = null;
       _completed = false;
+      _finished = false;
     });
     _progressController.reset();
     _completionController.reset();
@@ -73,7 +102,7 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
     try {
       await Future.wait<void>(<Future<void>>[
         _progressController.forward(),
-        _runRealScan(),
+        operation.run(_runRealScan),
       ]);
       if (!mounted) {
         return;
@@ -82,7 +111,10 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
       if (!mounted) {
         return;
       }
-      setState(() => _completed = true);
+      setState(() {
+        _completed = operation.snapshot.successful;
+        _finished = true;
+      });
       await Future<void>.delayed(const Duration(milliseconds: 420));
       if (mounted) {
         _openResults();
@@ -96,6 +128,11 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
     }
   }
 
+  Future<T> _required<T>(String module, Future<T> future) {
+    ref.read(scanProgressRegistryProvider).attachCurrent(module);
+    return future;
+  }
+
   Future<void> _runRealScan() async {
     switch (widget.target) {
       case ScanLaunchTarget.smartScan:
@@ -103,29 +140,42 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
         return;
       case ScanLaunchTarget.screenshots:
         ref.invalidate(screenshotScanProvider);
-        await ref.read(screenshotScanProvider.future);
+        ref.invalidate(screenshotSummaryProvider);
+        await _required(
+          'screenshots',
+          ref.read(
+            screenshotSummaryProvider(ScreenshotGroup.defaultGroup).future,
+          ),
+        );
         return;
       case ScanLaunchTarget.duplicates:
         ref.invalidate(duplicateScanProvider);
         ref.invalidate(duplicatesProvider);
-        await ref.read(duplicatesProvider.future);
+        await _required('duplicates', ref.read(duplicatesProvider.future));
         return;
       case ScanLaunchTarget.largeVideos:
         ref.invalidate(videoScanProvider);
-        await ref.read(videoScanProvider.future);
+        ref.invalidate(videoSummaryProvider);
+        await _required(
+          'videos',
+          ref.read(videoSummaryProvider(VideoSort.largest).future),
+        );
         return;
       case ScanLaunchTarget.photoCleanup:
         refreshPhotoCleanup(ref);
         ref.invalidate(photoCleanupProvider);
-        await ref.read(photoCleanupProvider.future);
+        await _required('photos', ref.read(photoCleanupProvider.future));
         return;
       case ScanLaunchTarget.files:
         ref.invalidate(fileScanProvider);
-        await ref.read(fileScanProvider.future);
+        await _required('files', ref.read(fileScanProvider.future));
         return;
       case ScanLaunchTarget.apps:
         ref.invalidate(installedAppsProvider);
-        await ref.read(installedAppsProvider.future);
+        await _required(
+          'discovery:apps',
+          ref.read(installedAppsProvider.future),
+        );
         return;
     }
   }
@@ -178,6 +228,15 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
   String get _scanStatus {
     if (_completed) {
       return 'Scan complete';
+    }
+    final snapshot = _snapshot;
+    if (snapshot != null && snapshot.stage != 'Discovering') {
+      final count = snapshot.total == null
+          ? '${snapshot.processed} ${snapshot.unit}'
+          : '${snapshot.processed} / ${snapshot.total} ${snapshot.unit}';
+      return snapshot.processed > 0
+          ? '${snapshot.stage} · $count'
+          : snapshot.stage;
     }
     return switch (widget.target) {
       ScanLaunchTarget.apps => 'Reading installed apps',
@@ -241,8 +300,11 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
               const SizedBox(height: AppSpacing.xxl),
               CircularFileScanner(
                 key: const Key('scan_progress_ring'),
-                active: !_completed && _scanError == null,
+                scanId: _snapshot?.id,
+                progress: _snapshot?.fraction,
+                active: !_finished && _scanError == null,
                 completed: _completed,
+                succeeded: _snapshot?.successful ?? false,
               ),
               const SizedBox(height: AppSpacing.xxl),
               AnimatedSwitcher(
@@ -251,6 +313,7 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
                     ? _ScanStatusCard(
                         key: ValueKey<String>(_scanStatus),
                         completed: _completed,
+                        progress: _snapshot?.fraction,
                         status: _scanStatus,
                         isDark: isDark,
                       )
@@ -307,12 +370,14 @@ class _PrivacyBadge extends StatelessWidget {
 class _ScanStatusCard extends StatelessWidget {
   const _ScanStatusCard({
     required this.completed,
+    this.progress,
     required this.status,
     required this.isDark,
     super.key,
   });
 
   final bool completed;
+  final double? progress;
   final String status;
   final bool isDark;
 
@@ -372,7 +437,7 @@ class _ScanStatusCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
-              value: completed ? 1 : null,
+              value: completed ? 1 : (progress == 1 ? null : progress),
               minHeight: 7,
               color: isDark
                   ? AppColors.darkPrimary

@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:phone_storage_cleaner/core/errors/app_failure.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/presentation/widgets/photo_tool_ui.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Shown while a scan is in flight.
 class FilesScanningView extends StatelessWidget {
-  const FilesScanningView({super.key});
+  const FilesScanningView({this.scanProgress, super.key});
+  final ScanSnapshot? scanProgress;
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      key: Key('files_scanning'),
+    return Center(
+      key: const Key('files_scanning'),
       child: PhotoToolLoadingState(
+        scanProgress: scanProgress,
         icon: PhosphorIconsDuotone.folderOpen,
         title: 'Scanning your files…',
         description: 'Reading names, sizes, and dates only.',
