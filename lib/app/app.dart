@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
 import 'package:phone_storage_cleaner/app/theme/app_theme.dart';
 import 'package:phone_storage_cleaner/core/constants/app_constants.dart';
+import 'package:phone_storage_cleaner/features/permissions/presentation/providers/permission_manager.dart';
 import 'package:phone_storage_cleaner/features/settings/domain/app_settings.dart';
 import 'package:phone_storage_cleaner/features/settings/presentation/providers/settings_provider.dart';
 
@@ -11,6 +12,16 @@ class PhoneStorageCleanerApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // A changed OS snapshot (not a cached flag) re-evaluates the active route.
+    // This catches revocation and Settings changes on foreground/resume.
+    ref.listen(permissionManagerProvider, (previous, next) {
+      if (previous?.value != null &&
+          next.value != previous?.value &&
+          next.value != null) {
+        guardVisibleFeature(next.value!);
+      }
+    });
+
     // Falls back to following the device while preferences load. The splash
     // screen is on-screen for that moment, so a saved Light or Dark choice is
     // applied before the user sees any real content — no theme flash.

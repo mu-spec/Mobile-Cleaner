@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
+import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
 import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
@@ -522,43 +523,7 @@ class PhotoToolLoadingState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            SizedBox.square(
-              dimension: 92,
-              child: Stack(
-                alignment: Alignment.center,
-                children: <Widget>[
-                  CircularProgressIndicator(
-                    strokeWidth: 6,
-                    color: PhotoToolUi.primary(context),
-                    backgroundColor: PhotoToolUi.isDark(context)
-                        ? AppColors.darkBorder
-                        : HomeUpperStyle.softBlue,
-                  ),
-                  Container(
-                    width: 62,
-                    height: 62,
-                    decoration: BoxDecoration(
-                      color: PhotoToolUi.surface(context),
-                      shape: BoxShape.circle,
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(
-                          color: PhotoToolUi.primary(context)
-                              .withValues(alpha: 0.14),
-                          blurRadius: 18,
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: PhosphorIcon(
-                        icon,
-                        size: 30,
-                        color: PhotoToolUi.orange(context),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            const CircularFileScanner(size: 92),
             const SizedBox(height: 22),
             Text(
               title,

@@ -81,7 +81,7 @@ class _LargeFilesScreenState extends ConsumerState<LargeFilesScreen> {
                 error: (Object error, StackTrace stackTrace) => FilesErrorView(
                   error: error,
                   onRetry: () => ref.invalidate(largeFileScanProvider),
-                  onPermissions: () => context.push(AppRoutes.permissions),
+                  onPermissions: () => context.push(AppRoutes.permissionsForLocation(AppRoutes.largeFiles)),
                 ),
                 data: (LargeFileSummary data) => RefreshIndicator(
                   onRefresh: () async {

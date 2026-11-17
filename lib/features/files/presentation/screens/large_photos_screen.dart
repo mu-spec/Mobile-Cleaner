@@ -141,7 +141,9 @@ class _LargePhotosScreenState extends ConsumerState<LargePhotosScreen> {
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(largePhotoScanProvider),
-            onPermissions: () => context.push(AppRoutes.permissions),
+            onPermissions: () => context.push(
+              AppRoutes.permissionsForLocation(AppRoutes.largePhotos),
+            ),
           ),
           data: (LargePhotoSummary data) => Column(
             children: <Widget>[

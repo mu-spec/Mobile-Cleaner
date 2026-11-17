@@ -56,7 +56,9 @@ class CleanScreen extends ConsumerWidget {
             error: (Object error, StackTrace stackTrace) => FilesErrorView(
               error: error,
               onRetry: runCompleteScan,
-              onPermissions: () => context.push(AppRoutes.permissions),
+              onPermissions: () => context.push(
+                AppRoutes.permissionsForLocation(AppRoutes.clean),
+              ),
             ),
             data: (SmartScanResult result) {
               final CompletedCleanupAnalysis? completed =

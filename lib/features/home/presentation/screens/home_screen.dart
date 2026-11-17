@@ -29,7 +29,7 @@ class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   static void _launchScan(BuildContext context, ScanLaunchTarget target) {
-    context.push(AppRoutes.permissionsForScan(target));
+    context.push(AppRoutes.progressForScan(target));
   }
 
   @override

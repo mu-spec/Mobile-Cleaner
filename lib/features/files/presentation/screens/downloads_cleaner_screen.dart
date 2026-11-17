@@ -155,7 +155,7 @@ class _DownloadsCleanerScreenState
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(downloadsScanProvider),
-            onPermissions: () => context.push(AppRoutes.permissions),
+            onPermissions: () => context.push(AppRoutes.permissionsForLocation(AppRoutes.downloadsCleaner)),
           ),
           data: (DownloadsSummary data) {
             return Column(

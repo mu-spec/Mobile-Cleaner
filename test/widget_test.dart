@@ -21,6 +21,7 @@ import 'package:phone_storage_cleaner/features/files/presentation/screens/files_
 import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:phone_storage_cleaner/features/permissions/data/permission_gateway.dart';
 import 'package:phone_storage_cleaner/features/permissions/domain/app_permission_status.dart';
+import 'package:phone_storage_cleaner/features/permissions/domain/permission_snapshot.dart';
 import 'package:phone_storage_cleaner/features/settings/presentation/screens/settings_screen.dart';
 import 'package:phone_storage_cleaner/features/storage/data/storage_repository.dart';
 import 'package:phone_storage_cleaner/features/storage/domain/storage_info.dart';
@@ -28,6 +29,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('com.KoreAppsTek.PhoneStorageCleaner/saf'),
+          (MethodCall call) async =>
+              call.method == 'isAccessRequired' ? true : <Object>[],
+        );
     // `appRouter` is a global singleton shared by every test, so the shell's
     // selected branch leaks across tests. Reset it to a known state.
     appRouter.go(AppRoutes.home);
@@ -218,21 +225,22 @@ void main() {
     await tester.tap(find.byKey(const Key('permission_primary_action')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    expect(find.byKey(const Key('permission_granted')), findsNothing);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.byKey(const Key('scan_progress_ring')), findsOneWidget);
     expect(find.byKey(const Key('scan_progress_percent')), findsNothing);
-    expect(find.byKey(const Key('scan_progress_wave')), findsOneWidget);
+    expect(
+      find.byKey(const Key('circular_file_scanner_paint')),
+      findsOneWidget,
+    );
 
     await tester.pump(const Duration(milliseconds: 1600));
     final Semantics progressSemantics = tester.widget<Semantics>(
       find.byKey(const Key('scan_progress_semantics')),
     );
-    expect(progressSemantics.properties.value, isNot('0 percent'));
+    expect(progressSemantics.properties.value, 'Scanning');
 
     await tester.pump(const Duration(milliseconds: 1500));
     await tester.pump(const Duration(milliseconds: 700));
@@ -293,7 +301,7 @@ void main() {
     expect(find.byKey(const Key('scan_progress_screen')), findsNothing);
   });
 
-  testWidgets('scan waits at 90 percent until the device scan finishes', (
+  testWidgets('scan stays indeterminate until the device scan finishes', (
     WidgetTester tester,
   ) async {
     await usePhoneSurface(tester);
@@ -337,8 +345,7 @@ void main() {
     await tester.tap(find.byKey(const Key('home_scan_now_button')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    expect(find.byKey(const Key('permission_granted')), findsNothing);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 3000));
@@ -347,8 +354,15 @@ void main() {
     final Semantics progressSemantics = tester.widget<Semantics>(
       find.byKey(const Key('scan_progress_semantics')),
     );
-    expect(progressSemantics.properties.value, '90 percent');
-    expect(find.byKey(const Key('scan_progress_wave')), findsOneWidget);
+    expect(progressSemantics.properties.value, 'Scanning');
+    expect(
+      find.byKey(const Key('circular_file_scanner_paint')),
+      findsOneWidget,
+    );
+    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
+    expect(find.byType(CleanScreen), findsNothing);
+
+    await tester.pump(const Duration(seconds: 20));
     expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
     expect(find.byType(CleanScreen), findsNothing);
 
@@ -502,8 +516,7 @@ void main() {
     await tester.tap(find.byKey(const Key('home_scan_now_button')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    expect(find.byKey(const Key('permission_granted')), findsNothing);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
@@ -550,13 +563,12 @@ void main() {
     await tester.tap(find.byKey(const Key('nav_clean')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    expect(find.byKey(const Key('permission_granted')), findsNothing);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
     expect(find.text('Scanning your storage'), findsOneWidget);
-    expect(find.byKey(const Key('scan_progress_wave')), findsWidgets);
+    expect(find.byKey(const Key('circular_file_scanner_paint')), findsWidgets);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pump(const Duration(milliseconds: 500));
@@ -566,13 +578,12 @@ void main() {
     await tester.tap(find.byKey(const Key('nav_photos')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    expect(find.byKey(const Key('permission_granted')), findsNothing);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.text('Scanning your photos'), findsOneWidget);
-    expect(find.byKey(const Key('scan_progress_wave')), findsWidgets);
+    expect(find.byKey(const Key('circular_file_scanner_paint')), findsWidgets);
     final Finder activePhotoScan = find.ancestor(
       of: find.text('Scanning your photos'),
       matching: find.byKey(const Key('scan_progress_screen')),
@@ -589,13 +600,12 @@ void main() {
     await tester.tap(find.byKey(const Key('nav_files')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    expect(find.byKey(const Key('permission_granted')), findsNothing);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.text('Scanning your files'), findsOneWidget);
-    expect(find.byKey(const Key('scan_progress_wave')), findsWidgets);
+    expect(find.byKey(const Key('circular_file_scanner_paint')), findsWidgets);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pump(const Duration(milliseconds: 500));
@@ -606,13 +616,12 @@ void main() {
     await tester.tap(find.byKey(const Key('nav_apps')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('permission_granted')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('permission_primary_action')));
+    expect(find.byKey(const Key('permission_granted')), findsNothing);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
     expect(find.text('Analyzing your apps'), findsOneWidget);
-    expect(find.byKey(const Key('scan_progress_wave')), findsWidgets);
+    expect(find.byKey(const Key('circular_file_scanner_paint')), findsWidgets);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pump(const Duration(milliseconds: 500));
@@ -801,15 +810,22 @@ class _FakePermissionGateway implements AppPermissionGateway {
   _FakePermissionGateway(this.status, {AppPermissionStatus? requestStatus})
     : requestStatus = requestStatus ?? status;
 
-  final AppPermissionStatus status;
+  AppPermissionStatus status;
   final AppPermissionStatus requestStatus;
 
   @override
-  Future<AppPermissionStatus> checkMediaAndStorage() async => status;
+  Future<PermissionSnapshot> readPermissions() async => PermissionSnapshot(
+    sdkInt: 34,
+    statuses: <PermissionKind, AppPermissionStatus>{
+      for (final PermissionKind kind in PermissionKind.values) kind: status,
+    },
+  );
 
   @override
   Future<bool> openSettings() async => true;
 
   @override
-  Future<AppPermissionStatus> requestMediaAndStorage() async => requestStatus;
+  Future<void> requestPermissions(Set<PermissionKind> kinds) async {
+    status = requestStatus;
+  }
 }

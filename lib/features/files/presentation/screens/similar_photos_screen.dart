@@ -170,7 +170,9 @@ class _SimilarPhotosScreenState extends ConsumerState<SimilarPhotosScreen> {
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(similarPhotoScanProvider),
-            onPermissions: () => context.push(AppRoutes.permissions),
+            onPermissions: () => context.push(
+              AppRoutes.permissionsForLocation(AppRoutes.similarPhotos),
+            ),
           ),
           data: (SimilarPhotoScanResult result) => Column(
             children: <Widget>[

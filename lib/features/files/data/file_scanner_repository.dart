@@ -1,8 +1,11 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phone_storage_cleaner/features/files/data/file_scanner_channel.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
+import 'package:phone_storage_cleaner/features/permissions/domain/permission_snapshot.dart';
+import 'package:phone_storage_cleaner/features/permissions/presentation/providers/permission_manager.dart';
 
 /// Options controlling one discovery pass.
 class FileScanRequest {
@@ -31,8 +34,9 @@ abstract interface class FileScannerRepository {
 
 final Provider<FileScannerRepository> fileScannerRepositoryProvider =
     Provider<FileScannerRepository>((ref) {
-      return MediaStoreFileScannerRepository(
-        ref.watch(fileScannerChannelProvider),
+      return PermissionAwareFileScannerRepository(
+        MediaStoreFileScannerRepository(ref.watch(fileScannerChannelProvider)),
+        () => ref.read(permissionManagerProvider.notifier).refresh(),
       );
     });
 
@@ -92,5 +96,47 @@ class MediaStoreFileScannerRepository implements FileScannerRepository {
       return value.toInt();
     }
     return null;
+  }
+}
+
+/// Access boundary only: the scanner's query limits, algorithms, ordering,
+/// parsing and calculations below this boundary are unchanged. A mixed scan
+/// must not abort just because an unrelated media collection is denied.
+class PermissionAwareFileScannerRepository implements FileScannerRepository {
+  const PermissionAwareFileScannerRepository(this._delegate, this._readAccess);
+
+  final FileScannerRepository _delegate;
+  final Future<PermissionSnapshot> Function() _readAccess;
+
+  @override
+  Future<FileScanResult> scan([
+    FileScanRequest request = const FileScanRequest(),
+  ]) async {
+    final PermissionSnapshot actual = await _readAccess();
+    final List<FileCategory> accessible = request.categories
+        .where((category) {
+          final PermissionFeature feature = switch (category) {
+            FileCategory.images => PermissionFeature.photos,
+            FileCategory.videos => PermissionFeature.videos,
+            FileCategory.audio => PermissionFeature.audio,
+            _ => PermissionFeature.nonMedia,
+          };
+          return actual.allowsFeature(feature);
+        })
+        .toList(growable: false);
+    if (accessible.isEmpty && request.categories.isNotEmpty) {
+      throw PlatformException(
+        code: 'SCAN_PERMISSION_DENIED',
+        message: 'Access to the requested media is not available.',
+      );
+    }
+    return _delegate.scan(
+      FileScanRequest(
+        categories: accessible,
+        limitPerCategory: request.limitPerCategory,
+        minSizeBytes: request.minSizeBytes,
+        sortOrder: request.sortOrder,
+      ),
+    );
   }
 }

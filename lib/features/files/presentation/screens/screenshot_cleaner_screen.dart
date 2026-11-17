@@ -149,7 +149,9 @@ class _ScreenshotCleanerScreenState
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(screenshotScanProvider),
-            onPermissions: () => context.push(AppRoutes.permissions),
+            onPermissions: () => context.push(
+              AppRoutes.permissionsForLocation(AppRoutes.screenshotCleaner),
+            ),
           ),
           data: (ScreenshotSummary data) => Column(
             children: <Widget>[

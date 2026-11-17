@@ -136,7 +136,7 @@ class _VideosScreenState extends ConsumerState<VideosScreen> {
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(videoScanProvider),
-            onPermissions: () => context.push(AppRoutes.permissions),
+            onPermissions: () => context.push(AppRoutes.permissionsForLocation(AppRoutes.videos)),
           ),
           data: (VideoSummary data) => Column(
             children: <Widget>[

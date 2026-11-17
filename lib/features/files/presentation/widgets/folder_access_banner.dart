@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
-import 'package:phone_storage_cleaner/features/files/data/storage_access_repository.dart';
 import 'package:phone_storage_cleaner/features/files/presentation/providers/file_scan_provider.dart';
+import 'package:phone_storage_cleaner/features/permissions/presentation/providers/permission_manager.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 /// Reference-style prompt for Android's optional folder access.
@@ -17,13 +17,14 @@ class _FolderAccessBannerState extends ConsumerState<FolderAccessBanner> {
   bool _requesting = false;
 
   Future<void> _grant() async {
+    if (_requesting) {
+      return;
+    }
     setState(() => _requesting = true);
     try {
       // Documents is accepted as a starting point on Android 11+, unlike a
       // storage-volume root or the Download root itself.
-      await ref
-          .read(storageAccessRepositoryProvider)
-          .requestFolderAccess(initialDir: 'Documents');
+      await ref.read(permissionManagerProvider.notifier).requestFolderAccess();
       if (!mounted) {
         return;
       }
@@ -36,7 +37,27 @@ class _FolderAccessBannerState extends ConsumerState<FolderAccessBanner> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _refreshAccess();
+  }
+
+  Future<void> _refreshAccess() async {
+    try {
+      await ref.read(permissionManagerProvider.notifier).refresh();
+    } catch (_) {
+      // The optional chooser remains available when status cannot be read.
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final access = ref.watch(permissionManagerProvider).value;
+    if (access != null &&
+        (access.folderUris.isNotEmpty ||
+            (access.sdkInt > 0 && access.sdkInt < 29))) {
+      return const SizedBox.shrink();
+    }
     final ThemeData theme = Theme.of(context);
     final bool isDark = theme.brightness == Brightness.dark;
     final Color orange = isDark

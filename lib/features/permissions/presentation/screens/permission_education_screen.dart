@@ -2,17 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
+import 'package:phone_storage_cleaner/app/router/permission_policy.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
 import 'package:phone_storage_cleaner/features/cleaner/domain/scan_launch_target.dart';
-import 'package:phone_storage_cleaner/features/permissions/data/permission_gateway.dart';
 import 'package:phone_storage_cleaner/features/permissions/data/permission_preferences.dart';
 import 'package:phone_storage_cleaner/features/permissions/domain/app_permission_status.dart';
+import 'package:phone_storage_cleaner/features/permissions/domain/permission_snapshot.dart';
+import 'package:phone_storage_cleaner/features/permissions/presentation/providers/permission_manager.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
 class PermissionEducationScreen extends ConsumerStatefulWidget {
-  const PermissionEducationScreen({this.scanTarget, super.key});
+  const PermissionEducationScreen({
+    this.scanTarget,
+    this.destination,
+    super.key,
+  });
 
   final ScanLaunchTarget? scanTarget;
+  final Uri? destination;
 
   @override
   ConsumerState<PermissionEducationScreen> createState() =>
@@ -22,6 +29,18 @@ class PermissionEducationScreen extends ConsumerStatefulWidget {
 class _PermissionEducationScreenState
     extends ConsumerState<PermissionEducationScreen> {
   _PermissionViewState _state = _PermissionViewState.checking;
+  bool _navigating = false;
+
+  PermissionFeature get _feature =>
+      permissionFeatureFor(
+        widget.destination ??
+            Uri.parse(
+              AppRoutes.progressForScan(
+                widget.scanTarget ?? ScanLaunchTarget.smartScan,
+              ),
+            ),
+      ) ??
+      PermissionFeature.media;
 
   @override
   void initState() {
@@ -31,20 +50,9 @@ class _PermissionEducationScreenState
 
   Future<void> _checkCurrentStatus() async {
     try {
-      final AppPermissionStatus status = await ref
-          .read(permissionGatewayProvider)
-          .checkMediaAndStorage();
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _state = switch (status) {
-          AppPermissionStatus.granted => _PermissionViewState.granted,
-          AppPermissionStatus.denied => _PermissionViewState.education,
-          AppPermissionStatus.permanentlyDenied =>
-            _PermissionViewState.permanentlyDenied,
-        };
-      });
+      _applySnapshot(
+        await ref.read(permissionManagerProvider.notifier).refresh(),
+      );
     } catch (_) {
       if (mounted) {
         setState(() => _state = _PermissionViewState.education);
@@ -52,23 +60,41 @@ class _PermissionEducationScreenState
     }
   }
 
+  void _applySnapshot(PermissionSnapshot snapshot, {bool requested = false}) {
+    if (!mounted || _navigating) {
+      return;
+    }
+    final AppPermissionStatus status = snapshot.statusFor(_feature);
+    if (snapshot.allowsFeature(_feature) &&
+        (widget.scanTarget != null || widget.destination != null)) {
+      _continueAfterGrant();
+      return;
+    }
+    setState(() {
+      _state = switch (status) {
+        AppPermissionStatus.granted ||
+        AppPermissionStatus.limited => _PermissionViewState.granted,
+        AppPermissionStatus.denied =>
+          requested
+              ? _PermissionViewState.denied
+              : _PermissionViewState.education,
+        AppPermissionStatus.permanentlyDenied =>
+          _PermissionViewState.permanentlyDenied,
+        AppPermissionStatus.restricted => _PermissionViewState.restricted,
+      };
+    });
+  }
+
   Future<void> _requestPermission() async {
+    if (_state == _PermissionViewState.requesting || _navigating) {
+      return;
+    }
     setState(() => _state = _PermissionViewState.requesting);
     try {
-      final AppPermissionStatus status = await ref
-          .read(permissionGatewayProvider)
-          .requestMediaAndStorage();
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _state = switch (status) {
-          AppPermissionStatus.granted => _PermissionViewState.granted,
-          AppPermissionStatus.denied => _PermissionViewState.denied,
-          AppPermissionStatus.permanentlyDenied =>
-            _PermissionViewState.permanentlyDenied,
-        };
-      });
+      _applySnapshot(
+        await ref.read(permissionManagerProvider.notifier).request(_feature),
+        requested: true,
+      );
     } catch (_) {
       if (mounted) {
         setState(() => _state = _PermissionViewState.denied);
@@ -77,8 +103,9 @@ class _PermissionEducationScreenState
   }
 
   Future<void> _openSettings() async {
-    await ref.read(permissionGatewayProvider).openSettings();
-    await _checkCurrentStatus();
+    // Launching Settings returns immediately. The manager rechecks on resume,
+    // and the listener below continues the original feature after a grant.
+    await ref.read(permissionManagerProvider.notifier).openSettings();
   }
 
   Future<void> _leaveScreen() async {
@@ -102,8 +129,16 @@ class _PermissionEducationScreenState
   }
 
   Future<void> _continueAfterGrant() async {
+    if (_navigating) {
+      return;
+    }
+    _navigating = true;
     await PermissionPreferences.markEducationSeen();
     if (!mounted) {
+      return;
+    }
+    if (widget.destination case final Uri destination) {
+      context.replace(destination.toString());
       return;
     }
     final ScanLaunchTarget? target = widget.scanTarget;
@@ -116,6 +151,15 @@ class _PermissionEducationScreenState
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(permissionManagerProvider, (previous, next) {
+      if (next.value case final PermissionSnapshot snapshot) {
+        if (_state != _PermissionViewState.requesting) {
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _applySnapshot(snapshot),
+          );
+        }
+      }
+    });
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -136,7 +180,17 @@ class _PermissionEducationScreenState
   }
 
   Widget _buildContent(BuildContext context) {
-    final _PermissionCopy copy = _permissionCopy(widget.scanTarget);
+    final _PermissionCopy copy = _permissionCopy(
+      widget.scanTarget ??
+          (widget.destination == null
+              ? null
+              : switch (_feature) {
+                  PermissionFeature.photos => ScanLaunchTarget.photoCleanup,
+                  PermissionFeature.videos => ScanLaunchTarget.largeVideos,
+                  PermissionFeature.none => ScanLaunchTarget.apps,
+                  _ => ScanLaunchTarget.files,
+                }),
+    );
     return switch (_state) {
       _PermissionViewState.checking ||
       _PermissionViewState.requesting => const _LoadingView(),
@@ -157,9 +211,24 @@ class _PermissionEducationScreenState
         eyebrow: 'READY TO CONTINUE',
         icon: PhosphorIconsDuotone.shieldCheck,
         title: 'Access granted',
-        description: copy.grantedDescription,
+        description:
+            ref.watch(permissionManagerProvider).value?.statusFor(_feature) ==
+                AppPermissionStatus.limited
+            ? 'Access is limited to the media Android makes available. Other media and files outside granted folders remain protected.'
+            : copy.grantedDescription,
         primaryLabel: 'Continue',
         onPrimary: _continueAfterGrant,
+        secondaryLabel:
+            widget.destination == null &&
+                widget.scanTarget == null &&
+                (ref.watch(permissionManagerProvider).value?.sdkInt ?? 0) >= 29
+            ? 'Choose another folder'
+            : null,
+        onSecondary: () async {
+          await ref
+              .read(permissionManagerProvider.notifier)
+              .requestFolderAccess();
+        },
       ),
       _PermissionViewState.denied => _PermissionMessage(
         key: const Key('permission_denied'),
@@ -174,14 +243,17 @@ class _PermissionEducationScreenState
         secondaryLabel: 'Continue without access',
         onSecondary: _leaveScreen,
       ),
+      _PermissionViewState.restricted ||
       _PermissionViewState.permanentlyDenied => _PermissionMessage(
         key: const Key('permission_permanently_denied'),
         eyebrow: 'SYSTEM SETTINGS REQUIRED',
         icon: PhosphorIconsDuotone.gearSix,
-        title: 'Permission blocked',
-        description:
-            'Android will no longer show the permission prompt. Open system '
-            'settings to allow media and storage access.',
+        title: _state == _PermissionViewState.restricted
+            ? 'Access restricted'
+            : 'Permission blocked',
+        description: _state == _PermissionViewState.restricted
+            ? 'Access is restricted by this device or its administrator. Review system settings; another permission prompt cannot override this restriction.'
+            : 'Android will no longer show the permission prompt. Open system settings to allow the access this feature needs.',
         primaryLabel: 'Open settings',
         onPrimary: _openSettings,
         secondaryLabel: 'Continue without access',
@@ -538,8 +610,7 @@ class _PermissionCopy {
 
 _PermissionCopy _permissionCopy(ScanLaunchTarget? target) => switch (target) {
   ScanLaunchTarget.photoCleanup ||
-  ScanLaunchTarget.screenshots ||
-  ScanLaunchTarget.duplicates => const _PermissionCopy(
+  ScanLaunchTarget.screenshots => const _PermissionCopy(
     eyebrow: 'PHOTO ACCESS',
     icon: PhosphorIconsDuotone.imagesSquare,
     title: 'Allow access to your photos',
@@ -549,16 +620,23 @@ _PermissionCopy _permissionCopy(ScanLaunchTarget? target) => switch (target) {
     grantedDescription:
         'Phone Storage Cleaner can now scan supported photos on this device.',
   ),
-  ScanLaunchTarget.files ||
   ScanLaunchTarget.largeVideos => const _PermissionCopy(
+    eyebrow: 'VIDEO ACCESS',
+    icon: PhosphorIconsDuotone.videoCamera,
+    title: 'Allow access to your videos',
+    description: 'Review videos Android makes available without requesting photo or audio access.',
+    grantedDescription:
+        'Phone Storage Cleaner can now review accessible videos.',
+  ),
+  ScanLaunchTarget.files ||
+  ScanLaunchTarget.duplicates => const _PermissionCopy(
     eyebrow: 'FILE ACCESS',
     icon: PhosphorIconsDuotone.folderOpen,
     title: 'Allow access to your files',
     description:
         'Review large files, downloads, videos, audio, and installers using '
         'real storage information from this device.',
-    grantedDescription:
-        'Phone Storage Cleaner can now scan supported file categories on this device.',
+    grantedDescription: 'Phone Storage Cleaner can now scan supported file categories on this device.',
   ),
   ScanLaunchTarget.apps => const _PermissionCopy(
     eyebrow: 'APP ANALYSIS',
@@ -567,8 +645,7 @@ _PermissionCopy _permissionCopy(ScanLaunchTarget? target) => switch (target) {
     description:
         'Connect installed-app insights with related storage cleanup while '
         'keeping all analysis on this device.',
-    grantedDescription:
-        'Phone Storage Cleaner can now analyze installed apps and related storage.',
+    grantedDescription: 'Phone Storage Cleaner can now analyze installed apps and related storage.',
   ),
   ScanLaunchTarget.smartScan => const _PermissionCopy(
     eyebrow: 'SMART CLEANUP',
@@ -577,8 +654,7 @@ _PermissionCopy _permissionCopy(ScanLaunchTarget? target) => switch (target) {
     description:
         'Scan supported storage categories and build safe cleanup suggestions '
         'from real files on this device.',
-    grantedDescription:
-        'Phone Storage Cleaner is ready to run a complete on-device Smart Scan.',
+    grantedDescription: 'Phone Storage Cleaner is ready to run a complete on-device Smart Scan.',
   ),
   null => const _PermissionCopy(
     eyebrow: 'PRIVATE ACCESS',
@@ -587,8 +663,7 @@ _PermissionCopy _permissionCopy(ScanLaunchTarget? target) => switch (target) {
     description:
         'See what uses space and review supported files without uploading '
         'anything from this device.',
-    grantedDescription:
-        'Phone Storage Cleaner can now analyze supported media and storage categories.',
+    grantedDescription: 'Phone Storage Cleaner can now analyze supported media and storage categories.',
   ),
 };
 
@@ -599,4 +674,5 @@ enum _PermissionViewState {
   granted,
   denied,
   permanentlyDenied,
+  restricted,
 }

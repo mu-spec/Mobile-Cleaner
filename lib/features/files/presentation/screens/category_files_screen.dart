@@ -225,7 +225,7 @@ class _CategoryFilesScreenState extends ConsumerState<CategoryFilesScreen> {
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(fileScanProvider),
-            onPermissions: () => context.push(AppRoutes.permissions),
+            onPermissions: () => context.push(AppRoutes.permissionsForLocation(AppRoutes.forFileCategory(widget.category))),
           ),
           data: (List<ScannedFile> allFiles) {
             final List<ScannedFile> items = _visibleFiles(allFiles);

@@ -51,7 +51,9 @@ class PhotosScreen extends ConsumerWidget {
             error: (Object error, StackTrace stackTrace) => FilesErrorView(
               error: error,
               onRetry: () => refreshPhotoCleanup(ref),
-              onPermissions: () => context.push(AppRoutes.permissions),
+              onPermissions: () => context.push(
+                AppRoutes.permissionsForLocation(AppRoutes.photos),
+              ),
             ),
             data: (PhotoCleanupSummary summary) =>
                 _PhotoCleanupView(summary: summary),

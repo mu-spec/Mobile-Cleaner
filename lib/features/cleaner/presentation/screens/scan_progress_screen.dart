@@ -1,11 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phone_storage_cleaner/app/router/app_router.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
 import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
+import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
 import 'package:phone_storage_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
 import 'package:phone_storage_cleaner/features/cleaner/domain/scan_launch_target.dart';
 import 'package:phone_storage_cleaner/features/files/presentation/providers/duplicates_provider.dart';
@@ -16,11 +15,11 @@ import 'package:phone_storage_cleaner/features/files/presentation/providers/vide
 import 'package:phone_storage_cleaner/features/home/presentation/providers/recommendations_provider.dart';
 import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
-/// Runs a real storage scan behind a deliberately paced premium progress UI.
+/// Runs the existing real scan and preserves its presentation timing gates.
 ///
-/// The native scanner does not expose a per-file count. The visual therefore
-/// advances to 90%, waits for the requested provider to complete, and only
-/// then finishes at 100% before opening the matching results screen.
+/// Native scanning has no incremental progress API, so the scanner visual is
+/// indeterminate. Timing controllers below pace the existing screen transition
+/// only; they are never presented as measured progress.
 class ScanProgressScreen extends ConsumerStatefulWidget {
   const ScanProgressScreen({required this.target, super.key});
 
@@ -34,18 +33,9 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
     with TickerProviderStateMixin {
   late final AnimationController _progressController;
   late final AnimationController _completionController;
-  late final AnimationController _rotationController;
   Object? _scanError;
   bool _completed = false;
   bool _running = false;
-
-  double get _progress {
-    if (_completionController.value > 0) {
-      return 0.9 +
-          Curves.easeOutCubic.transform(_completionController.value) * 0.1;
-    }
-    return Curves.easeInOutCubic.transform(_progressController.value) * 0.9;
-  }
 
   @override
   void initState() {
@@ -58,10 +48,6 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
       vsync: this,
       duration: const Duration(milliseconds: 650),
     );
-    _rotationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1450),
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _startScan());
   }
 
@@ -69,7 +55,6 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
   void dispose() {
     _progressController.dispose();
     _completionController.dispose();
-    _rotationController.dispose();
     super.dispose();
   }
 
@@ -84,9 +69,6 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
     });
     _progressController.reset();
     _completionController.reset();
-    _rotationController
-      ..reset()
-      ..repeat();
 
     try {
       await Future.wait<void>(<Future<void>>[
@@ -100,7 +82,6 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
       if (!mounted) {
         return;
       }
-      _rotationController.stop();
       setState(() => _completed = true);
       await Future<void>.delayed(const Duration(milliseconds: 420));
       if (mounted) {
@@ -108,7 +89,6 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
       }
     } catch (error) {
       if (mounted) {
-        _rotationController.stop();
         setState(() => _scanError = error);
       }
     } finally {
@@ -195,42 +175,21 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
     _ => 'Reviewing files safely on this device.',
   };
 
-  String _statusFor(double progress) {
-    if (_completed || progress >= 0.995) {
+  String get _scanStatus {
+    if (_completed) {
       return 'Scan complete';
     }
-    if (progress < 0.3) {
-      return switch (widget.target) {
-        ScanLaunchTarget.apps => 'Reading installed apps',
-        ScanLaunchTarget.photoCleanup => 'Reading photo library',
-        _ => 'Reading storage',
-      };
-    }
-    if (progress < 0.62) {
-      return widget.target == ScanLaunchTarget.apps
-          ? 'Calculating app sizes'
-          : 'Analyzing files';
-    }
-    if (progress < 0.9) {
-      return widget.target == ScanLaunchTarget.apps
-          ? 'Preparing app insights'
-          : 'Calculating recoverable space';
-    }
-    return widget.target == ScanLaunchTarget.apps
-        ? 'Finishing the app scan'
-        : 'Finishing the real device scan';
+    return switch (widget.target) {
+      ScanLaunchTarget.apps => 'Reading installed apps',
+      ScanLaunchTarget.photoCleanup => 'Reading photo library',
+      _ => 'Analyzing files',
+    };
   }
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final bool isDark = theme.brightness == Brightness.dark;
-    final Listenable animation = Listenable.merge(<Listenable>[
-      _progressController,
-      _completionController,
-      _rotationController,
-    ]);
-
     return Scaffold(
       key: const Key('scan_progress_screen'),
       backgroundColor: isDark
@@ -247,69 +206,61 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
         title: const Text('Smart Scan'),
       ),
       body: SafeArea(
-        child: AnimatedBuilder(
-          animation: animation,
-          builder: (BuildContext context, Widget? child) {
-            final double progress = _progress.clamp(0, 1);
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xl,
-                AppSpacing.lg,
-                AppSpacing.xl,
-                AppSpacing.xl,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.lg,
+            AppSpacing.xl,
+            AppSpacing.xl,
+          ),
+          child: Column(
+            children: <Widget>[
+              _PrivacyBadge(isDark: isDark),
+              const SizedBox(height: AppSpacing.xl),
+              Text(
+                _scanTitle,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                  color: isDark
+                      ? theme.colorScheme.onSurface
+                      : HomeUpperStyle.textPrimary,
+                ),
               ),
-              child: Column(
-                children: <Widget>[
-                  _PrivacyBadge(isDark: isDark),
-                  const SizedBox(height: AppSpacing.xl),
-                  Text(
-                    _scanTitle,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                      color: isDark
-                          ? theme.colorScheme.onSurface
-                          : HomeUpperStyle.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    _scanSubtitle,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: isDark
-                          ? theme.colorScheme.onSurfaceVariant
-                          : HomeUpperStyle.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  _PremiumScanRing(
-                    key: const Key('scan_progress_ring'),
-                    progress: progress,
-                    rotation: _rotationController.value,
-                    completed: _completed,
-                    isDark: isDark,
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    child: _scanError == null
-                        ? _ScanStatusCard(
-                            key: ValueKey<String>(_statusFor(progress)),
-                            progress: progress,
-                            status: _statusFor(progress),
-                            isDark: isDark,
-                          )
-                        : _ScanErrorCard(
-                            onRetry: _startScan,
-                            onCancel: () => context.go(AppRoutes.home),
-                          ),
-                  ),
-                ],
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                _scanSubtitle,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: isDark
+                      ? theme.colorScheme.onSurfaceVariant
+                      : HomeUpperStyle.textSecondary,
+                ),
               ),
-            );
-          },
+              const SizedBox(height: AppSpacing.xxl),
+              CircularFileScanner(
+                key: const Key('scan_progress_ring'),
+                active: !_completed && _scanError == null,
+                completed: _completed,
+              ),
+              const SizedBox(height: AppSpacing.xxl),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: _scanError == null
+                    ? _ScanStatusCard(
+                        key: ValueKey<String>(_scanStatus),
+                        completed: _completed,
+                        status: _scanStatus,
+                        isDark: isDark,
+                      )
+                    : _ScanErrorCard(
+                        onRetry: _startScan,
+                        onCancel: () => context.go(AppRoutes.home),
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -353,312 +304,15 @@ class _PrivacyBadge extends StatelessWidget {
   }
 }
 
-class _PremiumScanRing extends StatelessWidget {
-  const _PremiumScanRing({
-    required this.progress,
-    required this.rotation,
-    required this.completed,
-    required this.isDark,
-    super.key,
-  });
-
-  final double progress;
-  final double rotation;
-  final bool completed;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    final int percent = (progress * 100).round().clamp(0, 100);
-    return Semantics(
-      key: const Key('scan_progress_semantics'),
-      value: '$percent percent',
-      label: 'Scan progress',
-      child: SizedBox.square(
-        dimension: 228,
-        child: CustomPaint(
-          key: const Key('scan_progress_wave'),
-          painter: _PremiumScanPainter(
-            progress: progress,
-            rotation: rotation,
-            completed: completed,
-            isDark: isDark,
-          ),
-          child: Center(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              child: completed
-                  ? const Icon(
-                      Icons.check_rounded,
-                      key: Key('scan_complete_icon'),
-                      size: 68,
-                      color: Colors.white,
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PremiumScanPainter extends CustomPainter {
-  const _PremiumScanPainter({
-    required this.progress,
-    required this.rotation,
-    required this.completed,
-    required this.isDark,
-  });
-
-  final double progress;
-  final double rotation;
-  final bool completed;
-  final bool isDark;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Offset center = size.center(Offset.zero);
-    final Color orange = isDark ? AppColors.darkOrange : HomeUpperStyle.orange;
-    final Rect glowRect = Rect.fromCircle(
-      center: center,
-      radius: size.width * 0.47,
-    );
-    final Rect progressRect = Rect.fromCircle(
-      center: center,
-      radius: size.width * 0.405,
-    );
-    final double innerRadius = size.width * 0.35;
-    final Rect innerRect = Rect.fromCircle(center: center, radius: innerRadius);
-
-    canvas.drawCircle(
-      center,
-      size.width * 0.465,
-      Paint()
-        ..color = isDark
-            ? orange.withValues(alpha: 0.08)
-            : orange.withValues(alpha: 0.06)
-        ..style = PaintingStyle.fill,
-    );
-    canvas.drawCircle(
-      center,
-      innerRadius,
-      Paint()
-        ..color = isDark
-            ? AppColors.darkInfoSurface.withValues(alpha: 0.76)
-            : const Color(0xFFF2F7FF),
-    );
-
-    _paintLiquidWave(
-      canvas: canvas,
-      center: center,
-      radius: innerRadius,
-      bounds: innerRect,
-    );
-
-    canvas.drawCircle(
-      center,
-      size.width * 0.405,
-      Paint()
-        ..color = isDark
-            ? AppColors.darkBorder.withValues(alpha: 0.75)
-            : const Color(0xFFE4EBF8)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 15,
-    );
-
-    final Paint progressPaint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 15
-      ..strokeCap = StrokeCap.round
-      ..shader = SweepGradient(
-        startAngle: 0,
-        endAngle: math.pi * 2,
-        colors: <Color>[
-          orange,
-          const Color(0xFFFFB23E),
-          const Color(0xFFFF6B00),
-          orange,
-        ],
-      ).createShader(progressRect);
-    canvas.drawArc(
-      progressRect,
-      -math.pi / 2,
-      math.pi * 2 * progress,
-      false,
-      progressPaint,
-    );
-
-    if (!completed) {
-      final double angle = -math.pi / 2 + rotation * math.pi * 2;
-      final Paint glowPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4
-        ..strokeCap = StrokeCap.round
-        ..shader = SweepGradient(
-          colors: <Color>[
-            Colors.transparent,
-            orange.withValues(alpha: 0.18),
-            orange,
-          ],
-          stops: const <double>[0, 0.72, 1],
-          transform: GradientRotation(angle),
-        ).createShader(glowRect);
-      canvas.drawArc(glowRect, angle, math.pi * 0.58, false, glowPaint);
-    }
-  }
-
-  void _paintLiquidWave({
-    required Canvas canvas,
-    required Offset center,
-    required double radius,
-    required Rect bounds,
-  }) {
-    final double phase = rotation * math.pi * 2;
-    final double baseline = bounds.bottom - bounds.height * progress;
-
-    canvas.save();
-    canvas.clipPath(
-      Path()..addOval(Rect.fromCircle(center: center, radius: radius)),
-    );
-
-    final Path backWave = _waveFillPath(
-      bounds: bounds,
-      baseline: baseline + 5,
-      amplitude: 6,
-      phase: phase + math.pi * 0.82,
-      frequency: 1.3,
-    );
-    canvas.drawPath(
-      backWave,
-      Paint()
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: <Color>[
-            HomeUpperStyle.radarCyan.withValues(alpha: isDark ? 0.62 : 0.52),
-            HomeUpperStyle.primaryBlue.withValues(alpha: isDark ? 0.82 : 0.72),
-          ],
-        ).createShader(bounds),
-    );
-
-    final Path frontWave = _waveFillPath(
-      bounds: bounds,
-      baseline: baseline,
-      amplitude: 7,
-      phase: -phase,
-      frequency: 1.18,
-    );
-    canvas.drawPath(
-      frontWave,
-      Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: <Color>[
-            HomeUpperStyle.radarCyan,
-            HomeUpperStyle.primaryBlue,
-            HomeUpperStyle.deepBlue,
-          ],
-          stops: <double>[0, 0.48, 1],
-        ).createShader(bounds),
-    );
-
-    _paintWaveBubbles(
-      canvas: canvas,
-      center: center,
-      radius: radius,
-      baseline: baseline,
-      phase: phase,
-    );
-    canvas.restore();
-
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = isDark
-            ? AppColors.darkPrimary.withValues(alpha: 0.28)
-            : HomeUpperStyle.primaryBlue.withValues(alpha: 0.14),
-    );
-  }
-
-  Path _waveFillPath({
-    required Rect bounds,
-    required double baseline,
-    required double amplitude,
-    required double phase,
-    required double frequency,
-  }) {
-    final Path path = Path();
-    const int segments = 48;
-    for (int index = 0; index <= segments; index++) {
-      final double fraction = index / segments;
-      final double x = bounds.left + bounds.width * fraction;
-      final double y =
-          baseline +
-          math.sin(fraction * math.pi * 2 * frequency + phase) * amplitude;
-      if (index == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path
-      ..lineTo(bounds.right, bounds.bottom + amplitude)
-      ..lineTo(bounds.left, bounds.bottom + amplitude)
-      ..close();
-    return path;
-  }
-
-  void _paintWaveBubbles({
-    required Canvas canvas,
-    required Offset center,
-    required double radius,
-    required double baseline,
-    required double phase,
-  }) {
-    final List<Offset> bubbles = <Offset>[
-      Offset(center.dx - radius * 0.42, center.dy + radius * 0.48),
-      Offset(
-        center.dx + radius * 0.30,
-        center.dy + radius * 0.22 + math.sin(phase) * 3,
-      ),
-      Offset(
-        center.dx - radius * 0.08,
-        center.dy + radius * 0.64 + math.cos(phase) * 2,
-      ),
-    ];
-    final Paint bubblePaint = Paint()
-      ..color = Colors.white.withValues(alpha: isDark ? 0.28 : 0.36);
-    for (int index = 0; index < bubbles.length; index++) {
-      final Offset bubble = bubbles[index];
-      if (bubble.dy > baseline + 10) {
-        canvas.drawCircle(bubble, index == 1 ? 3 : 2, bubblePaint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _PremiumScanPainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.rotation != rotation ||
-        oldDelegate.completed != completed ||
-        oldDelegate.isDark != isDark;
-  }
-}
-
 class _ScanStatusCard extends StatelessWidget {
   const _ScanStatusCard({
-    required this.progress,
+    required this.completed,
     required this.status,
     required this.isDark,
     super.key,
   });
 
-  final double progress;
+  final bool completed;
   final String status;
   final bool isDark;
 
@@ -718,7 +372,7 @@ class _ScanStatusCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
-              value: progress,
+              value: completed ? 1 : null,
               minHeight: 7,
               color: isDark
                   ? AppColors.darkPrimary

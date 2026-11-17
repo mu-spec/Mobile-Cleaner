@@ -128,7 +128,7 @@ class _AppShellState extends State<AppShell> {
       _ => null,
     };
     if (scanTarget != null) {
-      context.push(AppRoutes.permissionsForScan(scanTarget));
+      context.push(AppRoutes.progressForScan(scanTarget));
       return;
     }
     widget.navigationShell.goBranch(

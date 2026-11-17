@@ -54,7 +54,9 @@ class FilesScreen extends ConsumerWidget {
             error: (Object error, StackTrace stackTrace) => FilesErrorView(
               error: error,
               onRetry: () => ref.invalidate(fileScanProvider),
-              onPermissions: () => context.push(AppRoutes.permissions),
+              onPermissions: () => context.push(
+                AppRoutes.permissionsForLocation(AppRoutes.files),
+              ),
             ),
             data: (FileScanResult result) => _FilesOverview(result: result),
           ),
@@ -87,8 +89,8 @@ class _FilesOverview extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: <Widget>[
-        // Deliberately always available: users can grant another useful
-        // folder even after Android no longer marks the grant as required.
+        // Shared live SAF state hides the prompt once a folder is granted.
+        // A tree grant never implies access outside that tree.
         const FolderAccessBanner(),
         const SizedBox(height: 22),
         _SectionTitle(
@@ -207,7 +209,7 @@ class _DeviceFilesSummary extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurfaceElevated : AppColors.card,
-          borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: isDark ? AppColors.darkBorder : AppColors.border,
         ),

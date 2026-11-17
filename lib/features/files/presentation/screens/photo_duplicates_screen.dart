@@ -151,7 +151,9 @@ class _PhotoDuplicatesScreenState extends ConsumerState<PhotoDuplicatesScreen> {
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => ref.invalidate(photoDuplicateScanProvider),
-            onPermissions: () => context.push(AppRoutes.permissions),
+            onPermissions: () => context.push(
+              AppRoutes.permissionsForLocation(AppRoutes.photoDuplicates),
+            ),
           ),
           data: (DuplicateScanResult result) => Column(
             children: <Widget>[
