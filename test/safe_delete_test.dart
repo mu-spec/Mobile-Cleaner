@@ -217,7 +217,10 @@ void main() {
 
       expect(result.deletedCount, 2);
       expect(result.freedBytes, 90 * _mib);
-      expect(result.failureCount, 0);
+      expect(
+        result.failureCount,
+        1,
+      ); // Unreported requested outcome is not success.
     });
 
     test('records failures with their reason', () {
@@ -235,7 +238,7 @@ void main() {
       );
 
       expect(result.deletedCount, 1);
-      expect(result.failures.single.reason, 'Access was denied.');
+      expect(result.failures.first.reason, 'Access was denied.');
       expect(result.isPartialSuccess, isTrue);
     });
 
@@ -253,7 +256,7 @@ void main() {
       );
 
       expect(result.deletedCount, 0);
-      expect(result.failureCount, 1);
+      expect(result.failureCount, 3);
       expect(result.freedBytes, 0);
     });
 
@@ -284,7 +287,7 @@ void main() {
       );
 
       expect(result.deletedCount, 0);
-      expect(result.failureCount, 0);
+      expect(result.failureCount, 3);
     });
 
     test('defaults a missing failure reason', () {
@@ -297,7 +300,7 @@ void main() {
         requested,
       );
 
-      expect(result.failures.single.reason, 'Could not delete this file.');
+      expect(result.failures.first.reason, 'Could not delete this file.');
     });
   });
 
@@ -463,13 +466,9 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('delete_confirm')));
 
-      // The reference-style live screen is a real stage, not a flash frame.
+      // An immediately confirmed fake may finish immediately. No timer may
+      // hold a made-up 90% stage before or after the real operation.
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byKey(const Key('delete_progress')), findsOneWidget);
-      expect(find.byKey(const Key('cleanup_progress_bar')), findsNothing);
-      expect(find.text('Cleaning...'), findsWidgets);
-
       await tester.pumpAndSettle();
 
       expect(deleter.requests.single, hasLength(1));

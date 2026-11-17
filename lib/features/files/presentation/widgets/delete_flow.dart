@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
 import 'package:phone_storage_cleaner/core/ui/haptics.dart';
+import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
+import 'package:phone_storage_cleaner/core/ui/reference_progress_art.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_progress.dart';
 import 'package:phone_storage_cleaner/core/utils/byte_formatter.dart';
 import 'package:phone_storage_cleaner/features/files/data/delete_repository.dart';
 import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
@@ -55,21 +58,25 @@ class _CleanupFlowScreen extends ConsumerStatefulWidget {
   ConsumerState<_CleanupFlowScreen> createState() => _CleanupFlowScreenState();
 }
 
-class _CleanupFlowScreenState extends ConsumerState<_CleanupFlowScreen>
-    with TickerProviderStateMixin {
+class _CleanupFlowScreenState extends ConsumerState<_CleanupFlowScreen> {
   late final List<_CleanupGroup> _groups = _buildGroups(widget.files);
   late final int _plannedBytes = widget.files.fold<int>(
     0,
     (int total, ScannedFile file) => total + file.sizeBytes,
   );
-  late final AnimationController _progress = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1350),
+  late final DeleteProgressOperation _deletion = DeleteProgressOperation(
+    widget.files,
   );
-  late final AnimationController _rotation = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1750),
-  );
+
+  @override
+  void initState() {
+    super.initState();
+    _deletion.addListener(_onProgress);
+  }
+
+  void _onProgress() {
+    if (mounted) setState(() {});
+  }
 
   _CleanupStage _stage = _CleanupStage.review;
   DeleteResult? _result;
@@ -78,8 +85,8 @@ class _CleanupFlowScreenState extends ConsumerState<_CleanupFlowScreen>
 
   @override
   void dispose() {
-    _progress.dispose();
-    _rotation.dispose();
+    _deletion.removeListener(_onProgress);
+    _deletion.dispose();
     super.dispose();
   }
 
@@ -92,30 +99,24 @@ class _CleanupFlowScreenState extends ConsumerState<_CleanupFlowScreen>
     setState(() => _stage = _CleanupStage.cleaning);
 
     final Stopwatch stopwatch = Stopwatch()..start();
-    _rotation.repeat();
-
-    // Begin the platform operation immediately. The progress animation runs
-    // beside it, stopping at 90% if Android still needs user confirmation.
-    final Future<DeleteResult> cleanup = ref
-        .read(deleteRepositoryProvider)
-        .deleteFiles(widget.files);
-    await _progress.animateTo(
-      0.9,
-      duration: const Duration(milliseconds: 1350),
-      curve: Curves.easeOutCubic,
-    );
-    final DeleteResult result = await cleanup;
-
-    if (!mounted) {
-      return;
+    DeleteResult result;
+    try {
+      result = await _deletion.run(
+        () => ref.read(deleteRepositoryProvider).deleteFiles(widget.files),
+      );
+    } catch (_) {
+      // Unknown outcomes are failures, never animation-driven successes.
+      result = DeleteResult(
+        deletedFiles: const [],
+        failures: [
+          for (final file in widget.files)
+            DeleteFailure(
+              uri: file.uri,
+              reason: 'Deletion could not be confirmed.',
+            ),
+        ],
+      );
     }
-
-    await _progress.animateTo(
-      1,
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeOut,
-    );
-    _rotation.stop();
     stopwatch.stop();
 
     if (!mounted) {
@@ -167,9 +168,8 @@ class _CleanupFlowScreenState extends ConsumerState<_CleanupFlowScreen>
       _CleanupStage.cleaning => _CleaningScreen(
         files: widget.files,
         groups: _groups,
-        plannedBytes: _plannedBytes,
-        progress: _progress,
-        rotation: _rotation,
+        snapshot: _deletion.snapshot,
+        operationId: _deletion.id,
       ),
       _CleanupStage.complete => CleanupCompleteScreen(
         result: _result!,
@@ -470,23 +470,32 @@ class _ReviewBreakdownRow extends StatelessWidget {
   }
 }
 
+/// Live cleaning is evidence-driven. No planned-byte multiplication, fake
+/// current-file index, weighted category completion or timer-based progress.
 class _CleaningScreen extends StatelessWidget {
   const _CleaningScreen({
     required this.files,
     required this.groups,
-    required this.plannedBytes,
-    required this.progress,
-    required this.rotation,
+    required this.snapshot,
+    required this.operationId,
   });
-
+  final String operationId;
   final List<ScannedFile> files;
   final List<_CleanupGroup> groups;
-  final int plannedBytes;
-  final Animation<double> progress;
-  final Animation<double> rotation;
+  final DeleteProgressSnapshot snapshot;
 
   @override
   Widget build(BuildContext context) {
+    final current = files
+        .where((file) => file.uri == snapshot.currentUri)
+        .firstOrNull;
+    final status = switch (snapshot.phase) {
+      'awaitingConfirmation' => 'Waiting for Android confirmation…',
+      'awaitingPermission' => 'Waiting for permission…',
+      'verifying' => 'Verifying removal…',
+      'preparing' => 'Preparing selected items…',
+      _ => 'Cleaning…',
+    };
     return PopScope<void>(
       canPop: false,
       child: Scaffold(
@@ -495,104 +504,89 @@ class _CleaningScreen extends StatelessWidget {
           leading: IconButton(
             key: const Key('cleanup_cleaning_back'),
             tooltip: 'Back',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Please wait while cleanup finishes.'),
-                ),
-              );
-            },
+            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please wait while cleanup finishes.'),
+              ),
+            ),
             icon: const Icon(Icons.arrow_back_rounded),
           ),
           title: const Text('Cleaning...'),
         ),
         body: SafeArea(
-          child: AnimatedBuilder(
-            animation: progress,
-            builder: (BuildContext context, Widget? child) {
-              final double value = progress.value.clamp(0, 1);
-              final int currentBytes = (plannedBytes * value).round();
-              final int fileIndex = files.isEmpty
-                  ? 0
-                  : ((files.length - 1) * value).floor().clamp(
-                      0,
-                      files.length - 1,
-                    );
-              final ScannedFile? current = files.isEmpty
-                  ? null
-                  : files[fileIndex];
-
-              return ListView(
-                padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
-                children: <Widget>[
-                  Center(
-                    child: _CleaningOrb(progress: value, rotation: rotation),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(24, 14, 24, 24),
+            children: [
+              Center(
+                child: CleaningProgressAnimation(
+                  progress: snapshot.fraction,
+                  active: !snapshot.terminal,
+                  operationId: operationId,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                ByteFormatter.format(snapshot.confirmedBytes),
+                key: const Key('cleanup_cleaning_bytes'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: ReferenceProgressColors.deep,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                status,
+                key: const Key('cleanup_cleaning_status'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                current == null
+                    ? 'Only confirmed removals count'
+                    : current.path.isNotEmpty
+                    ? current.path
+                    : current.name,
+                key: const Key('cleanup_current_file'),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
+              ReferenceProgressBar(
+                key: const Key('cleanup_progress_bar'),
+                value: snapshot.fraction,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${snapshot.processed} / ${snapshot.total} items processed · '
+                '${snapshot.deleted.length} cleaned',
+                key: const Key('cleanup_processed_count'),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 22),
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.darkSurfaceElevated
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
-                  const SizedBox(height: 22),
-                  Text(
-                    ByteFormatter.format(currentBytes),
-                    key: const Key('cleanup_cleaning_bytes'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: AppColors.brandBlue,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Cleaning...',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    current?.path.isNotEmpty == true
-                        ? current!.path
-                        : (current?.name ?? 'Preparing selected items'),
-                    key: const Key('cleanup_current_file'),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 26),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? AppColors.darkSurfaceElevated
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? AppColors.darkBorder
-                            : AppColors.border,
-                      ),
-                    ),
-                    child: Column(
-                      children: <Widget>[
-                        for (
-                          int index = 0;
-                          index < groups.length;
-                          index++
-                        ) ...<Widget>[
-                          _CleaningGroupRow(
-                            group: groups[index],
-                            progress: value,
-                            groupStart: _groupStart(groups, index),
-                            groupEnd: _groupEnd(groups, index),
-                          ),
-                          if (index != groups.length - 1)
-                            const Divider(height: 1, indent: 62),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
+                ),
+                child: Column(
+                  children: [
+                    for (final group in groups)
+                      _CleaningGroupRow(group: group, snapshot: snapshot),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -600,135 +594,48 @@ class _CleaningScreen extends StatelessWidget {
   }
 }
 
-class _CleaningOrb extends StatelessWidget {
-  const _CleaningOrb({required this.progress, required this.rotation});
-
-  final double progress;
-  final Animation<double> rotation;
-
+/// Separate broom treatment with lifecycle-aware pulse/shine. No rotation of
+/// the orange arc: its sweep is exclusively confirmed processed / selected.
+class CleaningProgressAnimation extends StatelessWidget {
+  const CleaningProgressAnimation({
+    required this.progress,
+    this.active = true,
+    this.operationId,
+    super.key,
+  });
+  final double? progress;
+  final bool active;
+  final Object? operationId;
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 166,
-      height: 166,
-      child: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: rotation,
-              builder: (BuildContext context, Widget? child) {
-                return Transform.rotate(
-                  angle: rotation.value * 6.283185307179586,
-                  child: CustomPaint(
-                    painter: _CleaningRingPainter(progress: progress),
-                  ),
-                );
-              },
-            ),
-          ),
-          Container(
-            width: 104,
-            height: 104,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: <Color>[AppColors.actionBlue, AppColors.brandBlue],
-              ),
-              boxShadow: <BoxShadow>[
-                BoxShadow(
-                  color: AppColors.actionBlue.withValues(alpha: 0.32),
-                  blurRadius: 24,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: const Icon(
-              PhosphorIconsDuotone.broom,
-              color: Colors.white,
-              size: 52,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CleaningRingPainter extends CustomPainter {
-  const _CleaningRingPainter({required this.progress});
-
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Offset center = size.center(Offset.zero);
-    final double radius = (size.shortestSide - 16) / 2;
-    final Rect rect = Rect.fromCircle(center: center, radius: radius);
-    final Paint track = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 10
-      ..color = AppColors.softBlue;
-    canvas.drawCircle(center, radius, track);
-
-    final Paint active = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 10
-      ..shader = const SweepGradient(
-        colors: <Color>[
-          AppColors.cleanupOrange,
-          AppColors.actionBlue,
-          AppColors.brandBlue,
-        ],
-      ).createShader(rect);
-    canvas.drawArc(
-      rect,
-      -1.5707963267948966,
-      6.283185307179586 * progress,
-      false,
-      active,
-    );
-
-    final Paint halo = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..color = AppColors.actionBlue.withValues(alpha: 0.2);
-    canvas.drawCircle(center, radius - 16, halo);
-  }
-
-  @override
-  bool shouldRepaint(_CleaningRingPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+  Widget build(BuildContext context) => CircularFileScanner(
+    size: 190,
+    cleaning: true,
+    scanId: operationId,
+    progress: progress,
+    active: active,
+  );
 }
 
 class _CleaningGroupRow extends StatelessWidget {
-  const _CleaningGroupRow({
-    required this.group,
-    required this.progress,
-    required this.groupStart,
-    required this.groupEnd,
-  });
-
+  const _CleaningGroupRow({required this.group, required this.snapshot});
   final _CleanupGroup group;
-  final double progress;
-  final double groupStart;
-  final double groupEnd;
-
+  final DeleteProgressSnapshot snapshot;
   @override
   Widget build(BuildContext context) {
-    final bool done = progress >= groupEnd || progress >= 0.999;
-    final bool active = progress >= groupStart && !done;
-    final double local = groupEnd <= groupStart
-        ? 1
-        : ((progress - groupStart) / (groupEnd - groupStart)).clamp(0, 1);
-
+    final uris = group.files.map((file) => file.uri).toSet();
+    final deleted = uris.intersection(snapshot.deleted).length;
+    final failed = uris.intersection(snapshot.failed).length;
+    final skipped = uris.intersection(snapshot.skipped).length;
+    final allDeleted = deleted == uris.length && uris.isNotEmpty;
+    final label = allDeleted
+        ? 'Done'
+        : failed > 0 || skipped > 0
+        ? '$deleted cleaned · $failed failed · $skipped skipped'
+        : '$deleted / ${uris.length} cleaned';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       child: Row(
-        children: <Widget>[
+        children: [
           _CategoryIcon(group: group),
           const SizedBox(width: 12),
           Expanded(
@@ -738,37 +645,20 @@ class _CleaningGroupRow extends StatelessWidget {
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
-          if (done)
-            Text(
-              'Done',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: AppColors.brandBlue,
-                fontWeight: FontWeight.w700,
-              ),
-            )
-          else if (active)
-            Text(
-              '${ByteFormatter.format((group.totalBytes * local).round())} / '
-              '${ByteFormatter.format(group.totalBytes)}',
-              style: Theme.of(context).textTheme.labelMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            )
-          else
-            Text(
-              ByteFormatter.format(group.totalBytes),
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+          Flexible(
+            child: Text(
+              label,
+              textAlign: TextAlign.right,
+              style: Theme.of(context).textTheme.labelMedium,
             ),
+          ),
           const SizedBox(width: 8),
           Icon(
-            done
+            allDeleted
                 ? PhosphorIconsDuotone.checkSquare
                 : PhosphorIconsDuotone.circleNotch,
             size: 20,
-            color: done
-                ? AppColors.brandBlue
-                : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: ReferenceProgressColors.blue,
           ),
         ],
       ),
@@ -888,6 +778,8 @@ class _CleanupResultDialog extends StatelessWidget {
           Text(
             cancelled
                 ? 'The cleanup was cancelled.'
+                : result.skippedUris.isNotEmpty
+                ? 'These items were already absent or skipped. No new space was counted.'
                 : 'The selected items could not be removed.',
           ),
           if (result.failureCount > 0) ...<Widget>[
@@ -981,24 +873,3 @@ IconData _cleanupIcon(FileCategory category) => switch (category) {
   FileCategory.apks => PhosphorIconsDuotone.androidLogo,
   FileCategory.other => PhosphorIconsDuotone.folder,
 };
-
-double _groupStart(List<_CleanupGroup> groups, int index) {
-  final int total = groups.fold<int>(
-    0,
-    (int sum, _CleanupGroup group) => sum + group.totalBytes,
-  );
-  if (total == 0) {
-    return index / groups.length;
-  }
-  final int before = groups
-      .take(index)
-      .fold<int>(0, (int sum, _CleanupGroup group) => sum + group.totalBytes);
-  return before / total;
-}
-
-double _groupEnd(List<_CleanupGroup> groups, int index) {
-  if (index == groups.length - 1) {
-    return 1;
-  }
-  return _groupStart(groups, index + 1);
-}

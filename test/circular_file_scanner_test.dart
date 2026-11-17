@@ -47,7 +47,7 @@ void main() {
     (WidgetTester tester) async {
       await tester.pumpWidget(_host());
       expect(_semanticsValue(tester), 'Scanning');
-      expect(find.byKey(const Key('scan_folder_icon')), findsOneWidget);
+      expect(find.byKey(const Key('scan_radar_center')), findsOneWidget);
       expect(find.textContaining('%'), findsNothing);
       int repaints = 0;
       final CustomPainter painter = _painter(tester);
@@ -89,7 +89,7 @@ void main() {
     await tester.pumpWidget(_host(completed: true));
     expect(_semanticsValue(tester), 'Scan complete');
     expect(find.byKey(const Key('scan_complete_icon')), findsOneWidget);
-    expect(find.byKey(const Key('scan_folder_icon')), findsNothing);
+    expect(find.byKey(const Key('scan_radar_center')), findsNothing);
     int repaints = 0;
     final CustomPainter painter = _painter(tester);
     void repaint() => repaints++;
@@ -135,7 +135,7 @@ void main() {
     expect(tester.binding.transientCallbackCount, 0);
     await tester.pumpWidget(_host(reduceMotion: true));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('scan_folder_icon')), findsOneWidget);
+    expect(find.byKey(const Key('scan_radar_center')), findsOneWidget);
     expect(tester.binding.transientCallbackCount, 0);
     expect(_semanticsValue(tester), 'Scanning');
   });

@@ -55,7 +55,7 @@ class CleanupCompleteScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool partial = result.failureCount > 0;
+    final bool partial = !result.isCompleteSuccess;
 
     return Scaffold(
       key: const Key('cleanup_complete_screen'),
@@ -72,6 +72,14 @@ class CleanupCompleteScreen extends StatelessWidget {
                     result: result,
                     cleanupDuration: cleanupDuration,
                   ),
+                  if (result.unmeasuredDeletedCount > 0) ...<Widget>[
+                    const SizedBox(height: 10),
+                    Text(
+                      '${result.unmeasuredDeletedCount} removed items have unknown size. '
+                      'Reported space excludes them.',
+                      key: const Key('cleanup_unknown_sizes'),
+                    ),
+                  ],
                   if (partial) ...<Widget>[
                     const SizedBox(height: 14),
                     _PartialNotice(result: result),
@@ -436,9 +444,14 @@ class _PartialNotice extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              '${result.failureCount} '
-              '${result.failureCount == 1 ? 'item' : 'items'} could not be '
-              'cleaned. ${result.failures.first.reason}',
+              result.failureCount > 0
+                  ? '${result.failureCount} '
+                        '${result.failureCount == 1 ? 'item' : 'items'} could not be '
+                        'cleaned. ${result.failures.first.reason}'
+                  : result.userCancelled
+                  ? 'The remaining cleanup was cancelled. Only confirmed removals are counted.'
+                  : '${result.skippedUris.length} items were skipped or already absent. '
+                        'No space was counted for them.',
               style: Theme.of(context).textTheme.bodySmall
                   ?.copyWith(color: colors.onErrorContainer, height: 1.35),
             ),

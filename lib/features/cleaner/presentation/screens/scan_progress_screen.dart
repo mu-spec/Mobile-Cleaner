@@ -8,6 +8,7 @@ import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
 import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
 import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
+import 'package:phone_storage_cleaner/core/ui/reference_progress_art.dart';
 import 'package:phone_storage_cleaner/core/ui/scan_stage_presentation.dart';
 import 'package:phone_storage_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
 import 'package:phone_storage_cleaner/features/cleaner/domain/scan_launch_target.dart';
@@ -443,16 +444,7 @@ class _ScanStatusCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: completed ? 1 : progress,
-              minHeight: 7,
-              color: isDark
-                  ? AppColors.darkPrimary
-                  : HomeUpperStyle.primaryBlue,
-              backgroundColor: isDark
-                  ? AppColors.darkBorder
-                  : const Color(0xFFE7ECF5),
-            ),
+            child: ReferenceProgressBar(value: completed ? 1 : progress),
           ),
           const SizedBox(height: AppSpacing.md),
           Row(

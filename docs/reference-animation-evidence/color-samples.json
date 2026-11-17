@@ -1,0 +1,110 @@
+{
+  "royal": {
+    "coordinate": [
+      185,
+      304
+    ],
+    "median_rgb": [
+      51,
+      103,
+      237
+    ],
+    "hex": "#3367ED"
+  },
+  "blue": {
+    "coordinate": [
+      208,
+      351
+    ],
+    "median_rgb": [
+      22,
+      74,
+      211
+    ],
+    "hex": "#164AD3"
+  },
+  "deep": {
+    "coordinate": [
+      266,
+      377
+    ],
+    "median_rgb": [
+      3,
+      44,
+      153
+    ],
+    "hex": "#032C99"
+  },
+  "cyan": {
+    "coordinate": [
+      232,
+      330
+    ],
+    "median_rgb": [
+      73,
+      196,
+      243
+    ],
+    "hex": "#49C4F3"
+  },
+  "ice": {
+    "coordinate": [
+      151,
+      304
+    ],
+    "median_rgb": [
+      180,
+      223,
+      254
+    ],
+    "hex": "#B4DFFE"
+  },
+  "ring": {
+    "coordinate": [
+      210,
+      227
+    ],
+    "median_rgb": [
+      206,
+      218,
+      245
+    ],
+    "hex": "#CEDAF5"
+  },
+  "halo": {
+    "coordinate": [
+      258,
+      216
+    ],
+    "median_rgb": [
+      239,
+      242,
+      251
+    ],
+    "hex": "#EFF2FB"
+  },
+  "orange": {
+    "coordinate": [
+      266,
+      239
+    ],
+    "median_rgb": [
+      247,
+      149,
+      22
+    ],
+    "hex": "#F79516"
+  },
+  "white": {
+    "coordinate": [
+      594,
+      1157
+    ],
+    "median_rgb": [
+      244,
+      251,
+      252
+    ],
+    "hex": "#F4FBFC"
+  }
+}

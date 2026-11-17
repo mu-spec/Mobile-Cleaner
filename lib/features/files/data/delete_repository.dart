@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_progress.dart';
 import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Deletes files the user selected and confirmed.
@@ -35,6 +36,8 @@ class PlatformDeleteRepository implements DeleteRepository {
     try {
       final Map<Object?, Object?>? payload = await _channel
           .invokeMapMethod<Object?, Object?>('deleteFiles', <String, Object>{
+            if (DeleteProgressOperation.current != null)
+              'progressId': DeleteProgressOperation.current!.id,
             'uris': files
                 .map((ScannedFile file) => file.uri)
                 .toList(growable: false),
@@ -94,7 +97,10 @@ class PlatformDeleteRepository implements DeleteRepository {
           continue;
         }
         final Object? uri = entry['uri'];
-        if (uri is! String || uri.isEmpty) {
+        if (uri is! String ||
+            uri.isEmpty ||
+            !byUri.containsKey(uri) ||
+            failures.any((failure) => failure.uri == uri)) {
           continue;
         }
         // A URI reported both deleted and failed is treated as failed, which
@@ -112,6 +118,37 @@ class PlatformDeleteRepository implements DeleteRepository {
       }
     }
 
+    final skipped = <String>{};
+    final rawSkipped = payload['skippedUris'];
+    if (rawSkipped is List) {
+      skipped.addAll(rawSkipped.whereType<String>().where(byUri.containsKey));
+    }
+    // An absent/skipped item is not a successful cleaning, even in a
+    // contradictory platform payload. Unknown requested outcomes fail closed.
+    deletedUris.removeAll(skipped);
+    final reportedFailures = failures.map((f) => f.uri).toSet();
+    skipped.removeAll(reportedFailures);
+    deletedUris.retainWhere(byUri.containsKey);
+    for (final uri in byUri.keys) {
+      if (!deletedUris.contains(uri) &&
+          !skipped.contains(uri) &&
+          !reportedFailures.contains(uri) &&
+          payload['userCancelled'] != true) {
+        failures.add(
+          DeleteFailure(uri: uri, reason: 'Deletion was not confirmed.'),
+        );
+      }
+    }
+    final Map<String, int>? confirmedSizes = payload['accountingVersion'] == 1
+        ? {}
+        : null;
+    final sizes = payload['confirmedBytesByUri'];
+    if (confirmedSizes != null && sizes is Map) {
+      for (final uri in deletedUris) {
+        final size = sizes[uri];
+        if (size is int && size >= 0) confirmedSizes[uri] = size;
+      }
+    }
     final List<ScannedFile> deletedFiles = <ScannedFile>[
       for (final String uri in deletedUris)
         if (byUri[uri] != null) byUri[uri]!,
@@ -121,10 +158,14 @@ class PlatformDeleteRepository implements DeleteRepository {
       deletedFiles: deletedFiles,
       failures: failures,
       userCancelled: payload['userCancelled'] == true,
+      skippedUris: skipped.toList(growable: false),
+      confirmedBytesByUri: confirmedSizes,
     );
   }
 
   DeleteResult _allFailed(List<ScannedFile> files, String reason) {
+    final operation = DeleteProgressOperation.current;
+    if (operation != null) return operation.failureResult(reason);
     return DeleteResult(
       deletedFiles: const <ScannedFile>[],
       failures: <DeleteFailure>[

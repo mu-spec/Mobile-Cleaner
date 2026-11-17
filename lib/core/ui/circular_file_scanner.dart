@@ -1,8 +1,5 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
-import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
-import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
+import 'package:phone_storage_cleaner/core/ui/reference_progress_art.dart';
 
 /// Silent, presentation-only scan activity. Null [progress] means indeterminate.
 ///
@@ -12,6 +9,7 @@ import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_up
 class CircularFileScanner extends StatefulWidget {
   const CircularFileScanner({
     this.progress,
+    this.cleaning = false,
     this.scanId,
     this.stageId,
     this.active = true,
@@ -23,6 +21,7 @@ class CircularFileScanner extends StatefulWidget {
        assert(size > 0);
 
   final double? progress;
+  final bool cleaning;
 
   /// Change for a genuinely new scan; updates within one scan never rewind.
   final Object? scanId;
@@ -36,7 +35,7 @@ class CircularFileScanner extends StatefulWidget {
   final bool succeeded;
   final double size;
 
-  // Four former 1450 ms wave cycles: a deliberately slower, gentle orbit.
+  // Slow continuous radar rotation; independent of measured work.
   static const Duration motionDuration = Duration(milliseconds: 5800);
 
   @override
@@ -136,7 +135,6 @@ class _CircularFileScannerState extends State<CircularFileScanner>
 
   @override
   Widget build(BuildContext context) {
-    final bool dark = Theme.of(context).brightness == Brightness.dark;
     final double? progress = widget.completed
         ? 1
         : widget.progress == null
@@ -144,7 +142,9 @@ class _CircularFileScannerState extends State<CircularFileScanner>
         : _confirmed;
     return Semantics(
       key: const Key('scan_progress_semantics'),
-      label: widget.stageId == null
+      label: widget.cleaning
+          ? 'Cleaning progress'
+          : widget.stageId == null
           ? 'Scan progress'
           : 'Current stage progress',
       value: widget.completed
@@ -152,8 +152,8 @@ class _CircularFileScannerState extends State<CircularFileScanner>
           : progress != null
           ? '${(progress * 100).floor()} percent'
           : widget.active
-          ? 'Scanning'
-          : 'Scan paused',
+          ? (widget.cleaning ? 'Cleaning' : 'Scanning')
+          : (widget.cleaning ? 'Cleaning paused' : 'Scan paused'),
       child: ExcludeSemantics(
         child: SizedBox.square(
           dimension: widget.size,
@@ -161,183 +161,34 @@ class _CircularFileScannerState extends State<CircularFileScanner>
             key: const Key('circular_file_scanner_artwork'),
             child: CustomPaint(
               key: const Key('circular_file_scanner_paint'),
-              painter: _FileScannerPainter(
+              painter: ReferenceProgressPainter(
                 motion: _motion,
-                fill: _fill,
+                fill: progress == null
+                    ? const AlwaysStoppedAnimation(0.0)
+                    : _fill,
+                cleaning: widget.cleaning,
                 completed: widget.completed,
-                blue: dark ? AppColors.darkPrimary : HomeUpperStyle.primaryBlue,
-                orange: dark ? AppColors.darkOrange : HomeUpperStyle.orange,
-                surface: dark ? AppColors.darkSurface : Colors.white,
-                track: dark ? AppColors.darkBorder : HomeUpperStyle.softBlue,
               ),
               child: Center(
-                child: Icon(
-                  widget.completed ? Icons.check_rounded : Icons.folder_rounded,
-                  key: widget.completed
-                      ? const Key('scan_complete_icon')
-                      : const Key('scan_folder_icon'),
-                  size: widget.size * 0.28,
-                  color: dark
-                      ? AppColors.darkPrimary
-                      : HomeUpperStyle.primaryBlue,
-                ),
+                child: widget.completed
+                    ? Icon(
+                        Icons.check_rounded,
+                        key: const Key('scan_complete_icon'),
+                        size: widget.size * .25,
+                        color: ReferenceProgressColors.white,
+                      )
+                    : SizedBox(
+                        key: Key(
+                          widget.cleaning
+                              ? 'cleaning_broom_art'
+                              : 'scan_radar_center',
+                        ),
+                      ),
               ),
             ),
           ),
         ),
       ),
     );
-  }
-}
-
-class _FileScannerPainter extends CustomPainter {
-  _FileScannerPainter({
-    required this.motion,
-    required this.fill,
-    required this.completed,
-    required this.blue,
-    required this.orange,
-    required this.surface,
-    required this.track,
-  }) : super(repaint: Listenable.merge([motion, fill]));
-
-  final Animation<double> motion;
-  final Animation<double> fill;
-  final bool completed;
-  final Color blue;
-  final Color orange;
-  final Color surface;
-  final Color track;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double side = math.min(size.width, size.height);
-    final Offset center = size.center(Offset.zero);
-    final double radius = side * 0.43;
-    final Rect ring = Rect.fromCircle(center: center, radius: radius);
-    final double phase = motion.value;
-    const double start = -math.pi / 2;
-    final double sweep = math.pi * 2 * fill.value;
-    final Paint stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = side * 0.032
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawCircle(center, radius, Paint()..color = surface);
-    canvas.drawCircle(center, radius, stroke..color = track);
-    if (sweep > 0) {
-      // Round end caps can overlap the remaining gap before 100%, or paint
-      // beyond the confirmed angle. Keep the blue sweep inside its exact
-      // measured bounds; the orange leading marker preserves the soft tip.
-      canvas.drawArc(
-        ring,
-        start,
-        sweep,
-        false,
-        stroke
-          ..color = blue
-          ..strokeCap = StrokeCap.butt,
-      );
-    }
-    if (!completed) {
-      // In determinate mode the orange marker follows actual progress.
-      final double angle = start + sweep;
-      final Offset marker =
-          center + Offset(math.cos(angle), math.sin(angle)) * radius;
-      canvas.drawCircle(marker, side * 0.023, Paint()..color = orange);
-
-      for (int index = 0; index < 4; index++) {
-        final double t = (phase + index / 4) % 1;
-        final double eased = Curves.easeInOutSine.transform(t);
-        final double distance = side * (0.31 - 0.23 * eased);
-        final double angle = -math.pi * 0.75 + index * math.pi / 2;
-        final Offset position =
-            center + Offset(math.cos(angle), math.sin(angle)) * distance;
-        // Fade completely at both ends so the repeating path never jumps.
-        final double opacity =
-            math.pow(math.sin(math.pi * t), 2).toDouble() * 0.8;
-        final double scale = side / 228 * (1 - 0.24 * eased);
-        canvas.save();
-        canvas.translate(position.dx, position.dy);
-        canvas.scale(scale);
-        _paintFileIcon(canvas, index, blue.withValues(alpha: opacity));
-        canvas.restore();
-      }
-    }
-    // The stable folder sits on a quiet surface, in front of incoming files.
-    canvas.drawCircle(center, side * 0.17, Paint()..color = surface);
-  }
-
-  @override
-  bool shouldRepaint(covariant _FileScannerPainter oldDelegate) =>
-      oldDelegate.motion != motion ||
-      oldDelegate.fill != fill ||
-      oldDelegate.completed != completed ||
-      oldDelegate.blue != blue ||
-      oldDelegate.orange != orange ||
-      oldDelegate.surface != surface ||
-      oldDelegate.track != track;
-
-  // Tiny vector icons avoid text layout, image decoding, and extra layers.
-  void _paintFileIcon(Canvas canvas, int index, Color color) {
-    final Paint line = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.7
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    final Rect box = const Rect.fromLTRB(-10, -9, 10, 9);
-    switch (index) {
-      case 0: // Photos.
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(box, const Radius.circular(3)),
-          line,
-        );
-        canvas.drawCircle(const Offset(4, -3), 1.5, line);
-        canvas.drawPath(
-          Path()
-            ..moveTo(-9, 6)
-            ..lineTo(-3, 0)
-            ..lineTo(1, 4)
-            ..lineTo(4, 1)
-            ..lineTo(9, 6),
-          line,
-        );
-      case 1: // Videos.
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(box, const Radius.circular(3)),
-          line,
-        );
-        canvas.drawPath(
-          Path()
-            ..moveTo(-2, -4)
-            ..lineTo(4, 0)
-            ..lineTo(-2, 4)
-            ..close(),
-          line,
-        );
-      case 2: // Audio files, a visual only; never produces sound.
-        canvas.drawPath(
-          Path()
-            ..moveTo(-4, 5)
-            ..lineTo(-4, -6)
-            ..lineTo(7, -9)
-            ..lineTo(7, 2),
-          line,
-        );
-        canvas.drawOval(const Rect.fromLTRB(-10, 3, -4, 8), line);
-        canvas.drawOval(const Rect.fromLTRB(1, 0, 7, 5), line);
-      case 3: // Documents.
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            const Rect.fromLTRB(-8, -11, 8, 11),
-            const Radius.circular(2),
-          ),
-          line,
-        );
-        for (final double y in <double>[-4, 1, 6]) {
-          canvas.drawLine(Offset(-4, y), Offset(4, y), line);
-        }
-    }
   }
 }

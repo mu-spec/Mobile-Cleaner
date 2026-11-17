@@ -9,6 +9,9 @@ import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.provider.OpenableColumns
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.util.Log
@@ -17,6 +20,8 @@ import androidx.core.content.ContextCompat
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Deletes user-selected files.
@@ -37,7 +42,7 @@ import java.io.File
  * Nothing here deletes without the user having confirmed in-app first; the
  * system dialog is an additional gate, never a replacement for ours.
  */
-class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandler {
+class DeleteBridge(private val context: Context, private val progressChannel: MethodChannel? = null) : MethodChannel.MethodCallHandler {
 
     companion object {
         const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/delete"
@@ -51,10 +56,94 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         private const val DEBUG_TAG = "DELETE_DEBUG"
     }
 
+    private val worker = Executors.newSingleThreadExecutor()
+    private val main = Handler(Looper.getMainLooper())
+    private val disposed = AtomicBoolean(false)
+    @Volatile private var deleting = false
+    private var ledger: DeleteProgressLedger? = null
+    private var allUris: List<Uri> = emptyList()
+    private val sizes = mutableMapOf<String, Long?>()
+    private val existed = mutableMapOf<String, Boolean?>()
+    private val eventLock = Any()
+    private var latestEvent: Map<String, Any?>? = null
+    private var eventPosted = false
+    private fun report(event: Map<String, Any?>) {
+        synchronized(eventLock) {
+            latestEvent = event
+            if (!eventPosted) {
+                eventPosted = true
+                main.post {
+                    val latest = synchronized(eventLock) {
+                        val value = latestEvent
+                        latestEvent = null
+                        eventPosted = false
+                        value
+                    }
+                    if (!disposed.get() && latest != null) progressChannel?.invokeMethod("progress", latest)
+                }
+            }
+        }
+    }
+    fun dispose() {
+        disposed.set(true)
+        activity = null
+        val pending = pendingResult
+        pendingResult = null
+        pendingUris = emptyList()
+        pendingPermissionUris = emptyList()
+        deleteRequestCode = null
+        permissionRequestCode = null
+        if (pending != null) work(pending) {
+            failPending(allUris, pending, "Android confirmation was interrupted; deletion was not confirmed.")
+        }
+        worker.shutdown()
+    }
+    private fun work(result: MethodChannel.Result?, action: () -> Unit) {
+        try {
+            worker.execute {
+                try { action() }
+                catch (_: Exception) { failPending(allUris, result, "Deletion could not be confirmed.") }
+            }
+        } catch (_: java.util.concurrent.RejectedExecutionException) {
+            failPending(allUris, result, "Cleanup is no longer available.")
+        }
+    }
+    private fun beginItem(uri: Uri) {
+        ledger?.update("deleting", uri.toString())
+        if (!sizes.containsKey(uri.toString())) sizes[uri.toString()] = readSize(uri)
+    }
+    private fun readSize(uri: Uri): Long? = try {
+        if (isDirectFile(uri)) {
+            uri.path?.let { path -> File(path).takeIf { it.isFile }?.length() }
+        } else {
+            context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { cursor ->
+                val index = cursor.getColumnIndex(OpenableColumns.SIZE)
+                if (cursor.moveToFirst() && index >= 0 && !cursor.isNull(index))
+                    cursor.getLong(index).takeIf { it >= 0 } else null
+            }
+        }
+    } catch (_: Exception) { null }
+    private fun removed(uri: Uri) {
+        if (uri.toString() !in deletedBeforePrompt) deletedBeforePrompt += uri.toString()
+        ledger?.settle(uri.toString(), "deleted", sizes[uri.toString()])
+    }
+    private fun skipped(uri: Uri) { ledger?.settle(uri.toString(), "skipped") }
+    private fun reply(result: MethodChannel.Result?, cancelled: Boolean = false) {
+        val response = buildResponse(cancelled)
+        main.post { result?.success(response) }
+    }
+    private fun failPending(uris: List<Uri>, result: MethodChannel.Result?, reason: String) {
+        for (uri in uris) if (ledger?.hasOutcome(uri.toString()) != true)
+            failedBeforePrompt += failure(uri, reason)
+        reply(result)
+    }
+
     var activity: Activity? = null
 
     /** Set while a system dialog is showing. */
     private var pendingResult: MethodChannel.Result? = null
+    private var deleteRequestCode: Int? = null
+    private var permissionRequestCode: Int? = null
 
     /** URIs awaiting the outcome of the current system dialog. */
     private var pendingUris: List<Uri> = emptyList()
@@ -146,6 +235,10 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        if (disposed.get()) {
+            result.error("UNAVAILABLE", "Cleanup is no longer available.", null)
+            return
+        }
         if (call.method != "deleteFiles") {
             result.notImplemented()
             return
@@ -156,12 +249,12 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             result.success(emptyResponse())
             return
         }
-        if (pendingResult != null) {
+        if (deleting || pendingResult != null) {
             result.error("ALREADY_DELETING", "A delete is already in progress.", null)
             return
         }
 
-        val uris = rawUris.mapNotNull { raw ->
+        val uris = rawUris.distinct().mapNotNull { raw ->
             try {
                 Uri.parse(raw)
             } catch (error: Exception) {
@@ -169,6 +262,11 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             }
         }
 
+        deleting = true
+        allUris = uris
+        sizes.clear(); existed.clear()
+        ledger = DeleteProgressLedger(call.argument<String>("progressId"), uris.map { it.toString() }, ::report)
+        ledger?.update("preparing")
         deletedBeforePrompt = mutableListOf()
         failedBeforePrompt = mutableListOf()
 
@@ -211,39 +309,32 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
                 "mediaStore=${mediaUris.size}",
         )
 
-        for (uri in safUris) {
-            deleteSafDocument(uri)
+        // Keep resolver/SAF/file IO off the platform thread so real settled
+        // outcomes can render while the next item is processed.
+        work(result) {
+            for (uri in safUris) deleteSafDocument(uri)
+            for (uri in fileUris) deleteDirectFile(uri)
+            main.post {
+                if (mediaUris.isEmpty()) {
+                    reply(result)
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    // The system dialog itself is still launched on main.
+                    work(result) {
+                        for (uri in mediaUris) {
+                            beginItem(uri)
+                            existed[uri.toString()] = stillExists(uri)
+                        }
+                        main.post { requestBulkDelete(mediaUris, result) }
+                    }
+                } else if (needsLegacyWritePermission()) {
+                    requestLegacyWritePermission(mediaUris, result)
+                } else work(result) { runLegacyMediaDelete(mediaUris, result) }
+            }
         }
-        for (uri in fileUris) {
-            deleteDirectFile(uri)
-        }
-
-        if (mediaUris.isEmpty()) {
-            result.success(buildResponse(userCancelled = false))
-            return
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            requestBulkDelete(mediaUris, result)
-            return
-        }
-
-        // Android 9 and below: ContentResolver.delete on shared media needs
-        // WRITE_EXTERNAL_STORAGE, which is a runtime permission from API 23.
-        // Without it the resolver throws
-        //   SecurityException: requires android.permission.WRITE_EXTERNAL_STORAGE
-        // Android 10+ never reaches here; it uses the delete request or SAF.
-        if (needsLegacyWritePermission()) {
-            log("legacy write permission missing, requesting before delete")
-            requestLegacyWritePermission(mediaUris, result)
-            return
-        }
-
-        runLegacyMediaDelete(mediaUris, result)
     }
 
     /**
-     * The Android 10 and below deletion path, unchanged.
+     * Android 10 and below: the same authorization path, now observed on a worker.
      *
      * Extracted so the API 28 permission-granted retry resumes through exactly
      * this code rather than a parallel copy.
@@ -262,18 +353,21 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         }
 
         if (recoverable.isEmpty()) {
-            result?.success(buildResponse(userCancelled = false))
+            reply(result)
             return
         }
 
         // Android 10 confirms one file at a time; surface the first prompt and
         // let the caller re-run for anything still present.
-        pendingResult = result
-        pendingUris = mediaUris
-        if (!launchIntentSender(recoverable.first())) {
-            pendingResult = null
-            pendingUris = emptyList()
-            result?.success(buildResponse(userCancelled = false))
+        main.post {
+            pendingResult = result
+            pendingUris = mediaUris
+            ledger?.update("awaitingConfirmation")
+            if (!launchIntentSender(recoverable.first())) {
+                pendingResult = null
+                pendingUris = emptyList()
+                failPending(mediaUris, result, "Could not show the delete dialog.")
+            }
         }
     }
 
@@ -339,16 +433,26 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             for (uri in uris) {
                 failedBeforePrompt += failure(uri, "Access to this file was denied.")
             }
-            result.success(buildResponse(userCancelled = false))
+            reply(result)
             return
         }
 
         pendingResult = result
         pendingPermissionUris = uris
-        current.requestPermissions(
-            arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-            REQUEST_CODE_WRITE_PERMISSION,
-        )
+        ledger?.update("awaitingPermission")
+        try {
+            val code = DeleteProgressLedger.nextRequestCode()
+            permissionRequestCode = code
+            current.requestPermissions(
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                code,
+            )
+        } catch (_: Exception) {
+            pendingResult = null
+            pendingPermissionUris = emptyList()
+            permissionRequestCode = null
+            failPending(uris, result, "Could not request permission.")
+        }
     }
 
     /**
@@ -361,11 +465,12 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         requestCode: Int,
         grantResults: IntArray,
     ): Boolean {
-        if (requestCode != REQUEST_CODE_WRITE_PERMISSION) {
+        if (requestCode != permissionRequestCode) {
             return false
         }
 
-        val result = pendingResult
+        permissionRequestCode = null
+        val result = pendingResult ?: return true
         val uris = pendingPermissionUris
         pendingResult = null
         pendingPermissionUris = emptyList()
@@ -379,12 +484,12 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             for (uri in uris) {
                 failedBeforePrompt += failure(uri, "Access to this file was denied.")
             }
-            result?.success(buildResponse(userCancelled = false))
+            reply(result)
             return true
         }
 
         // Granted: retry through the unchanged legacy path.
-        runLegacyMediaDelete(uris, result)
+        work(result) { runLegacyMediaDelete(uris, result) }
         return true
     }
 
@@ -392,12 +497,13 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
     private fun isDirectFile(uri: Uri): Boolean = uri.scheme == SCHEME_FILE
 
     private fun deleteSafDocument(uri: Uri) {
+        beginItem(uri)
         log("SAF attempt | ${describe(uri)} | ${describeSafPermission(uri)}")
         try {
             val removed = DocumentsContract.deleteDocument(context.contentResolver, uri)
             log("SAF result | deleteDocument returned=$removed | uri=$uri")
             if (removed) {
-                deletedBeforePrompt += uri.toString()
+                removed(uri)
             } else {
                 failedBeforePrompt += failure(uri, "Could not delete this file.")
             }
@@ -418,6 +524,7 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
      * would let the app report a success that never happened.
      */
     private fun deleteDirectFile(uri: Uri) {
+        beginItem(uri)
         log("DIRECT attempt | ${describe(uri)}")
         val path = uri.path
         if (path.isNullOrEmpty()) {
@@ -432,9 +539,9 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
                 "| canRead=${file.canRead()} | canWrite=${file.canWrite()}",
         )
         if (!file.exists()) {
-            // Already gone; treat as done rather than a failure.
+            // Already absent is skipped, never newly reclaimed storage.
             log("DIRECT result | already absent | path=$path")
-            deletedBeforePrompt += uri.toString()
+            skipped(uri)
             return
         }
 
@@ -447,7 +554,7 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         log("DIRECT result | File.delete returned=$removed | path=$path")
 
         if (removed) {
-            deletedBeforePrompt += uri.toString()
+            removed(uri)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             failedBeforePrompt += failure(
                 uri,
@@ -460,6 +567,8 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
 
     /** Returns an [IntentSender] when the system needs the user to confirm. */
     private fun deleteMediaDirect(uri: Uri): IntentSender? {
+        beginItem(uri)
+        existed[uri.toString()] = stillExists(uri)
         log(
             "MEDIASTORE attempt | ${describe(uri)} | " +
                 describeMediaStoreLookup(uri),
@@ -467,13 +576,7 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         return try {
             val rows = context.contentResolver.delete(uri, null, null)
             log("MEDIASTORE result | resolver.delete rows=$rows | uri=$uri")
-            // Zero rows means the row is no longer there — the file was moved
-            // or removed after the scan listed it. The user's goal was "this
-            // should not be on my phone", and it is not, so this counts as
-            // done. Reporting it as a failure sent people back to a file that
-            // no longer existed. The direct-file path already treated an
-            // absent file as success; this makes both agree.
-            deletedBeforePrompt += uri.toString()
+            if (DeleteProgressLedger.directRows(rows) == "deleted") removed(uri) else skipped(uri)
             null
         } catch (error: SecurityException) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
@@ -504,7 +607,7 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
     private fun requestBulkDelete(uris: List<Uri>, result: MethodChannel.Result) {
         val current = activity
         if (current == null) {
-            result.error("NO_ACTIVITY", "No activity is attached.", null)
+            failPending(uris, result, "No activity is attached.")
             return
         }
 
@@ -519,28 +622,33 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             )
             pendingResult = result
             pendingUris = uris
+            ledger?.update("awaitingConfirmation")
             if (!launchIntentSender(pendingIntent.intentSender)) {
                 log("MEDIASTORE bulk | launchIntentSender failed")
                 pendingResult = null
                 pendingUris = emptyList()
-                result.error("DELETE_FAILED", "Could not show the delete dialog.", null)
+                failPending(uris, result, "Could not show the delete dialog.")
             } else {
                 log("MEDIASTORE bulk | system dialog shown, awaiting result")
             }
         } catch (error: Exception) {
             logError("MEDIASTORE bulk | createDeleteRequest threw", error)
-            result.error("DELETE_FAILED", "Could not request deletion.", error.message)
+            failPending(uris, result, "Could not request deletion.")
         }
     }
 
     private fun launchIntentSender(sender: IntentSender): Boolean {
         val current = activity ?: return false
         return try {
-            current.startIntentSenderForResult(sender, REQUEST_CODE_DELETE, null, 0, 0, 0)
+            val code = DeleteProgressLedger.nextRequestCode()
+            deleteRequestCode = code
+            current.startIntentSenderForResult(sender, code, null, 0, 0, 0)
             true
         } catch (error: IntentSender.SendIntentException) {
+            deleteRequestCode = null
             false
         } catch (error: Exception) {
+            deleteRequestCode = null
             false
         }
     }
@@ -549,10 +657,11 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
 
     /** Called from `MainActivity.onActivityResult`. */
     fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        if (requestCode != REQUEST_CODE_DELETE) {
+        if (requestCode != deleteRequestCode) {
             return false
         }
-        val result = pendingResult
+        deleteRequestCode = null
+        val result = pendingResult ?: return true
         val uris = pendingUris
         pendingResult = null
         pendingUris = emptyList()
@@ -568,48 +677,43 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
             // The user declined the system dialog. Report honestly rather than
             // claiming success.
             log("system dialog | declined or cancelled, nothing deleted")
-            result?.success(buildResponse(userCancelled = true))
+            reply(result, cancelled = true)
             return true
         }
 
-        // The system reports OK for the batch. Verify each row really went, so
-        // the result screen never overstates what was removed.
-        for (uri in uris) {
-            val survived = stillExists(uri)
-            log(
-                "post-dialog verify | uri=$uri | stillExists=$survived | " +
-                    describeMediaStoreLookup(uri),
-            )
-            if (survived) {
-                failedBeforePrompt += failure(uri, "File could not be removed.")
-            } else {
-                deletedBeforePrompt += uri.toString()
+        // Consent is not evidence of deletion. Verify in a worker, preserving
+        // unavailable queries as unknown rather than claiming the file is gone.
+        work(result) {
+            for (uri in uris) {
+                if (ledger?.hasOutcome(uri.toString()) == true) continue
+                ledger?.update("verifying", uri.toString())
+                when (DeleteProgressLedger.afterConfirmation(existed[uri.toString()], stillExists(uri))) {
+                    "deleted" -> removed(uri)
+                    "skipped" -> skipped(uri)
+                    else -> failedBeforePrompt += failure(uri, "Deletion could not be confirmed.")
+                }
             }
+            reply(result)
         }
-
-        result?.success(buildResponse(userCancelled = false))
         return true
     }
 
-    private fun stillExists(uri: Uri): Boolean {
-        return try {
-            context.contentResolver.query(
-                uri,
-                arrayOf(MediaStore.MediaColumns._ID),
-                null,
-                null,
-                null,
-            )?.use { cursor -> cursor.count > 0 }
-                ?: false
-        } catch (error: Exception) {
-            false
-        }
+    /** null means verification unavailable, not absent. */
+    private fun stillExists(uri: Uri): Boolean? = try {
+        context.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns._ID), null, null, null)
+            ?.use { cursor -> cursor.count > 0 }
+    } catch (_: Exception) { null }
+
+    private fun failure(uri: Uri, reason: String): Map<String, Any?> {
+        ledger?.settle(uri.toString(), "failed")
+        return mapOf("uri" to uri.toString(), "reason" to reason)
     }
 
-    private fun failure(uri: Uri, reason: String): Map<String, Any?> =
-        mapOf("uri" to uri.toString(), "reason" to reason)
-
     private fun buildResponse(userCancelled: Boolean): Map<String, Any?> {
+        if (!userCancelled) for (uri in allUris) {
+            if (ledger?.hasOutcome(uri.toString()) != true)
+                failedBeforePrompt += failure(uri, "Deletion was not confirmed.")
+        }
         log(
             "===== delete summary ===== " +
                 "deleted=${deletedBeforePrompt.distinct().size} " +
@@ -618,7 +722,12 @@ class DeleteBridge(private val context: Context) : MethodChannel.MethodCallHandl
         for (entry in failedBeforePrompt) {
             log("failure | uri=${entry["uri"]} | reason=${entry["reason"]}")
         }
+        ledger?.finish(userCancelled)
+        deleting = false
         return mapOf(
+            "accountingVersion" to 1,
+            "confirmedBytesByUri" to ledger?.byteSizes().orEmpty(),
+            "skippedUris" to ledger?.skipped().orEmpty(),
             "deletedUris" to deletedBeforePrompt.distinct(),
             "failed" to failedBeforePrompt,
             "userCancelled" to userCancelled,

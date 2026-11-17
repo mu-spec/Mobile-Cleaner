@@ -329,7 +329,7 @@ void main() {
     await tester.pumpWidget(host('a', 1));
     await tester.pump(const Duration(milliseconds: 250));
     expect(semantics(), '100 percent');
-    expect(find.byKey(const Key('scan_folder_icon')), findsOneWidget);
+    expect(find.byKey(const Key('scan_radar_center')), findsOneWidget);
     await tester.pumpWidget(host('b', 0));
     expect(semantics(), '0 percent');
     await tester.pumpWidget(host('b', .5));

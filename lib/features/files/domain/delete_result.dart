@@ -18,12 +18,16 @@ class DeleteResult {
     required this.deletedFiles,
     required this.failures,
     this.userCancelled = false,
+    this.skippedUris = const <String>[],
+    this.confirmedBytesByUri,
   });
 
   const DeleteResult.cancelled()
     : deletedFiles = const <ScannedFile>[],
       failures = const <DeleteFailure>[],
-      userCancelled = true;
+      userCancelled = true,
+      skippedUris = const <String>[],
+      confirmedBytesByUri = null;
 
   /// Files confirmed gone.
   final List<ScannedFile> deletedFiles;
@@ -34,6 +38,18 @@ class DeleteResult {
   /// True when the user declined the system confirmation.
   final bool userCancelled;
 
+  /// Already absent/no row removed: handled but never claimed as cleaned.
+  final List<String> skippedUris;
+
+  /// Native pre-delete logical sizes, only for confirmed removals. Null is
+  /// legacy/custom-repository compatibility; an empty map means unknown size.
+  final Map<String, int>? confirmedBytesByUri;
+  int get unmeasuredDeletedCount => confirmedBytesByUri == null
+      ? 0
+      : deletedFiles
+            .where((file) => !confirmedBytesByUri!.containsKey(file.uri))
+            .length;
+
   int get deletedCount => deletedFiles.length;
 
   int get failureCount => failures.length;
@@ -41,13 +57,22 @@ class DeleteResult {
   /// Space actually reclaimed. Only counts files confirmed deleted.
   int get freedBytes => deletedFiles.fold<int>(
     0,
-    (int sum, ScannedFile file) => sum + file.sizeBytes,
+    (int sum, ScannedFile file) =>
+        sum +
+        (confirmedBytesByUri == null
+            ? file.sizeBytes
+            : confirmedBytesByUri![file.uri] ?? 0),
   );
 
   bool get isCompleteSuccess =>
-      !userCancelled && failures.isEmpty && deletedFiles.isNotEmpty;
+      !userCancelled &&
+      failures.isEmpty &&
+      skippedUris.isEmpty &&
+      deletedFiles.isNotEmpty;
 
-  bool get isPartialSuccess => deletedFiles.isNotEmpty && failures.isNotEmpty;
+  bool get isPartialSuccess =>
+      deletedFiles.isNotEmpty &&
+      (failures.isNotEmpty || skippedUris.isNotEmpty || userCancelled);
 
   /// Nothing was removed, whether cancelled or blocked.
   bool get isFailure => deletedFiles.isEmpty;

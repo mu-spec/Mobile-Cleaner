@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
+import 'package:phone_storage_cleaner/core/ui/reference_progress_art.dart';
 
 final _sampleRequests = Expando<Map<String, NativeScanRequest>>();
 final _sampleStages = Expando<Map<String, String>>();
@@ -359,14 +360,14 @@ void main() {
   });
 
   group('Real clockwise geometry', () {
-    testWidgets('zero and unknown totals never draw a rotating blue arc', (
+    testWidgets('zero and unknown totals never draw a measured orange arc', (
       tester,
     ) async {
       await tester.pumpWidget(host(progress: 0));
-      expect(drawing(tester), paintsExactlyCountTimes(#drawArc, 0));
+      expect(drawing(tester), paintsExactlyCountTimes(#drawArc, 1));
       await tester.pumpWidget(host());
       await tester.pump(const Duration(seconds: 30));
-      expect(drawing(tester), paintsExactlyCountTimes(#drawArc, 0));
+      expect(drawing(tester), paintsExactlyCountTimes(#drawArc, 1));
       expect(
         CircularFileScanner.motionDuration,
         const Duration(milliseconds: 5800),
@@ -374,25 +375,34 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
     testWidgets(
-      '12 oclock clockwise sweep and leading marker stay fixed between updates',
+      '12 oclock clockwise orange sweep stays fixed while radar rotates',
       (tester) async {
         await tester.pumpWidget(host(progress: .25));
         await tester.pump(const Duration(milliseconds: 250));
         expect(
           drawing(tester),
           paints
+            ..arc()
+            ..arc()
             ..arc(
+              color: ReferenceProgressColors.orange,
               startAngle: -math.pi / 2,
               sweepAngle: math.pi / 2,
               strokeCap: StrokeCap.butt,
               useCenter: false,
-            )
-            ..circle(x: 228 / 2 + 228 * .43, y: 228 / 2, radius: 228 * .023),
+            ),
         );
         await tester.pump(const Duration(seconds: 12));
         expect(
           drawing(tester),
-          paints..arc(startAngle: -math.pi / 2, sweepAngle: math.pi / 2),
+          paints
+            ..arc()
+            ..arc()
+            ..arc(
+              color: ReferenceProgressColors.orange,
+              startAngle: -math.pi / 2,
+              sweepAngle: math.pi / 2,
+            ),
         );
         await tester.pumpWidget(const SizedBox.shrink());
       },
@@ -404,19 +414,18 @@ void main() {
         await tester.pumpWidget(host(progress: .5));
         for (int i = 0; i < 8; i++) {
           await tester.pump(const Duration(milliseconds: 30));
-          expect(
-            drawing(tester),
-            paints..something(
-              (method, args) =>
-                  method == #drawArc &&
-                  (args[2] as double) >= 0 &&
-                  (args[2] as double) <= math.pi,
-            ),
-          );
+          final rendered = painter(tester) as ReferenceProgressPainter;
+          expect(rendered.fill.value, inInclusiveRange(0, .5));
         }
         await tester.pumpWidget(host(progress: .1));
         await tester.pump(const Duration(milliseconds: 300));
-        expect(drawing(tester), paints..arc(sweepAngle: math.pi));
+        expect(
+          drawing(tester),
+          paints
+            ..arc()
+            ..arc()
+            ..arc(color: ReferenceProgressColors.orange, sweepAngle: math.pi),
+        );
         await tester.pumpWidget(const SizedBox.shrink());
       },
     );
@@ -427,14 +436,26 @@ void main() {
       await tester.pump(const Duration(milliseconds: 250));
       await tester.pumpWidget(host(progress: 1));
       await tester.pump(const Duration(milliseconds: 250));
-      expect(drawing(tester), paints..arc(sweepAngle: math.pi * 2));
-      expect(find.byKey(const Key('scan_folder_icon')), findsOneWidget);
+      expect(
+        drawing(tester),
+        paints
+          ..arc()
+          ..arc()
+          ..arc(color: ReferenceProgressColors.orange, sweepAngle: math.pi * 2),
+      );
+      expect(find.byKey(const Key('scan_radar_center')), findsOneWidget);
       expect(find.byKey(const Key('scan_complete_icon')), findsNothing);
       await tester.pumpWidget(host(progress: 1, succeeded: true));
       await tester.pump(const Duration(milliseconds: 250));
-      expect(drawing(tester), paints..arc(sweepAngle: math.pi * 2));
+      expect(
+        drawing(tester),
+        paints
+          ..arc()
+          ..arc()
+          ..arc(color: ReferenceProgressColors.orange, sweepAngle: math.pi * 2),
+      );
       await tester.pumpWidget(host(progress: 0, id: 'fresh'));
-      expect(drawing(tester), paintsExactlyCountTimes(#drawArc, 0));
+      expect(drawing(tester), paintsExactlyCountTimes(#drawArc, 1));
       await tester.pumpWidget(const SizedBox.shrink());
     });
   });

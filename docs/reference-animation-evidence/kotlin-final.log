@@ -1,0 +1,6 @@
+android/app/src/main/kotlin/com/KoreAppsTek/PhoneStorageCleaner/InstalledAppsBridge.kt:348:24: warning: 'fun unsafeCheckOpNoThrow(p0: String, p1: Int, p2: String): Int' is deprecated. Deprecated in Java.
+                appOps.unsafeCheckOpNoThrow(
+                       ^^^^^^^^^^^^^^^^^^^^
+android/app/src/main/kotlin/com/KoreAppsTek/PhoneStorageCleaner/SafAccessBridge.kt:139:18: warning: 'fun <T : Parcelable!> getParcelableExtra(p0: String!): T?' is deprecated. Deprecated in Java.
+                .getParcelableExtra<Uri>(DocumentsContract.EXTRA_INITIAL_URI)
+                 ^^^^^^^^^^^^^^^^^^

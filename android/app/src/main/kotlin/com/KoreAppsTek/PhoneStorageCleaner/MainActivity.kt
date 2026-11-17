@@ -75,7 +75,10 @@ class MainActivity : FlutterActivity() {
             FileScannerBridge.CHANNEL,
         ).setMethodCallHandler(scanner)
 
-        val deleter = DeleteBridge(applicationContext)
+        val deleter = DeleteBridge(applicationContext, MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "com.KoreAppsTek.PhoneStorageCleaner/delete_progress",
+        ))
         deleter.activity = this
         deleteBridge = deleter
         MethodChannel(
@@ -152,6 +155,7 @@ class MainActivity : FlutterActivity() {
         safAccess?.activity = null
         safAccess = null
         deleteBridge?.activity = null
+        deleteBridge?.dispose()
         deleteBridge = null
         hashBridge?.dispose()
         hashBridge = null
