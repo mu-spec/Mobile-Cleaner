@@ -17,7 +17,8 @@ class InstalledAppsSnapshot {
 
   final List<InstalledApp> apps;
 
-  /// Whether `PACKAGE_USAGE_STATS` is granted, so sizes are detailed.
+  /// Whether Usage Access was authorized at read time; individual queries
+  /// may still fail, so this is not a guarantee of detailed size coverage.
   final bool hasUsageAccess;
 
   /// False below Android 8, where `StorageStatsManager` does not exist.
@@ -138,7 +139,12 @@ class PlatformInstalledAppsRepository implements InstalledAppsRepository {
         }
         final InstalledApp? app = InstalledApp.fromPlatformMap(row);
         if (app != null) {
-          apps.add(app);
+          apps.add(
+            payload['hasUsageAccess'] == true &&
+                    payload['sizeDetailSupported'] != false
+                ? app
+                : app.withoutSizeDetails(),
+          );
         }
       }
     }

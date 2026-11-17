@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:phone_storage_cleaner/app/router/permission_policy.dart';
 import 'package:phone_storage_cleaner/features/apps/data/installed_apps_repository.dart';
 import 'package:phone_storage_cleaner/features/apps/domain/app_inventory.dart';
 import 'package:phone_storage_cleaner/features/apps/domain/installed_app.dart';
 import 'package:phone_storage_cleaner/features/apps/presentation/screens/app_details_screen.dart';
 import 'package:phone_storage_cleaner/features/apps/presentation/screens/apps_screen.dart';
+import 'package:phone_storage_cleaner/features/permissions/domain/app_permission_status.dart';
+import 'package:phone_storage_cleaner/features/permissions/domain/permission_snapshot.dart';
 
 const int _mib = 1024 * 1024;
 
@@ -93,7 +98,8 @@ class _StubApps implements InstalledAppsRepository {
   }) : apps = apps ?? _fixture();
 
   final List<InstalledApp> apps;
-  final bool hasAccess;
+  bool hasAccess;
+  Completer<bool>? authorizationGate;
   final bool actionsSucceed;
   bool stillInstalled;
 
@@ -116,7 +122,8 @@ class _StubApps implements InstalledAppsRepository {
   }
 
   @override
-  Future<bool> hasUsageAccess() async => hasAccess;
+  Future<bool> hasUsageAccess() async =>
+      authorizationGate == null ? hasAccess : await authorizationGate!.future;
 
   @override
   Future<bool> openUsageAccessSettings() async {
@@ -196,7 +203,7 @@ void main() {
       expect(app, isNotNull);
       expect(app!.name, 'Example');
       expect(app.hasDetailedSize, isTrue);
-      expect(app.totalBytes, 105 * _mib);
+      expect(app.totalBytes, 100 * _mib);
       expect(app.versionName, '4.2.1');
       expect(app.versionCode, 421);
       expect(app.updatedAt, isNotNull);
@@ -253,6 +260,152 @@ void main() {
     test('a null payload is empty, not an error', () {
       expect(PlatformInstalledAppsRepository.parseSnapshot(null).apps, isEmpty);
     });
+  });
+
+  group('Apps access boundaries', () {
+    test('denied storage/media does not gate Apps or grant media', () {
+      for (final sdk in [25, 28, 29, 32, 33, 34, 36, 37]) {
+        final permissions = PermissionSnapshot(
+          sdkInt: sdk,
+          statuses: {
+            for (final kind in PermissionKind.values)
+              kind: AppPermissionStatus.denied,
+          },
+        );
+        for (final path in ['/apps', '/scan-progress?scan=apps']) {
+          final feature = permissionFeatureFor(Uri.parse(path));
+          expect(feature, PermissionFeature.none);
+          expect(permissions.allowsFeature(feature!), isTrue);
+        }
+        expect(permissions.allowsFeature(PermissionFeature.photos), isFalse);
+        expect(permissions.allows(PermissionKind.storage), isFalse);
+        expect(permissions.folderUris, isEmpty);
+      }
+    });
+
+    for (final payload in [
+      {'hasUsageAccess': false, 'sizeDetailSupported': true},
+      {'hasUsageAccess': true, 'sizeDetailSupported': false},
+      <String, bool>{},
+    ]) {
+      test('unauthorized/unsupported payload drops stats: $payload', () {
+        final snapshot = PlatformInstalledAppsRepository.parseSnapshot({
+          ...payload,
+          'apps': [
+            {
+              'packageName': 'com.example',
+              'name': 'Example',
+              'apkBytes': 20,
+              'appBytes': 30,
+              'dataBytes': 70,
+              'cacheBytes': 5,
+            },
+          ],
+        });
+        final app = snapshot.apps.single;
+        expect(app.apkBytes, 20);
+        expect(app.name, 'Example');
+        expect(app.appBytes, isNull);
+        expect(app.dataBytes, isNull);
+        expect(app.cacheBytes, isNull);
+        expect(app.bestKnownBytes, 20);
+      });
+    }
+
+    test('authorized payload counts cache only once', () {
+      final snapshot = PlatformInstalledAppsRepository.parseSnapshot({
+        'hasUsageAccess': true,
+        'sizeDetailSupported': true,
+        'apps': [
+          {
+            'packageName': 'com.example',
+            'apkBytes': 20,
+            'appBytes': 30,
+            'dataBytes': 70,
+            'cacheBytes': 5,
+          },
+        ],
+      });
+      expect(snapshot.apps.single.totalBytes, 100);
+      expect(snapshot.apps.single.cacheBytes, 5);
+    });
+
+    testWidgets('a stats query failure is not labelled as full coverage', (
+      tester,
+    ) async {
+      await _pumpApps(
+        tester,
+        repository: _StubApps(
+          apps: [
+            _fixture().first,
+            _app(packageName: 'com.partial', name: 'Partial'),
+          ],
+        ),
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('apps_total_label'))).data,
+        'Known size, some data unavailable',
+      );
+      expect(
+        tester.widget<Text>(find.byKey(const Key('app_size_com.partial'))).data,
+        endsWith('APK only'),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets(
+      'permission denied masks even a repository returning cached stats',
+      (tester) async {
+        await _pumpApps(tester, repository: _StubApps(hasAccess: false));
+        expect(
+          tester.widget<Text>(find.byKey(const Key('app_size_com.chat'))).data,
+          '40.0 MB · APK only',
+        );
+        expect(find.text('App size, excluding data'), findsOneWidget);
+        await _openDetails(tester, 'com.chat');
+        expect(
+          tester
+              .widget<Text>(find.byKey(const Key('app_details_total_com.chat')))
+              .data,
+          '40.0 MB',
+        );
+        expect(find.text('Not available'), findsNWidgets(2));
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+
+    testWidgets(
+      'resume hides open cached details while access check is pending, then refreshes on revoke/grant',
+      (tester) async {
+        final repo = await _pumpApps(tester);
+        await _openDetails(tester, 'com.chat');
+        expect(find.text('940.0 MB'), findsOneWidget);
+        repo.authorizationGate = Completer<bool>();
+        repo.hasAccess = false;
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('940.0 MB'), findsNothing);
+        expect(find.text('Not available'), findsNWidgets(2));
+        repo.authorizationGate!.complete(false);
+        repo.authorizationGate = null;
+        await tester.pumpAndSettle();
+        expect(find.text('Excluding data'), findsOneWidget);
+        expect(repo.reads, 2);
+        repo.hasAccess = true;
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        await tester.pumpAndSettle();
+        expect(repo.reads, 3);
+        expect(find.text('940.0 MB'), findsOneWidget);
+        expect(find.text('Including data and cache'), findsOneWidget);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
   });
 
   group('AppInventory', () {
@@ -330,8 +483,8 @@ void main() {
 
     test('totals use the best figure known per app', () {
       final AppInventory inventory = AppInventory.from(_fixture());
-      // 1000 + 400 + 16 MB.
-      expect(inventory.totalBytes, 1416 * _mib);
+      // Data includes cache: 940 + 400 + 15 MB.
+      expect(inventory.totalBytes, 1355 * _mib);
       expect(inventory.totalCacheBytes, 61 * _mib);
       expect(inventory.largestApp?.name, 'Chatter');
     });
@@ -378,7 +531,7 @@ void main() {
       );
       expect(
         tester.widget<Text>(find.byKey(const Key('app_size_com.chat'))).data,
-        '1000.0 MB',
+        '940.0 MB · Total',
       );
       expect(
         tester.widget<Text>(find.byKey(const Key('app_detail_com.chat'))).data,
@@ -420,7 +573,7 @@ void main() {
         tester
             .widget<Text>(find.byKey(const Key('app_details_total_com.chat')))
             .data,
-        '1000.0 MB',
+        '940.0 MB',
       );
       expect(
         tester
@@ -544,7 +697,7 @@ void main() {
 
       expect(
         tester.widget<Text>(find.byKey(const Key('app_size_com.a'))).data,
-        '25.0 MB',
+        '25.0 MB · APK only',
       );
       expect(
         tester.widget<Text>(find.byKey(const Key('apps_total_label'))).data,

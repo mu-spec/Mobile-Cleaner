@@ -8,6 +8,7 @@ import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
 import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
 import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
+import 'package:phone_storage_cleaner/core/ui/scan_stage_presentation.dart';
 import 'package:phone_storage_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
 import 'package:phone_storage_cleaner/features/cleaner/domain/scan_launch_target.dart';
 import 'package:phone_storage_cleaner/features/files/domain/screenshot_filter.dart';
@@ -23,7 +24,7 @@ import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_up
 /// Runs the existing real scan and preserves its presentation timing gates.
 ///
 /// Request-scoped measured work drives the ring when a reliable denominator
-/// exists. Composite discovery remains indeterminate. Timing gates pace only
+/// exists. Unknown-total discovery remains indeterminate. Timing gates pace only
 /// the existing transition and never contribute to scanning progress.
 class ScanProgressScreen extends ConsumerStatefulWidget {
   const ScanProgressScreen({required this.target, super.key});
@@ -249,80 +250,86 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final bool isDark = theme.brightness == Brightness.dark;
-    return Scaffold(
-      key: const Key('scan_progress_screen'),
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : HomeUpperStyle.background,
-      appBar: AppBar(
-        leading: IconButton(
-          key: const Key('scan_progress_back_button'),
-          tooltip: 'Back',
-          onPressed: _goBack,
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
-        backgroundColor: Colors.transparent,
-        title: const Text('Smart Scan'),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.xl,
-            AppSpacing.lg,
-            AppSpacing.xl,
-            AppSpacing.xl,
+    return ScanStagePresentation(
+      snapshot: _snapshot,
+      builder: (context, shown) => Scaffold(
+        key: const Key('scan_progress_screen'),
+        backgroundColor: isDark
+            ? AppColors.darkBackground
+            : HomeUpperStyle.background,
+        appBar: AppBar(
+          leading: IconButton(
+            key: const Key('scan_progress_back_button'),
+            tooltip: 'Back',
+            onPressed: _goBack,
+            icon: const Icon(Icons.arrow_back_rounded),
           ),
-          child: Column(
-            children: <Widget>[
-              _PrivacyBadge(isDark: isDark),
-              const SizedBox(height: AppSpacing.xl),
-              Text(
-                _scanTitle,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                  color: isDark
-                      ? theme.colorScheme.onSurface
-                      : HomeUpperStyle.textPrimary,
+          backgroundColor: Colors.transparent,
+          title: const Text('Smart Scan'),
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xl,
+              AppSpacing.lg,
+              AppSpacing.xl,
+              AppSpacing.xl,
+            ),
+            child: Column(
+              children: <Widget>[
+                _PrivacyBadge(isDark: isDark),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  _scanTitle,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                    color: isDark
+                        ? theme.colorScheme.onSurface
+                        : HomeUpperStyle.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                _scanSubtitle,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: isDark
-                      ? theme.colorScheme.onSurfaceVariant
-                      : HomeUpperStyle.textSecondary,
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  _scanSubtitle,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: isDark
+                        ? theme.colorScheme.onSurfaceVariant
+                        : HomeUpperStyle.textSecondary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xxl),
-              CircularFileScanner(
-                key: const Key('scan_progress_ring'),
-                scanId: _snapshot?.id,
-                progress: _snapshot?.fraction,
-                active: !_finished && _scanError == null,
-                completed: _completed,
-                succeeded: _snapshot?.successful ?? false,
-              ),
-              const SizedBox(height: AppSpacing.xxl),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
-                child: _scanError == null
-                    ? _ScanStatusCard(
-                        key: ValueKey<String>(_scanStatus),
-                        completed: _completed,
-                        progress: _snapshot?.fraction,
-                        status: _scanStatus,
-                        isDark: isDark,
-                      )
-                    : _ScanErrorCard(
-                        onRetry: _startScan,
-                        onCancel: () => context.go(AppRoutes.home),
-                      ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.xxl),
+                CircularFileScanner(
+                  key: const Key('scan_progress_ring'),
+                  scanId: shown?.id,
+                  stageId: shown?.displayStage?.id,
+                  progress: shown?.stageFraction,
+                  active: !_finished && _scanError == null,
+                  completed: _completed,
+                  succeeded: _snapshot?.successful ?? false,
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: _scanError == null
+                      ? _ScanStatusCard(
+                          key: const Key('scan_status_card'),
+                          completed: _completed,
+                          progress: shown?.stageFraction,
+                          status: _completed
+                              ? 'Scan complete'
+                              : shown?.stageDescription ?? _scanStatus,
+                          isDark: isDark,
+                        )
+                      : _ScanErrorCard(
+                          onRetry: _startScan,
+                          onCancel: () => context.go(AppRoutes.home),
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -437,7 +444,7 @@ class _ScanStatusCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(99),
             child: LinearProgressIndicator(
-              value: completed ? 1 : (progress == 1 ? null : progress),
+              value: completed ? 1 : progress,
               minHeight: 7,
               color: isDark
                   ? AppColors.darkPrimary

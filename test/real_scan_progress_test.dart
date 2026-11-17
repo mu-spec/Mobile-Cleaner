@@ -10,6 +10,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
 
+final _sampleRequests = Expando<Map<String, NativeScanRequest>>();
+final _sampleStages = Expando<Map<String, String>>();
+final _sampleOrdinals = Expando<Map<String, int>>();
+final _sampleSequences = Expando<Map<String, int>>();
+
 void sample(
   ScanOperation operation,
   int processed,
@@ -19,14 +24,25 @@ void sample(
   bool numeric = true,
   String outcome = 'running',
 }) {
+  final requests = _sampleRequests[operation] ??= {};
+  final actual = requests.putIfAbsent(request, operation.request).id;
+  final stages = _sampleStages[operation] ??= {};
+  final ordinals = _sampleOrdinals[operation] ??= {};
+  final sequences = _sampleSequences[operation] ??= {};
+  if (stages[request] != stage) {
+    ordinals[request] = (ordinals[request] ?? -1) + 1;
+    stages[request] = stage;
+  }
   operation.acceptNative({
-    'requestId': request,
+    'requestId': actual,
+    'stageIndex': ordinals[request],
+    'sequence': sequences[request] = (sequences[request] ?? 0) + 1,
     'processed': processed,
     'total': total,
     'numeric': numeric,
     'stage': stage,
     'outcome': outcome,
-  }, request);
+  }, actual);
 }
 
 Widget host({
@@ -98,7 +114,7 @@ void main() {
           operation.stage('Aggregating results');
           await gate.future;
         });
-        expect(operation.snapshot.fraction, .75);
+        expect(operation.snapshot.fraction, isNull);
         expect(operation.snapshot.successful, isFalse);
         gate.complete();
         await pending;
@@ -106,15 +122,15 @@ void main() {
       },
     );
     test(
-      'unknown totals and composite stage counts stay indeterminate',
+      'unknown totals stay indeterminate; measured composite stages fill',
       () async {
         final operation = ScanOperation();
         await operation.run(() async {
           sample(operation, 230, null, stage: 'Discovering folders');
           expect(operation.snapshot.fraction, isNull);
           sample(operation, 900, 1000, stage: 'Hashing');
-          expect(operation.snapshot.fraction, isNull);
-          sample(operation, 1000, 1000, stage: 'Hashing');
+          expect(operation.snapshot.fraction, .9);
+          sample(operation, 1000, 1000, stage: 'Hashing', outcome: 'succeeded');
           operation.stage('Comparing');
           expect(operation.snapshot.fraction, isNull);
         });
@@ -144,7 +160,7 @@ void main() {
         });
         first.complete();
         await Future<void>.delayed(Duration.zero);
-        expect(parent.snapshot.fraction, isNull);
+        expect(parent.snapshot.fraction, .1);
         expect(parent.snapshot.successful, isFalse);
         second.complete();
         await pending;
@@ -184,7 +200,7 @@ void main() {
         });
         expect(result, {'preserved': 42});
         expect(operation.snapshot.outcome, ScanOutcome.partial);
-        expect(operation.snapshot.fraction, isNull);
+        expect(operation.snapshot.fraction, 1);
       },
     );
     test('cancellation ignores late completion and stale callbacks', () async {
@@ -404,14 +420,16 @@ void main() {
         await tester.pumpWidget(const SizedBox.shrink());
       },
     );
-    testWidgets('only whole-operation success authorizes 360 degrees', (
+    testWidgets('a stage can reach 360 without a parent checkmark', (
       tester,
     ) async {
       await tester.pumpWidget(host(progress: .75));
       await tester.pump(const Duration(milliseconds: 250));
       await tester.pumpWidget(host(progress: 1));
       await tester.pump(const Duration(milliseconds: 250));
-      expect(drawing(tester), paints..arc(sweepAngle: math.pi * 1.5));
+      expect(drawing(tester), paints..arc(sweepAngle: math.pi * 2));
+      expect(find.byKey(const Key('scan_folder_icon')), findsOneWidget);
+      expect(find.byKey(const Key('scan_complete_icon')), findsNothing);
       await tester.pumpWidget(host(progress: 1, succeeded: true));
       await tester.pump(const Duration(milliseconds: 250));
       expect(drawing(tester), paints..arc(sweepAngle: math.pi * 2));

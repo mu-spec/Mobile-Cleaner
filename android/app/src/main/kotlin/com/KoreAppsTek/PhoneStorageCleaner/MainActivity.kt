@@ -97,7 +97,7 @@ class MainActivity : FlutterActivity() {
             PerceptualHashBridge.CHANNEL,
         ).setMethodCallHandler(perceptual)
 
-        val quality = PhotoQualityBridge(applicationContext)
+        val quality = PhotoQualityBridge(applicationContext, progress)
         photoQualityBridge = quality
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,

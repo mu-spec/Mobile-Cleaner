@@ -28,11 +28,15 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
     with WidgetsBindingObserver {
   AppSort _sort = AppSort.defaultSort;
   String? _pendingUninstall;
+  int _authorizationCheck = 0;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _recheckUsageAccess();
+    });
   }
 
   @override
@@ -45,7 +49,25 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _confirmPendingUninstall();
+      _recheckUsageAccess();
     }
+  }
+
+  Future<void> _recheckUsageAccess() async {
+    final check = ++_authorizationCheck;
+    final previous = ref.read(installedAppsProvider).asData?.value;
+    ref.read(appsUsageAuthorizationProvider.notifier).state = false;
+    bool allowed;
+    try {
+      allowed = await _repository.hasUsageAccess();
+    } catch (_) {
+      allowed = false;
+    }
+    if (!mounted || check != _authorizationCheck) return;
+    if (previous != null && previous.hasUsageAccess != allowed) {
+      refreshInstalledApps(ref);
+    }
+    ref.read(appsUsageAuthorizationProvider.notifier).state = allowed;
   }
 
   InstalledAppsRepository get _repository =>
@@ -113,11 +135,29 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
   void _showDetails(InstalledApp app) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => AppDetailsScreen(
-          app: app,
-          onOpen: () => _open(app),
-          onSettings: () => _openSettings(app),
-          onUninstall: () => _uninstall(app),
+        builder: (_) => Consumer(
+          builder: (context, detailRef, _) {
+            final snapshot = detailRef
+                .watch(installedAppsProvider)
+                .asData
+                ?.value;
+            final authorized =
+                detailRef.watch(appsUsageAuthorizationProvider) != false;
+            final current = snapshot?.apps
+                .where((item) => item.packageName == app.packageName)
+                .firstOrNull;
+            return AppDetailsScreen(
+              app:
+                  authorized &&
+                      snapshot?.hasUsageAccess == true &&
+                      current != null
+                  ? current
+                  : app.withoutSizeDetails(),
+              onOpen: () => _open(app),
+              onSettings: () => _openSettings(app),
+              onUninstall: () => _uninstall(app),
+            );
+          },
         ),
       ),
     );
@@ -146,7 +186,9 @@ class _AppsScreenState extends ConsumerState<AppsScreen>
       ),
       body: SafeArea(
         child: inventory.when(
-          loading: () => FilesScanningView(scanProgress: ref.watch(scanProgressProvider('apps')).value),
+          loading: () => FilesScanningView(
+            scanProgress: ref.watch(scanProgressProvider('apps')).value,
+          ),
           error: (Object error, StackTrace stackTrace) => FilesErrorView(
             error: error,
             onRetry: () => refreshInstalledApps(ref),
@@ -319,7 +361,7 @@ class _AppRow extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        ByteFormatter.format(app.bestKnownBytes),
+                        '${ByteFormatter.format(app.bestKnownBytes)} · ${app.hasDetailedSize ? 'Total' : 'APK only'}',
                         key: Key('app_size_${app.packageName}'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -397,8 +439,11 @@ class _TotalCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            inventory.hasUsageAccess
-                ? 'Space used by apps'
+            inventory.apps.isNotEmpty &&
+                    inventory.apps.every((app) => app.hasDetailedSize)
+                ? 'Space used by listed apps'
+                : inventory.apps.any((app) => app.hasDetailedSize)
+                ? 'Known size, some data unavailable'
                 : 'App size, excluding data',
             key: const Key('apps_total_label'),
             style: theme.textTheme.bodySmall?.copyWith(
@@ -438,8 +483,8 @@ class _TotalCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Android only lets this app see apps with a launcher icon, '
-                  'so this list is shorter than system settings.',
+                  'This feature lists visible apps with a launcher icon, excluding '
+                  'system apps by default. It is not a complete app inventory.',
                   key: const Key('apps_visibility_note'),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,

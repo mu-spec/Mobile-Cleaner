@@ -63,7 +63,7 @@ class FileHashBridge(private val context: Context, private val progressBridge: S
             executor.execute {
                 try {
                 progress.check()
-                progress.update("Hashing files", 0, capped.size, "files checked", true)
+                progress.update("Hashing files (current batch)", 0, capped.size, "files checked", true)
                 val hashes = mutableMapOf<String, String>()
                 var processed = 0
                 for (raw in capped) {
@@ -81,7 +81,7 @@ class FileHashBridge(private val context: Context, private val progressBridge: S
                         hashes[raw] = hash
                     } else progress.incomplete()
                     processed++
-                    progress.update("Hashing files", processed, capped.size, "files checked")
+                    progress.update("Hashing files (current batch)", processed, capped.size, "files checked")
                 }
                 progress.check()
                 progress.finish()

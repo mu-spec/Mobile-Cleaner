@@ -1,7 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/apps/data/installed_apps_repository.dart';
 import 'package:phone_storage_cleaner/features/apps/domain/app_inventory.dart';
+
+/// Null: rely on the native read-time check. False: hide cached details while
+/// a foreground special-access check is pending or has denied access.
+final appsUsageAuthorizationProvider = StateProvider<bool?>((ref) => null);
 
 /// One read of the installed-app list.
 ///
@@ -20,6 +25,7 @@ final appInventoryProvider =
       ref,
       (AppSort, AppFilter) options,
     ) async {
+      final authorization = ref.watch(appsUsageAuthorizationProvider);
       return observeScan(ref, 'apps', () async {
         final InstalledAppsSnapshot snapshot = await scanDependency(
           ref,
@@ -28,10 +34,14 @@ final appInventoryProvider =
         );
 
         return AppInventory.from(
-          snapshot.apps,
+          authorization == false ||
+                  !snapshot.hasUsageAccess ||
+                  !snapshot.sizeDetailSupported
+              ? snapshot.apps.map((app) => app.withoutSizeDetails())
+              : snapshot.apps,
           sort: options.$1,
           filter: options.$2,
-          hasUsageAccess: snapshot.hasUsageAccess,
+          hasUsageAccess: authorization != false && snapshot.hasUsageAccess,
           sizeDetailSupported: snapshot.sizeDetailSupported,
         );
       }, numeric: true);

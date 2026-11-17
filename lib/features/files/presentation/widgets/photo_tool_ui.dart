@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
 import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
+import 'package:phone_storage_cleaner/core/ui/scan_stage_presentation.dart';
 import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:phosphor_icons/phosphor_icons.dart';
 
@@ -520,35 +521,44 @@ class PhotoToolLoadingState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(30),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            CircularFileScanner(size: 92, scanId: scanProgress?.id,
-              progress: scanProgress?.fraction,
-              active: scanProgress == null || scanProgress!.outcome == ScanOutcome.running,
-              completed: scanProgress?.successful ?? false),
-            const SizedBox(height: 22),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 7),
-            Text(
-              scanProgress != null && scanProgress!.processed > 0
-                  ? '${scanProgress!.stage} · ${scanProgress!.processed}${scanProgress!.total == null ? '' : ' / ${scanProgress!.total}'} ${scanProgress!.unit}'
-                  : description,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.4,
+    return ScanStagePresentation(
+      // This is a loading view, not a completion transition. In particular,
+      // never replay a cached provider's terminal checkmark during refresh.
+      snapshot: scanProgress?.outcome == ScanOutcome.running
+          ? scanProgress
+          : null,
+      builder: (context, shown) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              CircularFileScanner(
+                size: 92,
+                scanId: shown?.id,
+                stageId: shown?.displayStage?.id,
+                progress: shown?.stageFraction,
+                active: shown == null || shown.outcome == ScanOutcome.running,
+                completed: shown?.successful ?? false,
               ),
-            ),
-          ],
+              const SizedBox(height: 22),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 7),
+              Text(
+                shown?.stageDescription ?? description,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  height: 1.4,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

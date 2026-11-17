@@ -239,7 +239,7 @@ class _AppSizeDetails extends StatelessWidget {
             valueKey: Key('app_details_app_bytes_${app.packageName}'),
           ),
           _SizeLine(
-            label: 'Data',
+            label: 'Data (includes cache)',
             value: app.dataBytes == null
                 ? 'Not available'
                 : ByteFormatter.format(app.dataBytes!),

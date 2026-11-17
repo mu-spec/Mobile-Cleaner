@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/data/photo_quality_repository.dart';
 import 'package:phone_storage_cleaner/features/files/domain/best_photo_scorer.dart';
 import 'package:phone_storage_cleaner/features/files/domain/photo_quality.dart';
@@ -15,18 +16,22 @@ final photoQualityProvider =
       ref,
       SimilarityStrength strength,
     ) async {
-      final SimilarPhotoScanResult result = await ref.watch(
-        similarPhotosProvider(strength).future,
-      );
-      if (result.isEmpty) {
-        return const <String, PhotoQuality>{};
-      }
+      return observeScan(ref, 'photoQuality', () async {
+        final SimilarPhotoScanResult result = await scanDependency(
+          ref,
+          'similar',
+          ref.watch(similarPhotosProvider(strength).future),
+        );
+        if (result.isEmpty) {
+          return const <String, PhotoQuality>{};
+        }
 
-      final List<ScannedFile> grouped = <ScannedFile>[
-        for (final SimilarPhotoGroup group in result.groups) ...group.files,
-      ];
+        final List<ScannedFile> grouped = <ScannedFile>[
+          for (final SimilarPhotoGroup group in result.groups) ...group.files,
+        ];
 
-      return ref.watch(photoQualityRepositoryProvider).analyzePhotos(grouped);
+        return ref.watch(photoQualityRepositoryProvider).analyzePhotos(grouped);
+      });
     });
 
 /// A recommendation per group, keyed by [SimilarPhotoGroup.key].

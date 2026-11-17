@@ -9,7 +9,6 @@ import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.CancellationException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 
 /** Engine-local progress transport. Work never waits for a Dart acknowledgement. */
 class ScanProgressBridge(messenger: BinaryMessenger) : MethodChannel.MethodCallHandler {
@@ -52,8 +51,13 @@ class NativeScanProgress(
     private val clock: () -> Long = { SystemClock.elapsedRealtime() },
 ) {
     private val cancelled = AtomicBoolean(false)
+    private val finished = AtomicBoolean(false)
     private val posted = AtomicBoolean(false)
-    private val latest = AtomicReference<Map<String, Any?>?>()
+    private val pending = LinkedHashMap<Int, Map<String, Any?>>()
+    private val deliveryLock = Any()
+    private var stageIndex = 0
+    private var sequence = 0L
+    private var lastEvent: Map<String, Any?>? = null
     private var lastSent = 0L
     private var partial = false
     var numeric = false
@@ -66,30 +70,51 @@ class NativeScanProgress(
     fun incomplete() { partial = true }
 
     fun update(label: String, done: Int, count: Int? = null, units: String = "rows checked", force: Boolean = false) {
+        if (finished.get()) return
+        val changed = label != stage || done < processed ||
+            (total != null && count != null && total != count)
+        if (changed) {
+            // Keep the actual last counts at a boundary, even if the normal
+            // sampling interval suppressed them. No scan work waits for UI.
+            if (lastEvent != null) emit(if (total != null && processed == total) "stageComplete" else "running", true)
+            stageIndex++
+        }
         stage = label; processed = done; total = count; unit = units
-        emit("running", force)
+        emit("running", force || changed)
     }
     private fun emit(outcome: String, force: Boolean) {
         if (id == null) return
         val now = clock()
         if (!force && now - lastSent < 80L) return
         lastSent = now
-        latest.set(mapOf("requestId" to id, "stage" to stage,
+        val event = mapOf("requestId" to id, "stageIndex" to stageIndex,
+            "sequence" to ++sequence, "stage" to stage,
             "processed" to processed, "total" to total,
-            "numeric" to numeric, "unit" to unit, "outcome" to outcome))
-        // At most one queued platform-thread runnable per request. Coalesce
-        // intermediate updates; terminal messages replace any pending sample.
-        if (posted.compareAndSet(false, true)) post {
-            posted.set(false)
-            val payload = latest.getAndSet(null)
-            if (payload != null) send(payload)
+            "numeric" to numeric, "unit" to unit, "outcome" to outcome)
+        lastEvent = event
+        synchronized(deliveryLock) {
+            // Coalesce within each stage, not across stage boundaries. Bounded
+            // backlog skips very fast undisplayed stages instead of flashing.
+            pending[stageIndex] = event
+            while (pending.size > 16) pending.remove(pending.keys.first())
+            if (posted.compareAndSet(false, true)) post {
+                val batch = synchronized(deliveryLock) {
+                    val values = pending.values.toList()
+                    pending.clear()
+                    posted.set(false)
+                    values
+                }
+                batch.forEach(send)
+            }
         }
     }
     private var outcome = "running"
     fun wrap(payload: Any): Any = if (id == null) payload else mapOf(
         "scanPayload" to payload, "scanOutcome" to outcome,
+        "scanStage" to lastEvent,
     )
     fun finish(outcome: String = "succeeded") {
+        if (!finished.compareAndSet(false, true)) return
         this.outcome = if (cancelled.get()) "cancelled" else if (partial && outcome == "succeeded") "partial" else outcome
         emit(if (cancelled.get()) "cancelled" else if (partial && outcome == "succeeded") "partial" else outcome, true)
         release()

@@ -30,7 +30,7 @@ class InstalledApp {
   /// Code size reported by `StorageStatsManager`, when Usage Access is on.
   final int? appBytes;
 
-  /// User data size, when Usage Access is on.
+  /// User data including cache, as reported by Android StorageStats.
   final int? dataBytes;
 
   /// Cache size, when Usage Access is on.
@@ -57,7 +57,7 @@ class InstalledApp {
   /// Launcher icon as PNG bytes, or null when it could not be rasterised.
   final Uint8List? icon;
 
-  /// True when Android gave a full app + data + cache breakdown.
+  /// True when Android gave code and data totals (cache is a data subset).
   ///
   /// When false the only honest figure is [apkBytes], and the UI must label it
   /// as the app size rather than the total footprint.
@@ -72,7 +72,8 @@ class InstalledApp {
     if (!hasDetailedSize) {
       return null;
     }
-    return appBytes! + dataBytes! + (cacheBytes ?? 0);
+    // Android's dataBytes already includes cacheBytes. Do not add it twice.
+    return appBytes! + dataBytes!;
   }
 
   /// The best size figure available: the full footprint, else the APK.
@@ -80,6 +81,20 @@ class InstalledApp {
   /// Used for sorting, so a device without Usage Access still gets a sensible
   /// biggest-first ordering rather than an arbitrary one.
   int get bestKnownBytes => totalBytes ?? apkBytes;
+
+  /// Retains only PackageManager/APK metadata after special access is lost.
+  InstalledApp withoutSizeDetails() => InstalledApp(
+    packageName: packageName,
+    name: name,
+    apkBytes: apkBytes,
+    isSystemApp: isSystemApp,
+    canOpen: canOpen,
+    versionName: versionName,
+    versionCode: versionCode,
+    installedAt: installedAt,
+    updatedAt: updatedAt,
+    icon: icon,
+  );
 
   /// Parses one platform row, returning null when unusable.
   static InstalledApp? fromPlatformMap(Map<Object?, Object?> map) {

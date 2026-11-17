@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
 import 'package:phone_storage_cleaner/features/files/domain/photo_quality.dart';
 import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
@@ -15,9 +16,7 @@ abstract interface class PhotoQualityRepository {
 }
 
 final Provider<PhotoQualityRepository> photoQualityRepositoryProvider =
-    Provider<PhotoQualityRepository>(
-      (ref) => PlatformPhotoQualityRepository(),
-    );
+    Provider<PhotoQualityRepository>((ref) => PlatformPhotoQualityRepository());
 
 class PlatformPhotoQualityRepository implements PhotoQualityRepository {
   PlatformPhotoQualityRepository({MethodChannel? channel})
@@ -72,8 +71,9 @@ class PlatformPhotoQualityRepository implements PhotoQualityRepository {
           : start + maxUrisPerCall;
 
       try {
-        final Map<Object?, Object?>? payload = await _channel
-            .invokeMapMethod<Object?, Object?>(
+        final Map<Object?, Object?>? payload =
+            await NativeScanRequest.invokeMap(
+              _channel,
               'analyzePhotos',
               <String, Object>{'uris': missing.sublist(start, end)},
             );

@@ -85,7 +85,7 @@ class PerceptualHashBridge(private val context: Context, private val progressBri
             executor.execute {
                 try {
                 progress.check()
-                progress.update("Fingerprinting photos", 0, capped.size, "files checked", true)
+                progress.update("Fingerprinting photos (current batch)", 0, capped.size, "files checked", true)
                 val hashes = mutableMapOf<String, String>()
                 var processed = 0
                 for (raw in capped) {
@@ -103,7 +103,7 @@ class PerceptualHashBridge(private val context: Context, private val progressBri
                         hashes[raw] = hash
                     } else progress.incomplete()
                     processed++
-                    progress.update("Fingerprinting photos", processed, capped.size, "files checked")
+                    progress.update("Fingerprinting photos (current batch)", processed, capped.size, "files checked")
                 }
                 progress.check()
                 progress.finish()

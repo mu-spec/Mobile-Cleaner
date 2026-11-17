@@ -5,6 +5,38 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum ScanOutcome { running, succeeded, failed, cancelled, partial }
 
+/// A measured stage is not an estimate of the parent operation's percentage.
+class ScanStage {
+  const ScanStage({
+    required this.id,
+    required this.name,
+    this.processed = 0,
+    this.total,
+    this.unit = 'items checked',
+    this.outcome = ScanOutcome.running,
+  });
+  final String id;
+  final String name;
+  final int processed;
+  final int? total;
+  final String unit;
+  final ScanOutcome outcome;
+  double? get fraction => total == null
+      ? null
+      : total! > 0
+      ? processed / total!
+      : outcome == ScanOutcome.succeeded
+      ? 1
+      : null;
+  bool get complete =>
+      fraction == 1 &&
+      (outcome == ScanOutcome.running || outcome == ScanOutcome.succeeded);
+  bool get terminal => outcome != ScanOutcome.running;
+  String get description =>
+      'Stage: $name · $processed${total == null ? '' : ' / $total'} $unit'
+      '${complete ? ' · stage complete' : ''}';
+}
+
 /// Counts describe a stage, not an invented percentage of a composite scan.
 class ScanSnapshot {
   const ScanSnapshot({
@@ -15,6 +47,7 @@ class ScanSnapshot {
     this.fraction,
     this.outcome = ScanOutcome.running,
     this.unit = 'items checked',
+    this.displayStage,
   });
   final String id;
   final String stage;
@@ -23,7 +56,11 @@ class ScanSnapshot {
   final double? fraction;
   final ScanOutcome outcome;
   final String unit;
+  final ScanStage? displayStage;
   bool get successful => outcome == ScanOutcome.succeeded;
+  double? get stageFraction =>
+      displayStage == null ? fraction : displayStage!.fraction;
+  String? get stageDescription => displayStage?.description;
 }
 
 final scanProgressRegistryProvider = Provider<ScanProgressRegistry>((ref) {
@@ -111,6 +148,8 @@ class ScanOperation {
   static final Object _zoneKey = Object();
   static ScanOperation? get current => Zone.current[_zoneKey] as ScanOperation?;
   final String id;
+  // Legacy call-site hint only. Fractions now always belong to displayStage,
+  // never to a weighted or aggregated whole-operation estimate.
   final bool numeric;
   late ScanSnapshot snapshot;
   final StreamController<ScanSnapshot> _updates =
@@ -121,8 +160,16 @@ class ScanOperation {
   final Set<String> _attached = {};
   bool _closed = false;
   bool _incomplete = false;
-  double? _confirmed;
-  String? _numericSource;
+  // Insertion order is the explicit deterministic branch priority. Stay on the
+  // earliest active source, even if another branch delivers more events.
+  final Map<String, ScanStage?> _sources = {};
+  final Set<String> _finishedSources = {};
+  final Map<String, int> _sequences = {};
+  final Map<String, int> _ordinals = {};
+  final Map<String, ScanStage> _nativeStages = {};
+  String? _selectedSource;
+  ScanStage? _displayStage;
+  int _localStage = 0;
 
   Future<T> run<T>(Future<T> Function() action) async {
     final parent = current;
@@ -141,6 +188,7 @@ class ScanOperation {
 
   void _attach(ScanOperation child) {
     if (_closed || identical(child, this) || !_attached.add(child.id)) return;
+    _sources[child.id] = null;
     void receive(ScanSnapshot event) {
       if (_closed) return;
       if (event.outcome == ScanOutcome.failed ||
@@ -153,17 +201,40 @@ class ScanOperation {
         event.processed,
         event.total,
         event.unit,
-        fraction: event.fraction,
         source: child.id,
+        displayStage: event.displayStage,
+        sourceFinished: event.outcome != ScanOutcome.running,
       );
     }
 
-    receive(child.snapshot);
+    if (child.snapshot.outcome == ScanOutcome.running) {
+      receive(child.snapshot);
+    } else {
+      // Cached terminal results propagate status, never replay a completed arc.
+      _finishedSources.add(child.id);
+      if (!child.snapshot.successful) _incomplete = true;
+    }
     _children.add(child.updates.listen(receive));
   }
 
   void stage(String label) {
-    if (!_closed) _accept(label, 0, null, 'items checked');
+    if (_closed) return;
+    final source = '$id:local-${++_localStage}';
+    // Local analysis follows awaited discovery/hashing. It is deliberately
+    // unmeasured unless the algorithm supplies real completed/total counts.
+    for (final key in _sources.keys.where(
+      (key) => key.startsWith('$id:local-'),
+    )) {
+      _finishedSources.add(key);
+    }
+    _accept(
+      label,
+      0,
+      null,
+      'items checked',
+      source: source,
+      displayStage: ScanStage(id: source, name: label),
+    );
   }
 
   void markIncomplete() {
@@ -171,31 +242,113 @@ class ScanOperation {
   }
 
   void acceptNative(Map<Object?, Object?> event, String requestId) {
-    if (_closed || event['requestId'] != requestId) return;
+    if (_closed ||
+        event['requestId'] != requestId ||
+        !_requests.any((request) => request.id == requestId) ||
+        _finishedSources.contains(requestId))
+      return;
     final processed = event['processed'];
     final total = event['total'];
     if (processed is! int ||
         processed < 0 ||
-        (total != null && (total is! int || total < processed))) {
+        (total != null && (total is! int || total < processed)))
       return;
-    }
-    if (event['outcome'] == 'failed' ||
-        event['outcome'] == 'partial' ||
-        event['outcome'] == 'cancelled') {
+    final sequence = event['sequence'];
+    final ordinal = event['stageIndex'];
+    if (sequence is! int ||
+        sequence < 0 ||
+        sequence <= (_sequences[requestId] ?? -1))
+      return;
+    if (ordinal is! int ||
+        ordinal < 0 ||
+        ordinal < (_ordinals[requestId] ?? -1))
+      return;
+    final name = event['stage'] is String
+        ? event['stage']! as String
+        : 'Scanning';
+    final stageId = '$requestId:stage-$ordinal';
+    final previous = _nativeStages[requestId];
+    if (previous?.id == stageId &&
+        (processed < previous!.processed ||
+            previous.name != name ||
+            (previous.total != null && previous.total != total)))
+      return;
+    final outcome = switch (event['outcome']) {
+      'succeeded' || 'stageComplete' => ScanOutcome.succeeded,
+      'failed' => ScanOutcome.failed,
+      'cancelled' => ScanOutcome.cancelled,
+      'partial' => ScanOutcome.partial,
+      _ => ScanOutcome.running,
+    };
+    if (previous?.id == stageId && previous!.terminal) return;
+    _sequences[requestId] = sequence;
+    _ordinals[requestId] = ordinal;
+    if (outcome == ScanOutcome.failed ||
+        outcome == ScanOutcome.partial ||
+        outcome == ScanOutcome.cancelled)
       _incomplete = true;
-    }
-    final double? fraction =
-        event['numeric'] == true && total is int && total > 0
-        ? processed / total
-        : null;
-    _accept(
-      event['stage'] is String ? event['stage']! as String : 'Scanning',
-      processed,
-      total as int?,
-      event['unit'] is String ? event['unit']! as String : 'items checked',
-      fraction: fraction,
-      source: requestId,
+    final measured = ScanStage(
+      id: stageId,
+      name: name,
+      processed: processed,
+      total: total as int?,
+      unit: event['unit'] is String
+          ? event['unit']! as String
+          : 'items checked',
+      outcome: outcome,
     );
+    _nativeStages[requestId] = measured;
+    _accept(
+      name,
+      processed,
+      measured.total,
+      measured.unit,
+      source: requestId,
+      displayStage: measured,
+      sourceFinished:
+          outcome != ScanOutcome.running && event['outcome'] != 'stageComplete',
+    );
+  }
+
+  void _selectStage(String source, ScanStage? stage, bool finished) {
+    final wasSelected =
+        _selectedSource == source ||
+        (_selectedSource == null && _displayStage == null);
+    _sources.putIfAbsent(source, () => null);
+    _sources[source] =
+        stage ?? ScanStage(id: '$source:pending', name: 'Discovering');
+    if (finished) _finishedSources.add(source);
+    if (_selectedSource == null || _finishedSources.contains(_selectedSource)) {
+      final active = _sources.keys.where(
+        (key) => !_finishedSources.contains(key),
+      );
+      _selectedSource = active.isEmpty ? null : active.first;
+    }
+    if (_selectedSource != null) {
+      _displayStage = _sources[_selectedSource];
+    } else if (wasSelected || _displayStage?.id == stage?.id) {
+      _displayStage = stage;
+    }
+  }
+
+  void endRequest(String requestId) {
+    if (_closed) return;
+    final stage = _nativeStages[requestId];
+    _selectStage(requestId, stage, true);
+    _publish();
+  }
+
+  void _publish() {
+    snapshot = ScanSnapshot(
+      id: id,
+      stage: _displayStage?.name ?? 'Discovering',
+      processed: _displayStage?.processed ?? 0,
+      total: _displayStage?.total,
+      unit: _displayStage?.unit ?? 'items checked',
+      fraction: _displayStage?.fraction,
+      displayStage: _displayStage,
+    );
+    _updates.add(snapshot);
   }
 
   void _accept(
@@ -203,35 +356,28 @@ class ScanOperation {
     int processed,
     int? total,
     String unit, {
-    double? fraction,
     String? source,
+    ScanStage? displayStage,
+    bool sourceFinished = false,
   }) {
-    // Only explicitly single-worklist operations can use a stage fraction.
-    // Never average stages or let a completed child finish its parent.
-    if (numeric &&
-        fraction != null &&
-        fraction.isFinite &&
-        fraction >= 0 &&
-        fraction < 1) {
-      _numericSource ??= source;
-      if (_numericSource == source &&
-          (_confirmed == null || fraction > _confirmed!)) {
-        _confirmed = fraction;
-      }
-    }
+    if (source != null) _selectStage(source, displayStage, sourceFinished);
     snapshot = ScanSnapshot(
       id: id,
-      stage: stage,
-      processed: processed,
-      total: total,
-      unit: unit,
-      fraction: _confirmed,
+      displayStage: _displayStage,
+      stage: _displayStage?.name ?? stage,
+      processed: _displayStage?.processed ?? processed,
+      total: _displayStage == null ? total : _displayStage!.total,
+      unit: _displayStage?.unit ?? unit,
+      fraction: _displayStage?.fraction,
     );
     _updates.add(snapshot);
   }
 
   void _finish(ScanOutcome outcome) {
     _closed = true;
+    for (final request in _requests.toList()) {
+      request.close();
+    }
     snapshot = ScanSnapshot(
       id: id,
       stage: outcome == ScanOutcome.succeeded
@@ -240,7 +386,8 @@ class ScanOperation {
       processed: snapshot.processed,
       total: snapshot.total,
       unit: snapshot.unit,
-      fraction: outcome == ScanOutcome.succeeded ? 1 : _confirmed,
+      fraction: outcome == ScanOutcome.succeeded ? 1 : _displayStage?.fraction,
+      displayStage: _displayStage,
       outcome: outcome,
     );
     _updates.add(snapshot);
@@ -260,13 +407,17 @@ class ScanOperation {
   }
 
   NativeScanRequest request() {
-    final request = NativeScanRequest._(this);
     if (_closed) {
       throw PlatformException(
         code: 'SCAN_CANCELLED',
         message: 'Scan no longer owns this work.',
       );
     }
+    final request = NativeScanRequest._(this);
+    _sources[request.id] = ScanStage(
+      id: '${request.id}:pending',
+      name: 'Discovering',
+    );
     _requests.add(request);
     return request;
   }
@@ -301,9 +452,11 @@ class NativeScanRequest {
   }
 
   void close() {
+    if (_closed) return;
     _closed = true;
     _active.remove(id);
     operation._requests.remove(this);
+    operation.endRequest(id);
   }
 
   void cancel() {
@@ -330,6 +483,12 @@ class NativeScanRequest {
       if (payload == null) operation?.markIncomplete();
       if (payload != null && payload.containsKey('scanOutcome')) {
         if (payload['scanOutcome'] != 'succeeded') operation?.markIncomplete();
+        if (request != null && payload['scanStage'] is Map) {
+          operation?.acceptNative(
+            (payload['scanStage'] as Map).cast<Object?, Object?>(),
+            request.id,
+          );
+        }
         final result = payload['scanPayload'];
         if (result is! Map) {
           operation?.markIncomplete();

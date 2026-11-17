@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.util.concurrent.CancellationException
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
 
@@ -39,7 +40,7 @@ import java.util.concurrent.RejectedExecutionException
  * Any failure omits that photo rather than failing the batch: an unmeasured
  * photo simply gets no recommendation, which is safe.
  */
-class PhotoQualityBridge(private val context: Context) : MethodChannel.MethodCallHandler {
+class PhotoQualityBridge(private val context: Context, private val progressBridge: ScanProgressBridge) : MethodChannel.MethodCallHandler {
 
     companion object {
         const val CHANNEL = "com.KoreAppsTek.PhoneStorageCleaner/photo_quality"
@@ -63,9 +64,11 @@ class PhotoQualityBridge(private val context: Context) : MethodChannel.MethodCal
             return
         }
 
+        val progress = progressBridge.request(call)
         val uris = call.argument<List<String>>("uris").orEmpty()
         if (uris.isEmpty()) {
-            result.success(emptyMap<String, Map<String, Any>>())
+            progress.finish()
+            result.success(progress.wrap(emptyMap<String, Map<String, Any>>()))
             return
         }
 
@@ -73,23 +76,37 @@ class PhotoQualityBridge(private val context: Context) : MethodChannel.MethodCal
 
         try {
             executor.execute {
-                val measurements = mutableMapOf<String, Map<String, Any>>()
-                for (raw in capped) {
-                    val measured = try {
-                        analyze(raw)
-                    } catch (error: Throwable) {
-                        // OutOfMemoryError is conceivable on a hostile file.
-                        null
+                try {
+                    progress.check()
+                    progress.update("Measuring photo quality (current batch)", 0, capped.size, "photos checked", true)
+                    val measurements = mutableMapOf<String, Map<String, Any>>()
+                    var processed = 0
+                    for (raw in capped) {
+                        progress.check()
+                        val measured = try {
+                            analyze(raw)
+                        } catch (error: Throwable) {
+                            // OutOfMemoryError is conceivable on a hostile file.
+                            null
+                        }
+                        if (measured != null) {
+                            measurements[raw] = measured
+                        } else progress.incomplete()
+                        processed++
+                        progress.update("Measuring photo quality (current batch)", processed, capped.size, "photos checked")
                     }
-                    if (measured != null) {
-                        measurements[raw] = measured
-                    }
+                    progress.check()
+                    progress.finish()
+                    mainHandler.post { result.success(progress.wrap(measurements)) }
+                } catch (cancelled: CancellationException) {
+                    progress.finish("cancelled")
+                    mainHandler.post { result.error("SCAN_CANCELLED", "Photo measurement cancelled.", null) }
                 }
-                mainHandler.post { result.success(measurements) }
             }
         } catch (rejected: RejectedExecutionException) {
             // The activity is going away; answer rather than crash.
-            result.success(emptyMap<String, Map<String, Any>>())
+            progress.finish("cancelled")
+            result.success(progress.wrap(emptyMap<String, Map<String, Any>>()))
         }
     }
 

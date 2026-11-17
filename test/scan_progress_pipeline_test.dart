@@ -27,6 +27,8 @@ void main() {
       codec.encodeMethodCall(
         MethodCall('progress', {
           'requestId': request,
+          'stageIndex': 0,
+          'sequence': done,
           'stage': 'Reading images',
           'processed': done,
           'total': total,
@@ -80,7 +82,7 @@ void main() {
         expect(parent.snapshot.fraction, .5);
         await emit(id, 4, 4);
         expect(parent.snapshot.successful, isFalse);
-        expect(parent.snapshot.fraction, .5);
+        expect(parent.snapshot.fraction, 1);
         response.complete({
           'scanOutcome': partial ? 'partial' : 'succeeded',
           'scanPayload': {'files': <Object>[], 'durationMillis': 25},
@@ -88,7 +90,7 @@ void main() {
         final summary = await result;
         expect(summary.fileCount, 0);
         expect(parent.snapshot.successful, !partial);
-        expect(parent.snapshot.fraction, partial ? .5 : 1);
+        expect(parent.snapshot.fraction, 1);
         expect(permissions.requests, isEmpty);
         expect(
           permissions.statuses[PermissionKind.videos],
@@ -96,7 +98,7 @@ void main() {
         );
         // A queued message for the now-closed native request cannot mutate it.
         await emit(id, 0, 4);
-        expect(parent.snapshot.fraction, partial ? .5 : 1);
+        expect(parent.snapshot.fraction, 1);
       },
     );
   }

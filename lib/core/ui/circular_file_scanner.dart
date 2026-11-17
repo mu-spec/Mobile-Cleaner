@@ -8,10 +8,12 @@ import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_up
 ///
 /// Only pass a fraction supplied by the scanner, never an elapsed-time estimate.
 /// This widget has no timers, completion callbacks, or access to scan providers.
+/// A fraction of one completes the current stage's arc, not the parent scan.
 class CircularFileScanner extends StatefulWidget {
   const CircularFileScanner({
     this.progress,
     this.scanId,
+    this.stageId,
     this.active = true,
     this.completed = false,
     this.succeeded = false,
@@ -24,6 +26,9 @@ class CircularFileScanner extends StatefulWidget {
 
   /// Change for a genuinely new scan; updates within one scan never rewind.
   final Object? scanId;
+
+  /// Reset only for a genuinely different selected stage, not a count update.
+  final Object? stageId;
   final bool active;
   final bool completed;
 
@@ -73,7 +78,8 @@ class _CircularFileScannerState extends State<CircularFileScanner>
   @override
   void didUpdateWidget(CircularFileScanner oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.scanId != widget.scanId) {
+    if (oldWidget.scanId != widget.scanId ||
+        oldWidget.stageId != widget.stageId) {
       _confirmed = 0;
       _fill.value = 0;
     }
@@ -89,10 +95,8 @@ class _CircularFileScannerState extends State<CircularFileScanner>
 
   void _acceptProgress() {
     final next = widget.completed || widget.succeeded ? 1.0 : widget.progress;
-    // A child reaching its total is not authorization to finish the ring.
-    if (next != null &&
-        (next < 1 || widget.completed || widget.succeeded) &&
-        next > _confirmed) {
+    // A stage may fill its ring; only completed renders the parent checkmark.
+    if (next != null && next > _confirmed) {
       _confirmed = next;
     }
   }
@@ -140,7 +144,9 @@ class _CircularFileScannerState extends State<CircularFileScanner>
         : _confirmed;
     return Semantics(
       key: const Key('scan_progress_semantics'),
-      label: 'Scan progress',
+      label: widget.stageId == null
+          ? 'Scan progress'
+          : 'Current stage progress',
       value: widget.completed
           ? 'Scan complete'
           : progress != null

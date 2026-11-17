@@ -120,10 +120,16 @@ class InstalledAppsBridge(private val context: Context, private val progressBrid
                 }
                 progress.finish()
                 mainHandler.post {
+                    // Recheck immediately before delivery. A scan can outlive
+                    // a special-access revocation in system settings.
+                    val authorized = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && hasUsageAccess()
+                    val visibleApps = if (authorized) apps else apps.map { row ->
+                        row + mapOf("appBytes" to null, "dataBytes" to null, "cacheBytes" to null)
+                    }
                     result.success(
                         progress.wrap(mapOf(
-                            "apps" to apps,
-                            "hasUsageAccess" to hasUsageAccess(),
+                            "apps" to visibleApps,
+                            "hasUsageAccess" to authorized,
                             // Below API 26 there is no StorageStatsManager at
                             // all, so Usage Access would not help either.
                             "sizeDetailSupported" to
@@ -150,7 +156,7 @@ class InstalledAppsBridge(private val context: Context, private val progressBrid
         val packageManager = context.getPackageManager()
 
         // Only apps with a launcher entry. This is the `<queries>` contract:
-        // asking for anything broader would return nothing useful anyway.
+        // deliberately excludes non-launcher packages, even on older Android.
         val launcherIntent = Intent(Intent.ACTION_MAIN)
             .addCategory(Intent.CATEGORY_LAUNCHER)
         val resolved = packageManager.queryIntentActivities(launcherIntent, 0)
@@ -185,7 +191,7 @@ class InstalledAppsBridge(private val context: Context, private val progressBrid
             var dataBytes: Long? = null
             var cacheBytes: Long? = null
 
-            if (statsManager != null) {
+            if (statsManager != null && hasUsageAccess()) {
                 try {
                     val stats = statsManager.queryStatsForPackage(
                         StorageManager.UUID_DEFAULT,
