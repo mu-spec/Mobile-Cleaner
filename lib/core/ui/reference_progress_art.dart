@@ -16,8 +16,9 @@ abstract final class ReferenceProgressColors {
   static const white = Color(0xFFF4FBFC);
 }
 
-/// Shared reference geometry: disc radius .337, illuminated rim .355,
-/// progress radius .375 and translucent rings .405/.45 of the total diameter.
+/// Approved scan geometry: center .342, cyan lip .398, progress .405,
+/// pale rings .427/.444/.45 and halo .49 of the total diameter.
+/// Cleaning retains its separately approved smaller rim and .375 progress radius.
 /// Motion is decorative only; the orange arc never depends on [motion].
 class ReferenceProgressPainter extends CustomPainter {
   ReferenceProgressPainter({
@@ -39,6 +40,12 @@ class ReferenceProgressPainter extends CustomPainter {
     void disc(double radius, Paint paint) =>
         canvas.drawCircle(c, d * radius, paint);
     final paint = Paint();
+    if (!cleaning) {
+      disc(
+        .49,
+        Paint()..color = ReferenceProgressColors.halo.withValues(alpha: .65),
+      );
+    }
     disc(
       .49,
       paint
@@ -53,37 +60,50 @@ class ReferenceProgressPainter extends CustomPainter {
       paint..color = ReferenceProgressColors.halo.withValues(alpha: .65),
     );
     disc(
-      .411,
+      cleaning ? .411 : .444,
       paint..color = ReferenceProgressColors.ring.withValues(alpha: .58),
     );
     disc(
-      .386,
+      cleaning ? .386 : .427,
       paint
         ..color = Colors.white
-        ..shader = const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ReferenceProgressColors.ice,
-            ReferenceProgressColors.ring,
-            ReferenceProgressColors.halo,
-          ],
-        ).createShader(Rect.fromCircle(center: c, radius: d * .386)),
+        ..shader =
+            const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                ReferenceProgressColors.ice,
+                ReferenceProgressColors.ring,
+                ReferenceProgressColors.halo,
+              ],
+            ).createShader(
+              Rect.fromCircle(center: c, radius: d * (cleaning ? .386 : .427)),
+            ),
     );
     disc(
-      .366,
+      cleaning ? .366 : .398,
       paint
         ..color = Colors.white
-        ..shader = const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ReferenceProgressColors.ice,
-            ReferenceProgressColors.cyan,
-            ReferenceProgressColors.blue,
-            ReferenceProgressColors.ice,
-          ],
-        ).createShader(Rect.fromCircle(center: c, radius: d * .366)),
+        ..shader =
+            LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: cleaning
+                  ? const [
+                      ReferenceProgressColors.ice,
+                      ReferenceProgressColors.cyan,
+                      ReferenceProgressColors.blue,
+                      ReferenceProgressColors.ice,
+                    ]
+                  : const [
+                      ReferenceProgressColors.cyan,
+                      ReferenceProgressColors.blue,
+                      ReferenceProgressColors.royal,
+                      ReferenceProgressColors.blue,
+                    ],
+            ).createShader(
+              Rect.fromCircle(center: c, radius: d * (cleaning ? .366 : .398)),
+            ),
     );
     disc(
       .342,
@@ -103,32 +123,40 @@ class ReferenceProgressPainter extends CustomPainter {
     paint.shader = null;
     // The reference has a soft directional cyan lip, not a generic radar grid.
     canvas.drawArc(
-      Rect.fromCircle(center: c, radius: d * .35),
-      -math.pi,
-      math.pi * .65,
+      Rect.fromCircle(center: c, radius: d * (cleaning ? .35 : .365)),
+      cleaning ? -math.pi : math.pi * .7,
+      cleaning ? math.pi * .65 : math.pi * .95,
       false,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = d * .018
-        ..color = ReferenceProgressColors.cyan.withValues(alpha: .5)
+        ..strokeWidth = d * (cleaning ? .018 : .034)
+        ..color = ReferenceProgressColors.cyan.withValues(
+          alpha: cleaning ? .5 : .95,
+        )
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, d * .014),
     );
     if (!cleaning) {
-      for (final radius in [.205, .3]) {
+      for (final radius in [.155, .245, .32]) {
         disc(
           radius,
           Paint()
             ..style = PaintingStyle.stroke
-            ..strokeWidth = d * .003
-            ..color = ReferenceProgressColors.ice.withValues(
-              alpha: radius == .205 ? .15 : .045,
-            ),
+            ..strokeWidth = d * .0025
+            ..color = ReferenceProgressColors.ice.withValues(alpha: .16),
         );
       }
+      final grid = Paint()
+        ..strokeWidth = d * .002
+        ..color = ReferenceProgressColors.ice.withValues(alpha: .10);
+      canvas.drawLine(c - Offset(d * .32, 0), c + Offset(d * .32, 0), grid);
+      canvas.drawLine(c - Offset(0, d * .32), c + Offset(0, d * .32), grid);
     }
     // Exact measured bounds; a rounded cap would overpaint unconfirmed work.
     if (fill.value > 0) {
-      final rect = Rect.fromCircle(center: c, radius: d * .375);
+      final rect = Rect.fromCircle(
+        center: c,
+        radius: d * (cleaning ? .375 : .405),
+      );
       final sweep = math.pi * 2 * fill.value;
       final start = cleaning ? -math.pi / 6 : -math.pi / 2;
       canvas.drawArc(
@@ -138,7 +166,7 @@ class ReferenceProgressPainter extends CustomPainter {
         false,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = d * .046
+          ..strokeWidth = d * (cleaning ? .046 : .06)
           ..color = ReferenceProgressColors.orange.withValues(alpha: .3)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, d * .016),
       );
@@ -149,7 +177,7 @@ class ReferenceProgressPainter extends CustomPainter {
         false,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = d * .036
+          ..strokeWidth = d * (cleaning ? .036 : .05)
           ..strokeCap = StrokeCap.butt
           ..color = ReferenceProgressColors.orange,
       );
@@ -213,7 +241,7 @@ class ReferenceProgressPainter extends CustomPainter {
     } else {
       // One fine illuminated beam, with a luminous point at its origin.
       final angle = -math.pi / 4 + phase;
-      final end = c + Offset(math.cos(angle), math.sin(angle)) * d * .337;
+      final end = c + Offset(math.cos(angle), math.sin(angle)) * d * .377;
       canvas.drawLine(
         c,
         end,
@@ -226,27 +254,41 @@ class ReferenceProgressPainter extends CustomPainter {
         c,
         end,
         Paint()
-          ..strokeWidth = d * .008
+          ..strokeWidth = d * .005
           ..strokeCap = StrokeCap.round
           ..color = ReferenceProgressColors.white,
       );
       disc(
-        .035,
+        .05,
         Paint()
           ..color = ReferenceProgressColors.cyan
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, d * .024),
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, d * .018),
       );
-      disc(.012, Paint()..color = ReferenceProgressColors.white);
+      disc(
+        .035,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              ReferenceProgressColors.cyan,
+              ReferenceProgressColors.cyan.withValues(alpha: 0),
+            ],
+          ).createShader(Rect.fromCircle(center: c, radius: d * .035)),
+      );
+      disc(.014, Paint()..color = ReferenceProgressColors.white);
       for (final p in [
-        const Offset(-.14, -.14),
-        const Offset(.1, .24),
-        const Offset(0, .13),
+        const Offset(-.18, -.155),
+        const Offset(-.035, -.21),
+        const Offset(.225, -.165),
+        const Offset(.195, -.045),
+        const Offset(-.145, .15),
+        const Offset(-.205, .21),
+        const Offset(.13, .245),
       ]) {
         _spark(
           canvas,
           c + p * d,
           d * .012,
-          ReferenceProgressColors.ice.withValues(alpha: .35),
+          ReferenceProgressColors.ice.withValues(alpha: .55),
         );
       }
     }

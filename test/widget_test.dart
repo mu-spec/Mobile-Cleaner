@@ -18,7 +18,6 @@ import 'package:phone_storage_cleaner/features/files/domain/file_category.dart';
 import 'package:phone_storage_cleaner/features/files/domain/file_scan_result.dart';
 import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 import 'package:phone_storage_cleaner/features/files/presentation/screens/files_screen.dart';
-import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 import 'package:phone_storage_cleaner/features/permissions/data/permission_gateway.dart';
 import 'package:phone_storage_cleaner/features/permissions/domain/app_permission_status.dart';
 import 'package:phone_storage_cleaner/features/permissions/domain/permission_snapshot.dart';
@@ -569,7 +568,8 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
-    expect(find.text('Scanning your storage'), findsOneWidget);
+    expect(find.text('Smart Scan'), findsWidgets);
+    expect(find.text('Private, on-device scan'), findsNothing);
     expect(find.byKey(const Key('circular_file_scanner_paint')), findsWidgets);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
@@ -584,14 +584,13 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
-    expect(find.text('Scanning your photos'), findsOneWidget);
+    expect(find.text('Smart Scan'), findsWidgets);
     expect(find.byKey(const Key('circular_file_scanner_paint')), findsWidgets);
-    final Finder activePhotoScan = find.ancestor(
-      of: find.text('Scanning your photos'),
-      matching: find.byKey(const Key('scan_progress_screen')),
-    );
+    final Finder activePhotoScan = find
+        .byKey(const Key('scan_progress_screen'))
+        .last;
     final Scaffold photoScan = tester.widget<Scaffold>(activePhotoScan);
-    expect(photoScan.backgroundColor, HomeUpperStyle.background);
+    expect(photoScan.backgroundColor, const Color(0xFFF8FAFE));
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
     await tester.pump(const Duration(milliseconds: 500));
@@ -606,7 +605,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
-    expect(find.text('Scanning your files'), findsOneWidget);
+    expect(find.text('Smart Scan'), findsWidgets);
     expect(find.byKey(const Key('circular_file_scanner_paint')), findsWidgets);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));
@@ -622,7 +621,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byKey(const Key('scan_progress_screen')), findsWidgets);
-    expect(find.text('Analyzing your apps'), findsOneWidget);
+    expect(find.text('Smart Scan'), findsWidgets);
     expect(find.byKey(const Key('circular_file_scanner_paint')), findsWidgets);
     await tester.pump(const Duration(milliseconds: 2900));
     await tester.pump(const Duration(milliseconds: 700));

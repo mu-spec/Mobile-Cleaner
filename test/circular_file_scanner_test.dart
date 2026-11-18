@@ -186,7 +186,7 @@ void main() {
       const MaterialApp(home: Scaffold(body: FilesScanningView())),
     );
     expect(find.byType(CircularFileScanner), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.byKey(const Key('scan_stage_spinner')), findsOneWidget);
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(

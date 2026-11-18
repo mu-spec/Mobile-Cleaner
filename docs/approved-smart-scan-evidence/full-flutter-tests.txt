@@ -1,0 +1,883 @@
+Error: unable to find directory entry in pubspec.yaml: /home/user/Mobile-Cleaner/assets/icons/
+00:00 +0: loading /home/user/Mobile-Cleaner/test/videos_test.dart
+00:00 +0: /home/user/Mobile-Cleaner/test/videos_test.dart: DurationFormatter formats clip lengths without padding the hour away
+00:00 +1: /home/user/Mobile-Cleaner/test/videos_test.dart: DurationFormatter an unknown length is admitted, never shown as zero
+00:00 +2: /home/user/Mobile-Cleaner/test/videos_test.dart: DurationFormatter totals read as an amount of footage, not a timestamp
+00:00 +3: /home/user/Mobile-Cleaner/test/videos_test.dart: ScannedFile video metadata a duration is parsed from the platform row
+00:00 +4: /home/user/Mobile-Cleaner/test/videos_test.dart: ScannedFile video metadata zero and missing lengths both read as unknown, not 0:00
+00:00 +5: /home/user/Mobile-Cleaner/test/videos_test.dart: ScannedFile video metadata a video is recognised by MIME type even outside its category
+00:00 +6: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSort largest orders by size
+00:00 +7: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSort longest orders by playback length, not by size
+00:00 +8: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSort newest and oldest are exact reverses on distinct dates
+00:00 +9: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSort ties break on name, so the order never shuffles
+00:00 +10: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSort all four orderings are offered, largest by default
+00:00 +11: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSummary photos are excluded even when they are the biggest file
+00:00 +12: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSummary a video reported twice is counted once
+00:00 +13: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSummary total footage counts only known lengths, and says so
+00:00 +14: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSummary largest and longest can be different videos
+00:00 +15: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSummary longest is null when no length is known at all
+00:00 +16: /home/user/Mobile-Cleaner/test/videos_test.dart: VideoSummary an empty library is empty, not an error
+00:00 +17: /home/user/Mobile-Cleaner/test/videos_test.dart: Videos screen scans videos only
+00:00 +18: /home/user/Mobile-Cleaner/test/videos_test.dart: Videos screen shows thumbnail, name, duration, size, and date per row
+00:01 +19: /home/user/Mobile-Cleaner/test/videos_test.dart: Videos screen a video of unknown length shows the placeholder
+00:01 +20: /home/user/Mobile-Cleaner/test/videos_test.dart: Videos screen the headline reports space and footage
+00:01 +21: /home/user/Mobile-Cleaner/test/videos_test.dart: Videos screen all four sorts are offered and reorder the list
+00:01 +22: /home/user/Mobile-Cleaner/test/videos_test.dart: Videos screen re-sorting does not rescan the device
+00:01 +23: /home/user/Mobile-Cleaner/test/videos_test.dart: Videos screen re-sorting keeps the selection, since nothing left the list
+00:01 +24: /home/user/Mobile-Cleaner/test/videos_test.dart: Videos screen selecting reveals a working Delete action
+00:02 +25: /home/user/Mobile-Cleaner/test/videos_test.dart: Videos screen select all covers every video and nothing else
+00:02 +26: /home/user/Mobile-Cleaner/test/videos_test.dart: Videos screen an empty library says so
+00:02 +27: loading /home/user/Mobile-Cleaner/test/file_scanner_test.dart
+00:02 +27: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: ScannedFile model parses a platform row into every required field
+00:02 +28: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: ScannedFile model derives a name from the path and tolerates missing fields
+00:02 +29: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: ScannedFile model rejects rows without any identity
+00:02 +30: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: ScannedFile model unknown category keys fall back to other
+00:02 +31: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: FileScanResult aggregates counts, sizes, and ordering
+00:02 +32: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: MediaStoreFileScannerRepository maps the payload, de-duplicates rows, and keeps metadata
+00:02 +33: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: MediaStoreFileScannerRepository forwards request options to the channel
+00:02 +34: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: MediaStoreFileScannerRepository propagates scanner failures
+00:02 +35: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: ByteFormatter formats each unit
+00:02 +36: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: Files screen uses the requested folder, categories, files order
+00:03 +37: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: Files screen shows a premium icon tile for every category and tool
+00:03 +38: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: Files screen renders discovered categories and largest files
+00:04 +39: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: Files screen opens the category detail list
+00:04 +40: /home/user/Mobile-Cleaner/test/file_scanner_test.dart: Files screen shows the empty state when nothing is found
+00:04 +41: loading /home/user/Mobile-Cleaner/test/widget_test.dart
+00:05 +41: /home/user/Mobile-Cleaner/test/widget_test.dart: onboarding is first-launch only and can be replayed
+00:06 +42: /home/user/Mobile-Cleaner/test/widget_test.dart: denied permission is handled without a crash
+00:06 +43: /home/user/Mobile-Cleaner/test/widget_test.dart: granting deferred access starts a real premium scan
+00:07 +44: /home/user/Mobile-Cleaner/test/widget_test.dart: Home does not fabricate a recommendation before Smart Scan
+00:07 +45: /home/user/Mobile-Cleaner/test/widget_test.dart: scan stays indeterminate until the device scan finishes
+00:07 +46: /home/user/Mobile-Cleaner/test/widget_test.dart: home displays real storage values from the repository
+00:07 +47: /home/user/Mobile-Cleaner/test/widget_test.dart: Home back shows a dismissible exit confirmation
+00:08 +48: /home/user/Mobile-Cleaner/test/widget_test.dart: Smart Scan and Settings actions open their screens
+00:08 +49: /home/user/Mobile-Cleaner/test/widget_test.dart: every bottom tab opens without errors
+00:09 +50: loading /home/user/Mobile-Cleaner/test/cleanup_score_test.dart
+00:09 +50: /home/user/Mobile-Cleaner/test/cleanup_score_test.dart: CleanupScoreCalculator a genuinely clean completed scan scores 100 and Excellent
+00:09 +51: /home/user/Mobile-Cleaner/test/cleanup_score_test.dart: CleanupScoreCalculator meaningful real findings lower the score
+00:09 +52: /home/user/Mobile-Cleaner/test/cleanup_score_test.dart: CleanupScoreCalculator a larger opportunity produces an appropriately worse score
+00:09 +53: /home/user/Mobile-Cleaner/test/cleanup_score_test.dart: CleanupScoreCalculator the score is always clamped from 0 through 100
+00:09 +54: /home/user/Mobile-Cleaner/test/cleanup_score_test.dart: CleanupScoreCalculator the same snapshot always produces the same result
+00:09 +55: /home/user/Mobile-Cleaner/test/cleanup_score_test.dart: CleanupScoreCalculator recoverable opportunity bytes use the real file sizes
+00:09 +56: /home/user/Mobile-Cleaner/test/cleanup_score_test.dart: CleanupScoreCalculator an identifiable overlapping file is counted exactly once
+00:09 +57: /home/user/Mobile-Cleaner/test/cleanup_score_test.dart: CleanupScoreCalculator multiple categories create an accurate non-empty breakdown
+00:09 +58: /home/user/Mobile-Cleaner/test/cleanup_score_test.dart: CleanupScoreCalculator centralized score labels use the required thresholds
+00:09 +59: loading /home/user/Mobile-Cleaner/test/scan_progress_pipeline_test.dart
+00:10 +59: /home/user/Mobile-Cleaner/test/scan_progress_pipeline_test.dart: native → permission-aware repository → summary → parent, partial=false
+00:10 +60: /home/user/Mobile-Cleaner/test/scan_progress_pipeline_test.dart: native → permission-aware repository → summary → parent, partial=true
+00:10 +61: loading /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart
+00:10 +61: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: PhotoCleanupSummary lists the four tools in dashboard order
+00:10 +62: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: PhotoCleanupSummary duplicates report reclaimable space, not occupied space
+00:10 +63: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: PhotoCleanupSummary screenshots and large photos report their own totals
+00:10 +64: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: PhotoCleanupSummary Similar Photos now carries a real figure, marked as an estimate
+00:10 +65: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: PhotoCleanupSummary similar photos never inflate the headline total
+00:10 +66: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: PhotoCleanupSummary the headline counts an overlapping photo once
+00:10 +67: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: PhotoCleanupSummary findings are ranked by size, pending tools excluded
+00:10 +68: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: PhotoCleanupSummary a tidy library is empty but still lists every tool
+00:10 +69: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: Photo Cleanup dashboard shows the reference orange photo-review hero
+00:11 +70: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: Photo Cleanup dashboard lists all four tools with their figures
+00:11 +71: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: Photo Cleanup dashboard all four tools use distinct premium icon tiles
+00:11 +72: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: Photo Cleanup dashboard overlap is disclosed rather than hidden
+00:11 +73: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: Photo Cleanup dashboard every tool row is tappable
+00:12 +74: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: Photo Cleanup dashboard uses compact Review actions instead of a separate CTA
+00:12 +75: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: Photo Cleanup dashboard a tidy library keeps every review row and says so
+00:12 +76: /home/user/Mobile-Cleaner/test/photo_cleanup_dashboard_test.dart: Photo Cleanup dashboard the dashboard reuses the tool scans, never its own
+00:12 +77: loading /home/user/Mobile-Cleaner/test/scan_progress_lifecycle_test.dart
+00:12 +77: /home/user/Mobile-Cleaner/test/scan_progress_lifecycle_test.dart: fast scan retains the original 2800/650/420 ms timing gates
+00:13 +78: /home/user/Mobile-Cleaner/test/scan_progress_lifecycle_test.dart: scan error freezes animation and retry starts the same scan
+00:13 +79: /home/user/Mobile-Cleaner/test/scan_progress_lifecycle_test.dart: leaving a pending scan disposes its animation and never redirects
+00:13 +80: loading /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart
+00:14 +80: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: SelectionActionBar layout renders without layout errors at 320dp
+00:14 +81: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: SelectionActionBar layout renders without layout errors at 360dp
+00:15 +82: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: SelectionActionBar layout renders without layout errors at 392dp
+00:15 +83: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: SelectionActionBar layout renders without layout errors at 412dp
+00:15 +84: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: SelectionActionBar layout the Clean Now button is never given an infinite width
+00:15 +85: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: SelectionActionBar layout buttons keep a comfortable tap height
+00:15 +86: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: SelectionActionBar layout survives a long size label and a large font scale
+00:15 +87: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: SelectionActionBar layout Clear and Delete both fire
+00:15 +88: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: SelectionActionBar layout shows the count and size, and disables an undeletable set
+00:15 +89: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: Global FilledButton theme does not force an infinite minimum width
+00:15 +90: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: Global FilledButton theme a themed FilledButton lays out inside a Row
+00:15 +91: /home/user/Mobile-Cleaner/test/selection_action_bar_layout_test.dart: Global FilledButton theme a full-width button still spans its parent
+00:15 +92: loading /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart
+00:16 +92: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadAgeFilter offers exactly the four required thresholds
+00:16 +93: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadAgeFilter uses correct day bounds
+00:16 +94: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadAgeFilter matches on an inclusive bound
+00:16 +95: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadAgeFilter ignores clock time within a day
+00:16 +96: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadAgeFilter never treats a future date as old
+00:16 +97: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadAgeFilter excludes files with an unknown timestamp
+00:16 +98: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadsSummary filters and totals at each threshold
+00:16 +99: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadsSummary sorts oldest first
+00:16 +100: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadsSummary counts a file shared by two categories only once
+00:16 +101: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadsSummary reports the largest matching download
+00:16 +102: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: DownloadsSummary is empty when nothing is old enough
+00:16 +103: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: FileSelection starts empty
+00:16 +104: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: FileSelection toggles a file on and off
+00:16 +105: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: FileSelection totals the size of every selected file
+00:16 +106: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: FileSelection select all and deselect all
+00:16 +107: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: FileSelection containsAll is false for an empty list
+00:16 +108: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: FileSelection is keyed by URI, so a rebuilt instance stays selected
+00:16 +109: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: FileSelection retainWhereVisible drops files outside the new list
+00:16 +110: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: FileSelection clear removes everything
+00:16 +111: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen shows the four age chips, defaulting to 30+ days
+00:17 +112: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen scans only the Downloads category
+00:17 +113: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen lists stale downloads and hides recent ones
+00:17 +114: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen narrowing the threshold shrinks the list
+00:17 +115: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen changing a filter does not trigger another scan
+00:18 +116: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen selecting a row reveals the selection bar
+00:18 +117: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen selecting several rows totals their size
+00:18 +118: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen tapping a selected row deselects it
+00:18 +119: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen select all selects every visible row, then clears
+00:18 +120: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen the clear button empties the selection
+00:19 +121: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen the app bar reflects the selection count
+00:19 +122: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen narrowing the filter drops now-hidden selections
+00:19 +123: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen delete is enabled once something is selected
+00:19 +124: /home/user/Mobile-Cleaner/test/downloads_cleaner_test.dart: Downloads cleaner screen shows a reassuring empty state
+00:19 +125: loading /home/user/Mobile-Cleaner/test/permission_navigation_test.dart
+00:20 +125: /home/user/Mobile-Cleaner/test/permission_navigation_test.dart: grant in one tool is reused by the next, then video asks only when missing
+00:21 +126: /home/user/Mobile-Cleaner/test/permission_navigation_test.dart: Files access is reused for APK and Downloads without another page
+00:22 +127: /home/user/Mobile-Cleaner/test/permission_navigation_test.dart: scoped non-media tools never request unrelated photo/audio grants
+00:23 +128: /home/user/Mobile-Cleaner/test/permission_navigation_test.dart: permanent denial opens Settings; resume continues automatically
+00:23 +129: /home/user/Mobile-Cleaner/test/permission_navigation_test.dart: revocation while backgrounded guards the active feature on return
+00:23 +130: /home/user/Mobile-Cleaner/test/permission_navigation_test.dart: limited selected-photo access opens photo tools without another prompt
+00:24 +131: /home/user/Mobile-Cleaner/test/permission_navigation_test.dart: existing SAF grants suppress the repeated folder explanation
+00:24 +132: loading /home/user/Mobile-Cleaner/test/settings_test.dart
+00:24 +132: /home/user/Mobile-Cleaner/test/settings_test.dart: AppSettings encoding theme mode round-trips by name, not index
+00:24 +133: /home/user/Mobile-Cleaner/test/settings_test.dart: AppSettings encoding an unknown theme falls back to following the device
+00:24 +134: /home/user/Mobile-Cleaner/test/settings_test.dart: AppSettings encoding enum settings decode by name and fall back safely
+00:24 +135: /home/user/Mobile-Cleaner/test/settings_test.dart: AppSettings encoding copyWith changes one field and leaves the rest
+00:24 +136: /home/user/Mobile-Cleaner/test/settings_test.dart: AppSettings encoding theme labels read as the UI shows them
+00:24 +137: /home/user/Mobile-Cleaner/test/settings_test.dart: Persistence settings survive a real save and reload
+00:24 +138: /home/user/Mobile-Cleaner/test/settings_test.dart: Persistence a fresh install gets the defaults
+00:24 +139: /home/user/Mobile-Cleaner/test/settings_test.dart: Persistence one corrupt value does not reset the others
+00:24 +140: /home/user/Mobile-Cleaner/test/settings_test.dart: Persistence names are persisted, never enum indexes
+00:24 +141: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen shows every required item
+00:25 +142: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen theme choice is saved
+00:26 +143: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen the large-file threshold can be changed
+00:26 +144: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen screenshot age and download age can be changed
+00:26 +145: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen choosing the value already set writes nothing
+00:26 +146: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen stored settings are reflected on open
+00:27 +147: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen the defaults note explains tools can still override
+00:27 +148: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen privacy policy row launches the published URL externally
+00:27 +149: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen a failed launch shows the message and does not throw
+00:27 +150: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen a throwing launch is caught, not rethrown
+00:27 +151: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen there is exactly one privacy policy row
+00:27 +152: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen about opens and is honest about limits
+00:27 +153: /home/user/Mobile-Cleaner/test/settings_test.dart: Settings screen the app version is shown
+00:27 +154: loading /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart
+00:28 +154: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: InstalledApp parsing reads a well-formed platform row
+00:28 +155: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: InstalledApp parsing a row without a package name is dropped
+00:28 +156: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: InstalledApp parsing a missing label falls back to the package name
+00:28 +157: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: InstalledApp parsing total is null rather than partial when data is unknown
+00:28 +158: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: InstalledApp parsing the repository drops malformed rows and reads the flags
+00:28 +159: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: InstalledApp parsing a null payload is empty, not an error
+00:28 +160: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps access boundaries denied storage/media does not gate Apps or grant media
+00:28 +161: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps access boundaries unauthorized/unsupported payload drops stats: {hasUsageAccess: false, sizeDetailSupported: true}
+00:28 +162: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps access boundaries unauthorized/unsupported payload drops stats: {hasUsageAccess: true, sizeDetailSupported: false}
+00:28 +163: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps access boundaries unauthorized/unsupported payload drops stats: {}
+00:28 +164: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps access boundaries authorized payload counts cache only once
+00:28 +165: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps access boundaries a stats query failure is not labelled as full coverage
+00:29 +166: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps access boundaries permission denied masks even a repository returning cached stats
+00:29 +167: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps access boundaries resume hides open cached details while access check is pending, then refreshes on revoke/grant
+00:29 +168: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: AppInventory user apps are the default, system apps counted but hidden
+00:29 +169: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: AppInventory the All filter includes system apps
+00:29 +170: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: AppInventory largest sorts on the full footprint when it is known
+00:29 +171: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: AppInventory name and date orderings each differ
+00:29 +172: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: AppInventory apps with no date sort last, never first
+00:29 +173: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: AppInventory ties break stably, so the order never shuffles
+00:29 +174: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: AppInventory a duplicate package is listed once
+00:29 +175: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: AppInventory totals use the best figure known per app
+00:29 +176: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: AppInventory a usage-access prompt is only offered when it would help
+00:29 +177: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: AppInventory an uninstalled app can be dropped without a re-read
+00:29 +178: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps screen shows the compact reference list with no inline actions
+00:29 +179: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps screen tapping an app opens its complete real detail screen
+00:30 +180: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps screen detail screen offers Open, App Settings, and Uninstall
+00:30 +181: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps screen uninstall remains an Android handoff
+00:30 +182: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps screen a failed detail action is reported
+00:30 +183: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps screen system app detail disables impossible actions
+00:30 +184: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps screen partial Android figures stay honestly labelled
+00:30 +185: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps screen the list admits it is shorter than system settings
+00:30 +186: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps screen only the four reference sorts are shown and work in memory
+00:31 +187: /home/user/Mobile-Cleaner/test/apps_analyzer_test.dart: Apps screen an empty list explains itself
+00:31 +188: loading /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart
+00:31 +188: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Storage ring animation usedFraction is normalized
+00:31 +189: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Storage ring animation summary bar animates to the same real storage fraction
+00:32 +190: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Storage ring animation painter starts at zero and reaches usedFraction
+00:32 +191: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Storage ring animation painter repaints when the animated fraction changes
+00:32 +192: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Storage ring animation reduced motion paints the final fraction immediately
+00:32 +193: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Storage ring animation returning to Home restarts the finite animation
+00:32 +194: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Storage ring animation popping a pushed screen restarts the finite animation
+00:32 +195: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Smart Scan card redesign Smart Scan title and sparkle removed
+00:32 +196: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Smart Scan card redesign Scan Now button always visible
+00:32 +197: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Smart Scan card redesign loading keeps the empty recommendation slot occupied
+00:32 +198: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Smart Scan card redesign recommendation remains visible when present
+00:32 +199: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Smart Scan card redesign Scan Now triggers scan
+00:32 +200: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Smart Scan card redesign radar visual present
+00:32 +201: /home/user/Mobile-Cleaner/test/home_smart_scan_and_ring_test.dart: Smart Scan card redesign radar is static when reduced motion is requested
+00:32 +202: loading /home/user/Mobile-Cleaner/test/large_files_test.dart
+00:33 +202: /home/user/Mobile-Cleaner/test/large_files_test.dart: LargeFileFilter offers exactly the three required thresholds
+00:33 +203: /home/user/Mobile-Cleaner/test/large_files_test.dart: LargeFileFilter uses correct byte bounds
+00:33 +204: /home/user/Mobile-Cleaner/test/large_files_test.dart: LargeFileFilter matches on an inclusive bound
+00:33 +205: /home/user/Mobile-Cleaner/test/large_files_test.dart: LargeFileSummary filters and totals for each threshold
+00:33 +206: /home/user/Mobile-Cleaner/test/large_files_test.dart: LargeFileSummary sorts matches largest first
+00:33 +207: /home/user/Mobile-Cleaner/test/large_files_test.dart: LargeFileSummary counts a file shared by two categories only once
+00:33 +208: /home/user/Mobile-Cleaner/test/large_files_test.dart: LargeFileSummary is empty when nothing is big enough
+00:33 +209: /home/user/Mobile-Cleaner/test/large_files_test.dart: LargeFileSummary breaks the total down by category, biggest first
+00:33 +210: /home/user/Mobile-Cleaner/test/large_files_test.dart: Large Files screen shows the three filter chips, defaulting to 100 MB+
+00:34 +211: /home/user/Mobile-Cleaner/test/large_files_test.dart: Large Files screen displays the total space used
+00:34 +212: /home/user/Mobile-Cleaner/test/large_files_test.dart: Large Files screen lists matching files biggest first
+00:34 +213: /home/user/Mobile-Cleaner/test/large_files_test.dart: Large Files screen switching to 500 MB+ narrows the list and total
+00:34 +214: /home/user/Mobile-Cleaner/test/large_files_test.dart: Large Files screen switching to 1 GB+ keeps only the biggest file
+00:34 +215: /home/user/Mobile-Cleaner/test/large_files_test.dart: Large Files screen changing a filter does not trigger another device scan
+00:34 +216: /home/user/Mobile-Cleaner/test/large_files_test.dart: Large Files screen asks the scanner for the lowest threshold
+00:35 +217: /home/user/Mobile-Cleaner/test/large_files_test.dart: Large Files screen shows a reassuring empty state
+00:35 +218: /home/user/Mobile-Cleaner/test/large_files_test.dart: Large Files screen breaks the total down by category
+00:35 +219: loading /home/user/Mobile-Cleaner/test/circular_file_scanner_test.dart
+00:35 +219: /home/user/Mobile-Cleaner/test/circular_file_scanner_test.dart: unknown progress is activity, never an elapsed-time percentage
+00:36 +220: /home/user/Mobile-Cleaner/test/circular_file_scanner_test.dart: determinate progress changes only when supplied by the caller
+00:36 +221: /home/user/Mobile-Cleaner/test/circular_file_scanner_test.dart: completion stops motion and shows a static completion mark
+00:36 +222: /home/user/Mobile-Cleaner/test/circular_file_scanner_test.dart: inactive on failure or cancellation stops, retry restarts
+00:36 +223: /home/user/Mobile-Cleaner/test/circular_file_scanner_test.dart: offstage TickerMode and reduced motion do not keep ticking
+00:36 +224: /home/user/Mobile-Cleaner/test/circular_file_scanner_test.dart: backgrounding pauses motion, foregrounding resumes it
+00:36 +225: /home/user/Mobile-Cleaner/test/circular_file_scanner_test.dart: disposal during an active scan leaves no animation ticker
+00:36 +226: /home/user/Mobile-Cleaner/test/circular_file_scanner_test.dart: both themes and compact loading area paint without overflow
+00:36 +227: /home/user/Mobile-Cleaner/test/circular_file_scanner_test.dart: all shared file and photo loading states use the scanner
+00:36 +228: loading /home/user/Mobile-Cleaner/test/smart_scan_test.dart
+00:36 +228: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: SmartScanCategory covers exactly the three required checks
+00:36 +229: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: SmartScanResult groups each finding under the right check
+00:36 +230: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: SmartScanResult counts a file matched by several checks only once
+00:36 +231: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: SmartScanResult the headline is smaller than the summed group totals
+00:36 +232: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: SmartScanResult reports no overlap when checks find different files
+00:36 +233: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: SmartScanResult orders unique files largest first
+00:36 +234: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: SmartScanResult ranks non-empty groups by size
+00:36 +235: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: SmartScanResult is empty when nothing matches any check
+00:36 +236: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: SmartScanResult an absent group still resolves
+00:36 +237: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen does not fabricate a Cleanup Score without a full scan
+00:37 +238: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen renders the exact completed analysis without calculating another score
+00:37 +239: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen never labels newer findings with an older scan score
+00:37 +240: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen shows the Potentially Recoverable heading
+00:38 +241: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen uses Home orange for the recoverable total
+00:38 +242: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen lists each check with its label and size
+00:38 +243: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen offers Review Cleanup, opening the biggest check
+00:38 +244: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen Review Cleanup is absent from the clean state
+00:38 +245: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen shows a card for each of the three checks
+00:38 +246: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen reports the combined recoverable total
+00:38 +247: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen explains the overlap when one exists
+00:38 +248: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen runs one scan per underlying tool, not more
+00:38 +249: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen lists the biggest items across every check
+00:38 +250: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen shows a clean state when nothing is found
+00:38 +251: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen an empty check is shown but not tappable
+00:38 +252: /home/user/Mobile-Cleaner/test/smart_scan_test.dart: Smart Scan screen each check shows its own recoverable size
+00:38 +253: loading /home/user/Mobile-Cleaner/test/cleanup_history_test.dart
+00:39 +253: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: CleanupEntry storage round-trips through JSON
+00:39 +254: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: CleanupEntry storage no file names are ever stored
+00:39 +255: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: CleanupEntry storage a corrupt row is dropped, never defaulted
+00:39 +256: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: CleanupEntry storage groups by calendar day, ignoring the time
+00:39 +257: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: CleanupHistory orders newest first
+00:39 +258: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: CleanupHistory combines same-day cleanups into one line
+00:39 +259: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: CleanupHistory lifetime totals count every cleanup once
+00:39 +260: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: CleanupHistory bytes within a window exclude older days
+00:39 +261: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: CleanupHistory an empty history is not an error
+00:39 +262: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: Persistence decoding survives corrupt storage
+00:39 +263: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: Persistence a partly corrupt log keeps the readable rows
+00:39 +264: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: Persistence entries survive a real save and reload
+00:39 +265: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: Persistence a cleanup that removed nothing is not recorded
+00:39 +266: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: Persistence the log is capped so preferences cannot grow without bound
+00:39 +267: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: Persistence clearing removes everything
+00:39 +268: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: History screen lists days with date and space cleaned
+00:39 +269: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: History screen same-day cleanups report how many there were
+00:40 +270: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: History screen shows lifetime totals and the privacy note
+00:40 +271: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: History screen an empty log explains itself
+00:40 +272: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: History screen clearing asks first, and says files are untouched
+00:40 +273: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: History screen cancelling the clear keeps the history
+00:40 +274: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: Home history card summarises the lifetime total
+00:40 +275: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: Home history card shows an honest empty state before the first cleanup
+00:40 +276: /home/user/Mobile-Cleaner/test/cleanup_history_test.dart: Home history card shows an honest error state when history cannot load
+00:40 +277: loading /home/user/Mobile-Cleaner/test/home_recommendation_state_test.dart
+00:41 +277: /home/user/Mobile-Cleaner/test/home_recommendation_state_test.dart: no Smart Scan means no specific recommendation or analyzer work
+00:41 +278: /home/user/Mobile-Cleaner/test/home_recommendation_state_test.dart: completed Smart Scan publishes recommendations from real results
+00:41 +279: /home/user/Mobile-Cleaner/test/home_recommendation_state_test.dart: all applicable Smart Scan file analyzers contribute real findings
+00:41 +280: /home/user/Mobile-Cleaner/test/home_recommendation_state_test.dart: results and Home share the latest score and a later scan replaces it
+00:41 +281: /home/user/Mobile-Cleaner/test/home_recommendation_state_test.dart: multiple findings rank deterministically by space then safe tie-break
+00:41 +282: /home/user/Mobile-Cleaner/test/home_recommendation_state_test.dart: completed scan with no findings fabricates nothing
+00:41 +283: /home/user/Mobile-Cleaner/test/home_recommendation_state_test.dart: each recommendation routes to its existing review screen
+00:41 +284: /home/user/Mobile-Cleaner/test/home_recommendation_state_test.dart: successful-cleanup invalidation clears stale recommendation
+00:41 +285: /home/user/Mobile-Cleaner/test/home_recommendation_state_test.dart: new app session does not restore old scan recommendations
+00:41 +286: loading /home/user/Mobile-Cleaner/test/large_photos_test.dart
+00:42 +286: /home/user/Mobile-Cleaner/test/large_photos_test.dart: LargePhotoFilter offers exactly the three suggested thresholds
+00:42 +287: /home/user/Mobile-Cleaner/test/large_photos_test.dart: LargePhotoFilter uses correct byte bounds
+00:42 +288: /home/user/Mobile-Cleaner/test/large_photos_test.dart: LargePhotoFilter matches on an inclusive bound
+00:42 +289: /home/user/Mobile-Cleaner/test/large_photos_test.dart: LargePhotoSummary filters and totals at each threshold
+00:42 +290: /home/user/Mobile-Cleaner/test/large_photos_test.dart: LargePhotoSummary excludes videos even when they are far larger
+00:42 +291: /home/user/Mobile-Cleaner/test/large_photos_test.dart: LargePhotoSummary classifies by MIME type over category
+00:42 +292: /home/user/Mobile-Cleaner/test/large_photos_test.dart: LargePhotoSummary sorts largest first and reports the biggest photo
+00:42 +293: /home/user/Mobile-Cleaner/test/large_photos_test.dart: LargePhotoSummary counts a photo reported twice only once
+00:42 +294: /home/user/Mobile-Cleaner/test/large_photos_test.dart: LargePhotoSummary reports the average size
+00:42 +295: /home/user/Mobile-Cleaner/test/large_photos_test.dart: LargePhotoSummary is empty when nothing is large enough
+00:42 +296: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen scans only images, at the lowest threshold
+00:43 +297: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen shows the three threshold chips
+00:43 +298: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen displays the count and total size
+00:43 +299: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen lists photos largest first and hides videos
+00:43 +300: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen raising the threshold narrows the list and total
+00:43 +301: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen changing the threshold does not rescan
+00:43 +302: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen selecting reveals the action bar with count and size
+00:44 +303: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen select all covers every visible photo
+00:44 +304: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen raising the threshold drops now-hidden selections
+00:44 +305: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen delete is enabled once something is selected
+00:44 +306: /home/user/Mobile-Cleaner/test/large_photos_test.dart: Large Photos screen shows a reassuring empty state
+00:44 +307: loading /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart
+00:45 +307: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting a fresh scan has no fabricated denominator
+00:45 +308: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting processed-work counts drive fractions, never time
+00:45 +309: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting out of order and invalid counters cannot rewind or overshoot
+00:45 +310: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting 1000/1000 native rows cannot finish required Flutter analysis
+00:45 +311: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting unknown totals stay indeterminate; measured composite stages fill
+00:45 +312: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting a parent waits for all concurrent branches and final analysis
+00:45 +313: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting successfully empty scans complete without dividing by zero
+00:45 +314: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting failure after discovery never produces success
+00:45 +315: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting partial/unreadable results retain their payload, not a success ring
+00:45 +316: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting cancellation ignores late completion and stale callbacks
+00:45 +317: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting detaching a screen does not cancel provider-owned shared work
+00:45 +318: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting cached partial work cannot become a new consumer success
+00:45 +319: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Measured operation accounting registry generations cannot be overwritten by old progress
+00:45 +320: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Native channel contract terminal envelope preserves original data and partial status
+00:45 +321: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Native channel contract missing plugin cannot be converted into a success by a caller fallback
+00:45 +322: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Native channel contract only its owner can cancel a native request
+00:45 +323: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Native channel contract provider invalidation cooperatively cancels its native work
+00:45 +324: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Real clockwise geometry zero and unknown totals never draw a measured orange arc
+00:45 +325: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Real clockwise geometry 12 oclock clockwise orange sweep stays fixed while radar rotates
+00:45 +326: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Real clockwise geometry smooth interpolation never exceeds the last confirmed fraction
+00:45 +327: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: Real clockwise geometry a stage can reach 360 without a parent checkmark
+00:45 +328: /home/user/Mobile-Cleaner/test/real_scan_progress_test.dart: release version and Android Flutter wiring remain correct
+00:45 +329: loading /home/user/Mobile-Cleaner/test/cleanup_share_test.dart
+00:46 +329: /home/user/Mobile-Cleaner/test/cleanup_share_test.dart: opens the native chooser with the cleanup summary
+00:46 +330: /home/user/Mobile-Cleaner/test/cleanup_share_test.dart: falls back safely when Android sharing is unavailable
+00:46 +331: /home/user/Mobile-Cleaner/test/cleanup_share_test.dart: does not open a chooser for an empty summary
+00:46 +332: loading /home/user/Mobile-Cleaner/test/storage_access_test.dart
+00:46 +332: /home/user/Mobile-Cleaner/test/storage_access_test.dart: GrantedFolder parsing reads uri and label from the platform payload
+00:46 +333: /home/user/Mobile-Cleaner/test/storage_access_test.dart: GrantedFolder parsing skips malformed rows and defaults a missing label
+00:46 +334: /home/user/Mobile-Cleaner/test/storage_access_test.dart: GrantedFolder parsing handles a null payload
+00:46 +335: /home/user/Mobile-Cleaner/test/storage_access_test.dart: GrantedFolder parsing folders are equal by uri
+00:46 +336: /home/user/Mobile-Cleaner/test/storage_access_test.dart: PlatformStorageAccessRepository requests folder access with the initial directory
+00:46 +337: /home/user/Mobile-Cleaner/test/storage_access_test.dart: PlatformStorageAccessRepository a denied grant resolves to an empty list, not an error
+00:46 +338: /home/user/Mobile-Cleaner/test/storage_access_test.dart: PlatformStorageAccessRepository isAccessRequired defaults to false when unavailable
+00:46 +339: /home/user/Mobile-Cleaner/test/storage_access_test.dart: PlatformStorageAccessRepository releaseFolder passes the uri through
+00:46 +340: /home/user/Mobile-Cleaner/test/storage_access_test.dart: needsFolderAccess flows through the scan is true when the platform reports hidden non-media files
+00:46 +341: /home/user/Mobile-Cleaner/test/storage_access_test.dart: needsFolderAccess flows through the scan defaults to false when the platform omits it
+00:46 +342: /home/user/Mobile-Cleaner/test/storage_access_test.dart: needsFolderAccess flows through the scan fromFiles defaults the flag to false
+00:46 +343: loading /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart
+00:47 +343: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: hash repository preserves terminal stage and never replays cache progress
+00:47 +344: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: fingerprint repository preserves terminal stage and never replays cache progress
+00:47 +345: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: quality repository preserves terminal stage and never replays cache progress
+00:47 +346: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: measured stages reach one, reset on identity, never complete parent
+00:47 +347: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: old sequence, generation, decreasing work and changed denominators rejected
+00:47 +348: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: unregistered and malformed native events cannot create a stage
+00:47 +349: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: unknown stage keeps real counts, zero total never divides by zero
+00:47 +350: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: registration priority beats callback arrival order and stays sticky
+00:47 +351: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: concurrent children cannot combine one label with another fraction
+00:47 +352: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: a full stage with partial never authorizes parent success
+00:47 +353: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: a full stage with failed never authorizes parent success
+00:47 +354: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: a full stage with cancelled never authorizes parent success
+00:47 +355: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: cached successful/partial children propagate status, not stage replay
+00:47 +356: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: stage identity resets arc; full stage is not a checkmark
+00:47 +357: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: fast transitions coalesce label, counts and ring atomically
+00:47 +358: /home/user/Mobile-Cleaner/test/stage_scan_progress_test.dart: loading view labels zero, unknown and stage-complete honestly
+00:47 +359: loading /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart
+00:48 +359: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: Sort options exposes the five required orders
+00:48 +360: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: Sort options each comparator orders files correctly
+00:48 +361: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: Sort options ties fall back to name for a stable order
+00:48 +362: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: DateFormatter formats absolute dates
+00:48 +363: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: DateFormatter formats relative dates
+00:48 +364: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: ScannedFile.supportsThumbnail is true for images and videos only
+00:48 +365: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: File rows show icon, name, size, and date
+00:49 +366: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: File rows metadata stays responsive on a narrow large-text screen
+00:49 +367: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: File rows render a real thumbnail for images
+00:49 +368: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: File rows fall back to an icon when no thumbnail exists
+00:49 +369: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: File rows open a details sheet on tap
+00:49 +370: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: Sorting the list every sort chip is shown and defaults to largest
+00:49 +371: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: Sorting the list tapping the Smallest chip reorders the list
+00:49 +372: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: Sorting the list tapping the Newest chip reorders the list
+00:50 +373: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: Sorting the list tapping the Oldest chip reorders the list
+00:50 +374: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: Sorting the list tapping the Name chip reorders the list
+00:50 +375: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: Sorting the list the app bar menu offers the same five orders
+00:50 +376: /home/user/Mobile-Cleaner/test/file_viewer_sorting_test.dart: Sorting the list sorting survives searching
+00:51 +377: loading /home/user/Mobile-Cleaner/test/final_qa_test.dart
+00:51 +377: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Fresh install every stored preference falls back to a safe default
+00:51 +378: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Fresh install an empty device produces empty results, not errors
+00:51 +379: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Fresh install regressions (device-reported) a truly empty preference store shows onboarding
+00:51 +380: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Fresh install regressions (device-reported) a restored backup is what made onboarding disappear
+00:51 +381: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Permission denial a denial is classified and offers the settings route
+00:51 +382: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Permission denial a revoked permission mid-session does not crash deletion
+00:51 +383: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Storage over 90% full a nearly full device reports a sane percentage
+00:51 +384: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Storage over 90% full a completely full device does not divide by zero or exceed 100
+00:51 +385: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Storage over 90% full free space larger than total is clamped, never negative
+00:51 +386: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Storage over 90% full the indicator announces the percentage to a screen reader
+00:51 +387: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Thousands of photos a five thousand file library aggregates correctly
+00:51 +388: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Thousands of photos duplicate detection on a large library stays leader-based
+00:51 +389: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Thousands of photos a long list builds lazily, not all at once
+00:52 +390: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Deletion only confirmed deletions count toward freed space
+00:52 +391: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Deletion cancelling reports nothing removed and no failures
+00:52 +392: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Deletion a cleanup is recorded with the confirmed figures only
+00:52 +393: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Dark mode uses deliberate navy layers and vivid accessible accents
+00:52 +394: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Dark mode both themes build with matching structure
+00:52 +395: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Dark mode the infinite-width button regression stays fixed in both
+00:52 +396: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Dark mode a screen renders in dark mode without throwing
+00:52 +397: /home/user/Mobile-Cleaner/test/final_qa_test.dart: App restart settings and history both survive a simulated restart
+00:52 +398: /home/user/Mobile-Cleaner/test/final_qa_test.dart: App restart scan results are deliberately not persisted
+00:52 +399: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Offline use byte formatting needs no locale service or network
+00:52 +400: /home/user/Mobile-Cleaner/test/final_qa_test.dart: Offline use every feature path is local: no HTTP client is constructed
+00:52 +401: loading /home/user/Mobile-Cleaner/test/legacy_write_permission_test.dart
+00:52 +401: /home/user/Mobile-Cleaner/test/legacy_write_permission_test.dart: API 28 legacy write permission granted: the legacy delete proceeds and reports freed space
+00:52 +402: /home/user/Mobile-Cleaner/test/legacy_write_permission_test.dart: API 28 legacy write permission denied: nothing is deleted and access-denied is reported
+00:52 +403: /home/user/Mobile-Cleaner/test/legacy_write_permission_test.dart: API 28 legacy write permission denied: every item in the batch is kept and reported
+00:52 +404: /home/user/Mobile-Cleaner/test/legacy_write_permission_test.dart: API 28 legacy write permission granted: a partly blocked batch still reports each half
+00:52 +405: /home/user/Mobile-Cleaner/test/legacy_write_permission_test.dart: API 28 legacy write permission a permission denial is distinguishable from a cancelled dialog
+00:52 +406: loading /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart
+00:53 +406: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: ApkSummary keeps only real installers
+00:53 +407: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: ApkSummary finds installers regardless of category
+00:53 +408: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: ApkSummary detects an installer by MIME type alone
+00:53 +409: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: ApkSummary totals the space installers occupy
+00:53 +410: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: ApkSummary counts a package reported twice only once
+00:53 +411: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: ApkSummary applies each sort order
+00:53 +412: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: ApkSummary reports the largest installer
+00:53 +413: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: ApkSummary is empty when no installers exist
+00:53 +414: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen scans everywhere an installer can appear
+00:54 +415: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen shows each installer name, size, and date
+00:54 +416: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen excludes files that only look like installers
+00:54 +417: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen displays the combined installer size
+00:54 +418: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen lists largest first by default
+00:54 +419: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen sorting reorders without rescanning
+00:54 +420: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen selecting a row reveals the selection bar
+00:54 +421: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen selecting several installers totals their size
+00:54 +422: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen tapping a selected row deselects it
+00:55 +423: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen select all then clear all
+00:55 +424: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen the app bar reflects the selection count
+00:55 +425: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen the clear button empties the selection
+00:55 +426: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen delete is enabled once something is selected
+00:55 +427: /home/user/Mobile-Cleaner/test/apk_cleaner_test.dart: APK cleaner screen shows a reassuring empty state
+00:55 +428: loading /home/user/Mobile-Cleaner/test/performance_test.dart
+00:56 +428: /home/user/Mobile-Cleaner/test/performance_test.dart: Large libraries are not silently truncated hashing 900 files reaches the native side in full
+00:56 +429: /home/user/Mobile-Cleaner/test/performance_test.dart: Large libraries are not silently truncated no batch exceeds the native cap
+00:56 +430: /home/user/Mobile-Cleaner/test/performance_test.dart: Large libraries are not silently truncated perceptual hashing chunks too
+00:56 +431: /home/user/Mobile-Cleaner/test/performance_test.dart: Large libraries are not silently truncated photo quality chunks too
+00:56 +432: /home/user/Mobile-Cleaner/test/performance_test.dart: Large libraries are not silently truncated a mid-way failure keeps what earlier batches produced
+00:56 +433: /home/user/Mobile-Cleaner/test/performance_test.dart: Caching avoids repeat work a second hash request does no platform work
+00:56 +434: /home/user/Mobile-Cleaner/test/performance_test.dart: Caching avoids repeat work only uncached files are re-requested
+00:56 +435: /home/user/Mobile-Cleaner/test/performance_test.dart: Thumbnail memory is bounded the cache never exceeds its entry cap
+00:56 +436: /home/user/Mobile-Cleaner/test/performance_test.dart: Thumbnail memory is bounded the cache never exceeds its byte cap
+00:56 +437: /home/user/Mobile-Cleaner/test/performance_test.dart: Thumbnail memory is bounded a repeat request is served from cache
+00:56 +438: /home/user/Mobile-Cleaner/test/performance_test.dart: Thumbnail memory is bounded simultaneous requests for one file share a single decode
+00:56 +439: /home/user/Mobile-Cleaner/test/performance_test.dart: Thumbnail memory is bounded a file with no thumbnail costs no platform call
+00:56 +440: /home/user/Mobile-Cleaner/test/performance_test.dart: Thumbnail memory is bounded a failed thumbnail is remembered, not retried forever
+00:56 +441: loading /home/user/Mobile-Cleaner/test/error_handling_test.dart
+00:56 +441: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Failure classification permission denied is recognised and is not retryable
+00:56 +442: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Failure classification missing files, delete failures and cancellation are distinct
+00:56 +443: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Failure classification storage problems are recognised in both forms
+00:56 +444: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Failure classification a missing native side is unsupported, not a crash
+00:56 +445: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Failure classification an unrecognised error is still showable, never swallowed
+00:56 +446: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Failure classification classification never throws, whatever it is handed
+00:56 +447: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Failure classification an AppFailure passes through unchanged
+00:56 +448: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Failure classification the platform code is kept for diagnosis
+00:56 +449: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Repositories degrade instead of crashing storage reports unavailable when the channel is missing
+00:57 +450: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Repositories degrade instead of crashing storage rejects nonsense values rather than showing them
+00:57 +451: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Repositories degrade instead of crashing the scanner reports unavailable rather than an empty library
+00:57 +452: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Repositories degrade instead of crashing a failed delete reports every file, and throws nothing
+00:57 +453: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Repositories degrade instead of crashing deleting with no delete channel fails safely
+00:57 +454: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Repositories degrade instead of crashing deleting nothing is a no-op, not an error
+00:57 +455: /home/user/Mobile-Cleaner/test/error_handling_test.dart: DeleteResult states cancellation is not the same as failure
+00:57 +456: /home/user/Mobile-Cleaner/test/error_handling_test.dart: DeleteResult states a partial delete is reported honestly
+00:57 +457: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Error screen a permission problem offers settings, not a retry
+00:57 +458: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Error screen storage unavailable says so specifically
+00:57 +459: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Error screen an unsupported feature offers no action at all
+00:57 +460: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Error screen the technical detail is shown for a bug report
+00:57 +461: /home/user/Mobile-Cleaner/test/error_handling_test.dart: Error screen every failure kind renders without throwing
+00:57 +462: loading /home/user/Mobile-Cleaner/test/delete_backend_test.dart
+00:58 +462: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: Deletable routing MediaStore, SAF and direct paths are all deletable
+00:58 +463: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: Deletable routing an unknown scheme is not offered for deletion
+00:58 +464: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository a MediaStore URI deletes and reports the freed size
+00:58 +465: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository a SAF document URI deletes through the same call
+00:58 +466: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository a direct file path deletes
+00:58 +467: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository every supported type can be sent in one batch
+00:58 +468: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository denied access keeps the file and reports the reason
+00:58 +469: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository a cancelled system confirmation deletes nothing
+00:58 +470: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository cancelling still reports what went before the prompt
+00:58 +471: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository a partly denied batch reports both halves
+00:58 +472: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository a URI reported both deleted and failed counts as failed
+00:58 +473: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository a platform error fails every file rather than claiming success
+00:58 +474: /home/user/Mobile-Cleaner/test/delete_backend_test.dart: PlatformDeleteRepository an empty selection never reaches the platform
+00:58 +475: loading /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart
+00:58 +475: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: percentage is strictly below, never inside radar; counts occur once
+00:59 +476: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: selected stage, not parent fraction, supplies all counts and fills
+00:59 +477: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: zero denominator remains unknown until an actual empty-stage completion
+00:59 +478: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: separately approved broom capture remains byte-identical
+00:59 +479: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: count-up is bounded by confirmed work and all three fills are identical each frame
+00:59 +480: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: unknown totals hide number and measured fill but keep actual counter
+00:59 +481: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: stage 100% is not parent completion and next identity resets every fill
+00:59 +482: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: new scan resets, unknown stage hides previous measured result
+00:59 +483: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: actual path is optional, never a hard-coded example
+00:59 +484: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: responsive radar fits 320.0 x 568.0 without horizontal overflow
+00:59 +485: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: responsive radar fits 360.0 x 640.0 without horizontal overflow
+00:59 +486: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: responsive radar fits 512.0 x 768.0 without horizontal overflow
+00:59 +487: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: responsive radar fits 800.0 x 1280.0 without horizontal overflow
+00:59 +488: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: responsive radar fits 640.0 x 360.0 without horizontal overflow
+00:59 +489: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: enlarged text uses vertical scroll, not a clipped radar or horizontal overflow
+00:59 +490: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: background, reduced motion, cancellation and disposal stop all decorative tickers
+01:00 +491: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: photo loading integration preserves its module labels with larger radar
+01:00 +492: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: all nine approved radar color constants remain exact
+01:00 +493: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: actual Smart Scan route fits Size(320.0, 568.0) including app bar and stage card
+01:00 +494: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: actual Smart Scan route fits Size(800.0, 1280.0) including app bar and stage card
+01:00 +495: /home/user/Mobile-Cleaner/test/approved_smart_scan_ui_test.dart: capture actual Smart Scan screen at reference viewport from measured repository progress
+01:00 +496: loading /home/user/Mobile-Cleaner/test/duplicates_test.dart
+01:00 +496: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 1: candidate grouping by size only sizes shared by two or more files become candidates
+01:01 +497: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 1: candidate grouping by size files below the floor are never candidates
+01:01 +498: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 1: candidate grouping by size a unique size is never hashed
+01:01 +499: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 1: candidate grouping by size a file reported twice is not its own duplicate
+01:01 +500: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 2: hash confirms exact duplicates same size but different content does not group
+01:01 +501: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 2: hash confirms exact duplicates identical content groups together
+01:01 +502: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 2: hash confirms exact duplicates reclaimable space keeps one copy of each set
+01:01 +503: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 2: hash confirms exact duplicates groups are ordered by biggest saving
+01:01 +504: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 2: hash confirms exact duplicates an unhashable file is dropped, never assumed identical
+01:01 +505: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 2: hash confirms exact duplicates no hashes at all yields no duplicates
+01:01 +506: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Stage 2: hash confirms exact duplicates reports how much work was done
+01:01 +507: /home/user/Mobile-Cleaner/test/duplicates_test.dart: DuplicateGroup safety the oldest copy is kept and never listed as removable
+01:01 +508: /home/user/Mobile-Cleaner/test/duplicates_test.dart: DuplicateGroup safety one copy is always excluded from the removable set
+01:01 +509: /home/user/Mobile-Cleaner/test/duplicates_test.dart: DuplicateGroup safety totals distinguish occupied from reclaimable space
+01:01 +510: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Duplicates screen hashes only the size-matched candidates
+01:01 +511: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Duplicates screen shows the recoverable total and counts
+01:01 +512: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Duplicates screen the kept copy is shown and cannot be selected
+01:01 +513: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Duplicates screen select copies never selects the kept file
+01:02 +514: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Duplicates screen selecting a copy reveals the action bar
+01:02 +515: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Duplicates screen shows an empty state when nothing matches
+01:02 +516: /home/user/Mobile-Cleaner/test/duplicates_test.dart: Duplicates screen same size but different content shows no duplicates
+01:02 +517: /home/user/Mobile-Cleaner/test/duplicates_test.dart: PlatformFileHashRepository.parseHashes keeps well-formed entries
+01:02 +518: /home/user/Mobile-Cleaner/test/duplicates_test.dart: PlatformFileHashRepository.parseHashes drops malformed rows and a null payload
+01:02 +519: loading /home/user/Mobile-Cleaner/test/permission_manager_test.dart
+01:02 +519: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 24 reuses legacy read but respects scoped non-media access
+01:02 +520: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 25 reuses legacy read but respects scoped non-media access
+01:02 +521: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 26 reuses legacy read but respects scoped non-media access
+01:02 +522: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 27 reuses legacy read but respects scoped non-media access
+01:02 +523: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 28 reuses legacy read but respects scoped non-media access
+01:02 +524: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 29 reuses legacy read but respects scoped non-media access
+01:02 +525: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 30 reuses legacy read but respects scoped non-media access
+01:02 +526: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 31 reuses legacy read but respects scoped non-media access
+01:02 +527: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 32 reuses legacy read but respects scoped non-media access
+01:02 +528: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 33 keeps each media grant separate
+01:03 +529: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 34 keeps each media grant separate
+01:03 +530: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 35 keeps each media grant separate
+01:03 +531: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy API 36 keeps each media grant separate
+01:03 +532: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy selected visual media is sufficient for its tools, not full storage
+01:03 +533: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy a folder grant is never a photo or unrestricted media grant
+01:03 +534: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy all feature routes share a central policy, including direct links
+01:03 +535: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Android capability policy permission continuation rejects external and looping destinations
+01:03 +536: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Central manager a photo grant is reused by every other photo tool without a request
+01:03 +537: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Central manager a sufficient partial result does not request optional media types
+01:03 +538: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Central manager a video feature never borrows a photo grant
+01:03 +539: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Central manager denial is stable; reads/navigation never launch another prompt
+01:03 +540: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Central manager blocked and restricted grants cannot trigger a runtime dialog
+01:03 +541: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Central manager concurrent reads and requests are coalesced, not duplicated
+01:03 +542: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Central manager Settings/foreground rechecks actual grants, including revocation
+01:03 +543: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Central manager a restarted manager rechecks Android, never a persistent granted flag
+01:03 +544: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Central manager SAF grants are shared and can be revoked independently of media
+01:03 +545: /home/user/Mobile-Cleaner/test/permission_manager_test.dart: Central manager an OS read failure is not accepted as an earlier cached grant
+01:03 +546: loading /home/user/Mobile-Cleaner/test/recommendations_test.dart
+01:03 +546: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Screenshot rule: > 20 older than 90 days fires above the threshold
+01:03 +547: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Screenshot rule: > 20 older than 90 days exactly 20 does not fire, 21 does
+01:03 +548: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Duplicate rule: > 500 MB fires above the threshold and names the sets
+01:03 +549: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Duplicate rule: > 500 MB exactly 500 MB does not fire
+01:03 +550: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Duplicate rule: > 500 MB one set is described in the singular
+01:03 +551: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Large video rule: one video > 1 GB a single oversized video is enough to fire
+01:03 +552: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Large video rule: one video > 1 GB other large videos are mentioned when present
+01:03 +553: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Large video rule: one video > 1 GB a video just under 1 GB does not fire
+01:03 +554: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Large video rule: one video > 1 GB no videos at all is not an error
+01:03 +555: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Engine behaviour a tidy device yields no advice rather than filler
+01:03 +556: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Engine behaviour every rule can fire at once, biggest saving first
+01:03 +557: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Engine behaviour ordering is stable across repeated evaluation
+01:03 +558: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Engine behaviour the result cannot be mutated by a caller
+01:03 +559: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Engine behaviour thresholds match the phase spec exactly
+01:03 +560: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Recommendations card shows advice derived from a real scan
+01:04 +561: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Recommendations card tapping a recommendation reports its kind, nothing more
+01:04 +562: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Recommendations card a large video is picked up from the video scan
+01:04 +563: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Recommendations card a tidy device says so instead of inventing advice
+01:04 +564: /home/user/Mobile-Cleaner/test/recommendations_test.dart: Recommendations card an empty device renders without error
+01:04 +565: loading /home/user/Mobile-Cleaner/test/home_screen_test.dart
+01:04 +565: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Compact header shows the app identity without an in-header action
+01:05 +566: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Storage is the top of the hierarchy used and available are both shown clearly
+01:05 +567: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Storage is the top of the hierarchy the total is labelled Internal storage
+01:05 +568: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Storage is the top of the hierarchy the percentage ring is still shown
+01:05 +569: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Storage is the top of the hierarchy the card is titled Storage Overview
+01:06 +570: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Storage is the top of the hierarchy storage appears before the scan action
+01:06 +571: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Smart Scan is the primary action the CTA is a compact Smart Scan action
+01:06 +572: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Smart Scan is the primary action the feature is still named on the screen
+01:06 +573: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Smart Scan is the primary action the hero card is the full width of the content area
+01:06 +574: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Smart Scan compact flow — Phase 1 Scan Now state shown when clean
+01:06 +575: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Smart Scan compact flow — Phase 1 real recommendation shown inside Smart Scan card
+01:06 +576: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Home hierarchy uses equal page padding and a consistent section rhythm
+01:06 +577: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Home hierarchy Storage, Smart Scan, Score, Quick Tools, Cleanup Summary appear in order
+01:06 +578: /home/user/Mobile-Cleaner/test/home_screen_test.dart: History card shows an honest empty state before the first cleanup
+01:06 +579: /home/user/Mobile-Cleaner/test/home_screen_test.dart: History card appears once there is real history
+01:06 +580: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Theme and layout robustness dark Home uses layered surfaces and restrained elevation
+01:06 +581: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Theme and layout robustness renders in dark mode without throwing
+01:06 +582: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Theme and layout robustness survives a large text scale
+01:07 +583: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Theme and layout robustness survives a small screen
+01:07 +584: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Theme and layout robustness a full device still reports sane figures
+01:07 +585: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Navigation destinations are unchanged recommendation routes still point at their existing screens
+01:07 +586: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Smart Scan compact flow — Phase 1 Scan Now state shown when no recommendation
+01:07 +587: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Smart Scan compact flow — Phase 1 recommendation state uses real recommendation data
+01:07 +588: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Smart Scan compact flow — Phase 1 tapping recommendation targets existing destination
+01:07 +589: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Old Recommended for you card removed separate recommendations section no longer on Home
+01:07 +590: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Quick Tools — Phase 2 all four tools appear in one row
+01:07 +591: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Quick Tools — Phase 2 each tool opens correct destination
+01:07 +592: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Quick Tools — Phase 2 layout survives large text scale
+01:07 +593: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Storage ring animation — Phase 3 ring animates while percentage shows the final value
+01:07 +594: /home/user/Mobile-Cleaner/test/home_screen_test.dart: Storage ring animation — Phase 3 reduced motion shows final state immediately
+01:07 +595: loading /home/user/Mobile-Cleaner/test/file_categories_test.dart
+01:08 +595: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Phase 7 categories exposes exactly the six required categories in order
+01:08 +596: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Phase 7 categories apks key round-trips through the platform contract
+01:08 +597: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Phase 7 categories recognises APKs by extension and by MIME type
+01:08 +598: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Phase 7 categories every category reports its own real files
+01:08 +599: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Phase 7 categories a downloaded APK counts in both lists but only once in totals
+01:08 +600: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Phase 7 categories sorting a category applies the requested order
+01:08 +601: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab shows a card for all six categories
+01:08 +602: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab opening Images shows its real files
+01:09 +603: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab opening Videos shows its real files
+01:09 +604: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab opening Audio shows its real files
+01:09 +605: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab opening Documents shows its real files
+01:10 +606: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab opening Downloads shows its real files
+01:10 +607: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab opening APKs shows its real files
+01:10 +608: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab an empty category explains itself instead of failing
+01:10 +609: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab category header reports count and size
+01:10 +610: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab sorting reorders the open category
+01:11 +611: /home/user/Mobile-Cleaner/test/file_categories_test.dart: Files tab search filters the open category
+01:11 +612: loading /home/user/Mobile-Cleaner/test/best_photo_test.dart
+01:12 +612: /home/user/Mobile-Cleaner/test/best_photo_test.dart: PhotoQuality parsing reads a well-formed platform row
+01:12 +613: /home/user/Mobile-Cleaner/test/best_photo_test.dart: PhotoQuality parsing a row without usable dimensions is dropped, never defaulted
+01:12 +614: /home/user/Mobile-Cleaner/test/best_photo_test.dart: PhotoQuality parsing a negative sharpness reads as unmeasured, not blurred
+01:12 +615: /home/user/Mobile-Cleaner/test/best_photo_test.dart: PhotoQuality parsing the repository drops malformed rows and keeps good ones
+01:12 +616: /home/user/Mobile-Cleaner/test/best_photo_test.dart: PhotoQuality parsing a null payload is empty, not an error
+01:12 +617: /home/user/Mobile-Cleaner/test/best_photo_test.dart: BestPhotoScorer suggests the sharpest when resolution is equal
+01:12 +618: /home/user/Mobile-Cleaner/test/best_photo_test.dart: BestPhotoScorer suggests the highest resolution when sharpness is equal
+01:12 +619: /home/user/Mobile-Cleaner/test/best_photo_test.dart: BestPhotoScorer names it best overall when both factors lead
+01:12 +620: /home/user/Mobile-Cleaner/test/best_photo_test.dart: BestPhotoScorer refuses to pick a winner when the shots are too close
+01:12 +621: /home/user/Mobile-Cleaner/test/best_photo_test.dart: BestPhotoScorer blur is judged relative to the group, never absolutely
+01:12 +622: /home/user/Mobile-Cleaner/test/best_photo_test.dart: BestPhotoScorer an unmeasured photo is omitted, not scored as blurred
+01:12 +623: /home/user/Mobile-Cleaner/test/best_photo_test.dart: BestPhotoScorer no measurements at all yields no opinion
+01:12 +624: /home/user/Mobile-Cleaner/test/best_photo_test.dart: BestPhotoScorer a single measured photo is not a comparison
+01:12 +625: /home/user/Mobile-Cleaner/test/best_photo_test.dart: BestPhotoScorer ties are broken stably, so a rebuild cannot change the advice
+01:12 +626: /home/user/Mobile-Cleaner/test/best_photo_test.dart: BestPhotoScorer sharpness outweighs resolution, as a person would judge it
+01:12 +627: /home/user/Mobile-Cleaner/test/best_photo_test.dart: Suggested Keep in the UI marks one shot and names the reason
+01:12 +628: /home/user/Mobile-Cleaner/test/best_photo_test.dart: Suggested Keep in the UI the suggestion never selects or deletes anything
+01:13 +629: /home/user/Mobile-Cleaner/test/best_photo_test.dart: Suggested Keep in the UI a suggested shot can still be selected by the user
+01:13 +630: /home/user/Mobile-Cleaner/test/best_photo_test.dart: Suggested Keep in the UI a soft shot is flagged relative to the best
+01:13 +631: /home/user/Mobile-Cleaner/test/best_photo_test.dart: Suggested Keep in the UI resolution is shown once a shot has been measured
+01:13 +632: /home/user/Mobile-Cleaner/test/best_photo_test.dart: Suggested Keep in the UI too close to call is stated, not papered over
+01:13 +633: /home/user/Mobile-Cleaner/test/best_photo_test.dart: Suggested Keep in the UI only grouped photos are measured
+01:13 +634: /home/user/Mobile-Cleaner/test/best_photo_test.dart: Suggested Keep in the UI an unmeasurable library simply shows no advice
+01:13 +635: loading /home/user/Mobile-Cleaner/test/ui_polish_test.dart
+01:14 +635: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: Haptics each level reaches the platform
+01:14 +636: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: Haptics a device with no vibrator does not break the action
+01:14 +637: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: SuccessCheck settles, so pumpAndSettle cannot hang
+01:14 +638: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: SuccessCheck honours the reduce-animations accessibility setting
+01:14 +639: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: SuccessCheck animates to completion when animations are enabled
+01:14 +640: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: EmptyState shows the message and marks the icon decorative
+01:14 +641: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: EmptyState survives a large text scale on a short screen
+01:14 +642: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: EmptyState renders an action when given one
+01:14 +643: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: Responsive chip bars grow with text scale but stay bounded
+01:14 +644: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: Responsive a narrow screen is not treated as wide
+01:14 +645: /home/user/Mobile-Cleaner/test/ui_polish_test.dart: Responsive photo strips grow but never run away
+01:14 +646: loading /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart
+01:15 +646: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner no action bar until something is selected
+01:16 +647: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner selecting one item reveals a visible Clean Now action
+01:16 +648: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner shows the selected count and size
+01:16 +649: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner Delete opens the Review step, not an instant delete
+01:16 +650: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner Review -> Confirm reaches Cleanup Complete
+01:17 +651: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner Delete is disabled when nothing selected is deletable
+01:17 +652: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner the list still scrolls while selecting
+01:17 +653: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner more items can be selected after the bar appears
+01:17 +654: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner the bar does not overlap the list
+01:18 +655: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner the Delete action survives a narrow screen
+01:18 +656: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Downloads Cleaner the Delete action survives a large system font
+01:18 +657: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner no action bar until something is selected
+01:18 +658: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner selecting one item reveals a visible Clean Now action
+01:18 +659: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner shows the selected count and size
+01:18 +660: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner Delete opens the Review step, not an instant delete
+01:18 +661: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner Review -> Confirm reaches Cleanup Complete
+01:19 +662: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner Delete is disabled when nothing selected is deletable
+01:19 +663: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner the list still scrolls while selecting
+01:19 +664: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner more items can be selected after the bar appears
+01:19 +665: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner the bar does not overlap the list
+01:19 +666: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner the Delete action survives a narrow screen
+01:19 +667: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: APK Cleaner the Delete action survives a large system font
+01:19 +668: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser no action bar until something is selected
+01:19 +669: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser selecting one item reveals a visible Clean Now action
+01:19 +670: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser shows the selected count and size
+01:20 +671: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser Delete opens the Review step, not an instant delete
+01:20 +672: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser Review -> Confirm reaches Cleanup Complete
+01:20 +673: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser Delete is disabled when nothing selected is deletable
+01:20 +674: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser the list still scrolls while selecting
+01:20 +675: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser more items can be selected after the bar appears
+01:20 +676: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser the bar does not overlap the list
+01:20 +677: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser the Delete action survives a narrow screen
+01:21 +678: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Images browser the Delete action survives a large system font
+01:21 +679: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner no action bar until something is selected
+01:21 +680: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner selecting one item reveals a visible Clean Now action
+01:21 +681: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner shows the selected count and size
+01:21 +682: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner Delete opens the Review step, not an instant delete
+01:21 +683: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner Review -> Confirm reaches Cleanup Complete
+01:21 +684: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner Delete is disabled when nothing selected is deletable
+01:21 +685: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner the list still scrolls while selecting
+01:22 +686: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner more items can be selected after the bar appears
+01:22 +687: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner the bar does not overlap the list
+01:22 +688: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner the Delete action survives a narrow screen
+01:22 +689: /home/user/Mobile-Cleaner/test/selection_action_bar_test.dart: Screenshot Cleaner the Delete action survives a large system font
+01:22 +690: loading /home/user/Mobile-Cleaner/test/permission_gateway_test.dart
+01:23 +690: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: API 24 reads and requests legacy READ permission only
+01:23 +691: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: API 28 reads and requests legacy READ permission only
+01:23 +692: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: API 29 reads and requests legacy READ permission only
+01:23 +693: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: API 30 reads and requests legacy READ permission only
+01:23 +694: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: API 32 reads and requests legacy READ permission only
+01:23 +695: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: API 33 reads each media status; never requests legacy/all-files
+01:23 +696: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: API 34 reads each media status; never requests legacy/all-files
+01:23 +697: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: API 35 reads each media status; never requests legacy/all-files
+01:23 +698: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: API 36 reads each media status; never requests legacy/all-files
+01:23 +699: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: every read reaches Android instead of trusting the preceding result
+01:23 +700: /home/user/Mobile-Cleaner/test/permission_gateway_test.dart: empty requests launch no native permission dialog
+01:23 +701: loading /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart
+01:23 +701: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: progress is zero until settled evidence; waiting for consent is not cleaning
+01:23 +702: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: failed, skipped, cancelled and unknown-size removals never inflate bytes
+01:23 +703: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: stale, foreign, decreasing and contradictory progress is ignored
+01:23 +704: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: partial evidence survives a repository exception without retrying deletion
+01:23 +705: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: parser deduplicates successes and excludes skipped, failed, foreign and unknown outcomes
+01:23 +706: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: contradictory final outcomes count a URI once and never exceed total
+01:23 +707: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: new deletion scopes restart at zero and late old messages cannot affect them
+01:23 +708: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: modern missing/negative sizes remain unknown, never use stale planned bytes
+01:23 +709: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: awaitingPermission channel updates never authorize success or new bytes
+01:23 +710: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: awaitingConfirmation channel updates never authorize success or new bytes
+01:23 +711: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: verifying channel updates never authorize success or new bytes
+01:23 +712: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: cleaning displays only confirmed bytes and genuine current URI during a delayed batch
+01:24 +713: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: cleaning shine pauses for background, reduced motion and disposal
+01:24 +714: /home/user/Mobile-Cleaner/test/reference_animation_and_cleaning_test.dart: render actual reference component previews
+01:24 +715: loading /home/user/Mobile-Cleaner/test/safe_delete_test.dart
+01:25 +715: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: DeleteResult reports a complete success
+01:25 +716: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: DeleteResult reports a partial success
+01:25 +717: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: DeleteResult a cancelled delete frees nothing
+01:25 +718: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: DeleteResult an empty delete is not a success
+01:25 +719: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: PlatformDeleteRepository.parseResult maps deleted uris back to their files
+01:25 +720: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: PlatformDeleteRepository.parseResult records failures with their reason
+01:25 +721: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: PlatformDeleteRepository.parseResult a uri reported both deleted and failed is treated as failed
+01:25 +722: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: PlatformDeleteRepository.parseResult propagates cancellation
+01:25 +723: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: PlatformDeleteRepository.parseResult ignores malformed rows and unknown uris
+01:25 +724: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: PlatformDeleteRepository.parseResult defaults a missing failure reason
+01:25 +725: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: PlatformDeleteRepository channel an empty selection never reaches the platform
+01:25 +726: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: PlatformDeleteRepository channel sends every selected uri
+01:25 +727: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: PlatformDeleteRepository channel a platform error fails every file rather than claiming success
+01:25 +728: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: PlatformDeleteRepository channel a missing plugin fails safely
+01:25 +729: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup flow Select -> Review shows the count and size
+01:26 +730: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup flow Review hero enlarges the cleanup artwork for clarity
+01:26 +731: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup flow Cancel deletes nothing
+01:26 +732: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup flow Confirm deletes and reports what was freed
+01:27 +733: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup flow the selection clears after a successful delete
+01:27 +734: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup flow declining the system dialog reports nothing deleted
+01:27 +735: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup flow a blocked delete is reported as a failure
+01:27 +736: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup flow a large selection is grouped into one real breakdown row
+01:28 +737: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup flow deleting rescans so the list reflects the device
+01:28 +738: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Selection primitives back the flow select all, deselect all, and running size
+01:28 +739: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Selection primitives back the flow deleted files are dropped from the selection
+01:28 +740: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: ApkSummary stays consistent after deletion removing files shrinks the total
+01:28 +741: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup Complete screen reports items removed, space freed, and elapsed time
+01:28 +742: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup Complete screen uses the singular form for one file
+01:28 +743: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup Complete screen completion does not depend on another storage read
+01:29 +744: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup Complete screen a partial delete is flagged on the screen
+01:29 +745: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup Complete screen cancelling never reaches the completion screen
+01:29 +746: /home/user/Mobile-Cleaner/test/safe_delete_test.dart: Cleanup Complete screen Done returns to the cleaner
+01:29 +747: loading /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart
+01:30 +747: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotDetector recognises the standard folder
+01:30 +748: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotDetector recognises the filename prefix outside the folder
+01:30 +749: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotDetector is case insensitive
+01:30 +750: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotDetector ignores ordinary photos
+01:30 +751: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotDetector does not match a lookalike folder name
+01:30 +752: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotDetector ignores non-images even inside the screenshots folder
+01:30 +753: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotDetector falls back to the full path when relativePath is absent
+01:30 +754: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotGroup offers exactly the three required groups
+01:30 +755: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotGroup the all group ignores age entirely
+01:30 +756: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotGroup age bounds are inclusive
+01:30 +757: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotGroup an unknown timestamp is never old
+01:30 +758: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotSummary counts and totals each group
+01:30 +759: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotSummary excludes the camera photo from every group
+01:30 +760: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotSummary sorts newest first
+01:30 +761: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotSummary counts a screenshot reported twice only once
+01:30 +762: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotSummary reports the largest screenshot
+01:30 +763: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: ScreenshotSummary is empty when no screenshots exist
+01:30 +764: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen scans only images
+01:31 +765: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen shows the three group chips
+01:31 +766: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen displays the count and total size
+01:31 +767: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen lists screenshots and hides ordinary photos
+01:31 +768: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen narrowing the group shrinks the count and size
+01:31 +769: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen changing group does not trigger another scan
+01:31 +770: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen selecting reveals the bar with count and size
+01:31 +771: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen select all covers every visible screenshot
+01:32 +772: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen narrowing the group drops now-hidden selections
+01:32 +773: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen the app bar reflects the selection
+01:32 +774: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen delete is enabled once something is selected
+01:32 +775: /home/user/Mobile-Cleaner/test/screenshot_cleaner_test.dart: Screenshot cleaner screen shows an empty state when nothing matches
+01:32 +776: loading /home/user/Mobile-Cleaner/test/permission_scan_boundary_test.dart
+01:33 +776: /home/user/Mobile-Cleaner/test/permission_scan_boundary_test.dart: mixed scan excludes denied video/audio, preserving every scan option
+01:33 +777: /home/user/Mobile-Cleaner/test/permission_scan_boundary_test.dart: full access leaves discovery categories and returned calculations intact
+01:33 +778: /home/user/Mobile-Cleaner/test/permission_scan_boundary_test.dart: scoped folder-only mode still discovers its available non-media
+01:33 +779: /home/user/Mobile-Cleaner/test/permission_scan_boundary_test.dart: revocation is reread before scanning, not inferred from last result
+01:33 +780: /home/user/Mobile-Cleaner/test/permission_scan_boundary_test.dart: legacy denied read cannot scan or launch any permission prompt
+01:33 +781: loading /home/user/Mobile-Cleaner/test/similar_photos_test.dart
+01:33 +781: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: PerceptualHash parses 32 hex characters into two 64-bit halves
+01:33 +782: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: PerceptualHash a hash with the top bit set survives parsing
+01:33 +783: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: PerceptualHash malformed input is rejected, never guessed at
+01:33 +784: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: PerceptualHash Hamming distance counts differing bits
+01:33 +785: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarityStrength both hashes must agree before photos are called similar
+01:33 +786: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarityStrength strengths widen in order
+01:33 +787: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoDetector candidates only photos above the floor are analysed
+01:33 +788: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoDetector candidates a photo reported twice is not its own twin
+01:33 +789: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoDetector grouping a burst is grouped, unrelated photos are not
+01:33 +790: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoDetector grouping the group never chains beyond its leader
+01:33 +791: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoDetector grouping strength changes how much is grouped
+01:33 +792: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoDetector grouping an unreadable photo is dropped, never grouped on a guess
+01:33 +793: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoDetector grouping no fingerprints at all yields no groups
+01:33 +794: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoDetector grouping a lone photo is never a group of one
+01:33 +795: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoGroup reclaimable space assumes the largest shot is kept
+01:33 +796: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoGroup members are chronological and the first shot leads
+01:33 +797: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: SimilarPhotoGroup a burst is recognised by its timespan
+01:33 +798: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Keep selection is shared with exact duplicates one shot is always retained whatever the user picks
+01:33 +799: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Keep selection is shared with exact duplicates reclaimable bytes follow the chosen keeper
+01:33 +800: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Similar Photos screen analyses only the eligible photos
+01:34 +801: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Similar Photos screen shows the total as an upper bound, not a promise
+01:34 +802: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Similar Photos screen groups shots visually and leaves nothing pre-selected
+01:34 +803: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Similar Photos screen sizes are shown, because similar shots differ in size
+01:34 +804: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Similar Photos screen the user can change which shot is kept
+01:34 +805: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Similar Photos screen tapping the kept shot does nothing
+01:35 +806: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Similar Photos screen a set can be selected, never the whole library
+01:35 +807: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Similar Photos screen changing strength regroups without re-analysing
+01:35 +808: /home/user/Mobile-Cleaner/test/similar_photos_test.dart: Similar Photos screen an empty result explains the strength setting
+01:35 +809: loading /home/user/Mobile-Cleaner/test/selection_performance_test.dart
+01:35 +809: /home/user/Mobile-Cleaner/test/selection_performance_test.dart: Screenshot Cleaner stays responsive with a large library only builds the rows that are on screen
+01:36 +810: /home/user/Mobile-Cleaner/test/selection_performance_test.dart: Screenshot Cleaner stays responsive with a large library does not request a thumbnail for every file in the library
+01:36 +811: /home/user/Mobile-Cleaner/test/selection_performance_test.dart: Screenshot Cleaner stays responsive with a large library selecting stays cheap and the UI keeps responding
+01:37 +812: /home/user/Mobile-Cleaner/test/selection_performance_test.dart: Screenshot Cleaner stays responsive with a large library the list still scrolls after selecting
+01:37 +813: /home/user/Mobile-Cleaner/test/selection_performance_test.dart: Screenshot Cleaner stays responsive with a large library more items can be selected after the first
+01:37 +814: loading /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart
+01:38 +814: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: PhotoDuplicates filter keeps images and image MIME types only
+01:38 +815: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: PhotoDuplicates filter the duplicate engine is reused unchanged, images only
+01:38 +816: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: PhotoDuplicates filter only size-matched photos are hashed
+01:38 +817: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: PhotoDuplicates filter reclaimable space keeps one photo per set
+01:38 +818: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: DuplicateKeepSelection defaults to the oldest copy
+01:38 +819: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: DuplicateKeepSelection the user can keep a different copy
+01:38 +820: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: DuplicateKeepSelection one copy is always retained whatever the choice
+01:38 +821: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: DuplicateKeepSelection a file from another group is never recorded
+01:38 +822: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: DuplicateKeepSelection reclaimable bytes are unaffected by which copy is kept
+01:38 +823: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: DuplicateKeepSelection choices for vanished groups are pruned
+01:38 +824: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: Photo duplicate providers scans images and downloads with the hashing floor applied
+01:38 +825: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: Duplicate Photos screen hashes only size-matched photos
+01:38 +826: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: Duplicate Photos screen shows the recoverable total for photos only
+01:39 +827: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: Duplicate Photos screen groups copies visually and hides non-photo duplicates
+01:39 +828: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: Duplicate Photos screen the oldest copy is kept by default and cannot be tapped
+01:39 +829: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: Duplicate Photos screen the user can choose which copy to keep
+01:39 +830: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: Duplicate Photos screen keeping a selected copy removes it from the selection
+01:39 +831: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: Duplicate Photos screen select copies never selects a kept photo
+01:39 +832: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: Duplicate Photos screen a set can be selected on its own
+01:40 +833: /home/user/Mobile-Cleaner/test/photo_duplicates_test.dart: Duplicate Photos screen an empty library says so
+01:40 +834: All tests passed!

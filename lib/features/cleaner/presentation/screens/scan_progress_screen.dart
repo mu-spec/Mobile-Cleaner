@@ -7,9 +7,8 @@ import 'package:phone_storage_cleaner/app/router/app_router.dart';
 import 'package:phone_storage_cleaner/app/theme/app_colors.dart';
 import 'package:phone_storage_cleaner/app/theme/app_tokens.dart';
 import 'package:phone_storage_cleaner/core/scanning/scan_progress.dart';
-import 'package:phone_storage_cleaner/core/ui/circular_file_scanner.dart';
-import 'package:phone_storage_cleaner/core/ui/reference_progress_art.dart';
 import 'package:phone_storage_cleaner/core/ui/scan_stage_presentation.dart';
+import 'package:phone_storage_cleaner/core/ui/smart_scan_progress.dart';
 import 'package:phone_storage_cleaner/features/apps/presentation/providers/installed_apps_provider.dart';
 import 'package:phone_storage_cleaner/features/cleaner/domain/scan_launch_target.dart';
 import 'package:phone_storage_cleaner/features/files/domain/screenshot_filter.dart';
@@ -20,7 +19,6 @@ import 'package:phone_storage_cleaner/features/files/presentation/providers/phot
 import 'package:phone_storage_cleaner/features/files/presentation/providers/screenshot_provider.dart';
 import 'package:phone_storage_cleaner/features/files/presentation/providers/videos_provider.dart';
 import 'package:phone_storage_cleaner/features/home/presentation/providers/recommendations_provider.dart';
-import 'package:phone_storage_cleaner/features/home/presentation/widgets/home_upper_style.dart';
 
 /// Runs the existing real scan and preserves its presentation timing gates.
 ///
@@ -210,264 +208,84 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
     }
   }
 
-  String get _scanTitle => switch (widget.target) {
-    ScanLaunchTarget.smartScan => 'Scanning your storage',
-    ScanLaunchTarget.screenshots => 'Finding screenshots',
-    ScanLaunchTarget.duplicates => 'Finding duplicates',
-    ScanLaunchTarget.largeVideos => 'Finding large videos',
-    ScanLaunchTarget.photoCleanup => 'Scanning your photos',
-    ScanLaunchTarget.files => 'Scanning your files',
-    ScanLaunchTarget.apps => 'Analyzing your apps',
+  String get _activity => switch (widget.target) {
+    ScanLaunchTarget.smartScan => 'Scanning your device...',
+    ScanLaunchTarget.screenshots => 'Finding screenshots...',
+    ScanLaunchTarget.duplicates => 'Checking duplicate files...',
+    ScanLaunchTarget.largeVideos => 'Checking large videos...',
+    ScanLaunchTarget.photoCleanup => 'Scanning your photos...',
+    ScanLaunchTarget.files => 'Checking files...',
+    ScanLaunchTarget.apps => 'Analyzing your apps...',
   };
 
-  String get _scanSubtitle => switch (widget.target) {
-    ScanLaunchTarget.apps => 'Reviewing installed apps safely on this device.',
-    ScanLaunchTarget.photoCleanup =>
-      'Reviewing your photo library safely on this device.',
-    _ => 'Reviewing files safely on this device.',
-  };
-
-  String get _scanStatus {
-    if (_completed) {
-      return 'Scan complete';
+  String _support(ScanSnapshot? shown) {
+    final stage = (shown?.displayStage?.name ?? shown?.stage ?? '')
+        .toLowerCase();
+    if (stage.contains('fingerprint')) return 'Comparing photo fingerprints';
+    if (stage.contains('hash')) return 'Checking file fingerprints';
+    if (stage.contains('quality')) return 'Reviewing photo quality';
+    if (stage.contains('app')) return 'Reviewing installed apps';
+    if (stage.contains('group') || stage.contains('compar')) {
+      return 'Comparing scanned items';
     }
-    final snapshot = _snapshot;
-    if (snapshot != null && snapshot.stage != 'Discovering') {
-      final count = snapshot.total == null
-          ? '${snapshot.processed} ${snapshot.unit}'
-          : '${snapshot.processed} / ${snapshot.total} ${snapshot.unit}';
-      return snapshot.processed > 0
-          ? '${snapshot.stage} · $count'
-          : snapshot.stage;
-    }
-    return switch (widget.target) {
-      ScanLaunchTarget.apps => 'Reading installed apps',
-      ScanLaunchTarget.photoCleanup => 'Reading photo library',
-      _ => 'Analyzing files',
-    };
+    return 'Checking files on your device';
   }
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final bool isDark = theme.brightness == Brightness.dark;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ScanStagePresentation(
       snapshot: _snapshot,
       builder: (context, shown) => Scaffold(
         key: const Key('scan_progress_screen'),
         backgroundColor: isDark
             ? AppColors.darkBackground
-            : HomeUpperStyle.background,
+            : const Color(0xFFF8FAFE),
         appBar: AppBar(
+          leadingWidth: 66,
           leading: IconButton(
             key: const Key('scan_progress_back_button'),
             tooltip: 'Back',
             onPressed: _goBack,
-            icon: const Icon(Icons.arrow_back_rounded),
+            icon: Transform.translate(
+              offset: const Offset(0, 12),
+              child: const Icon(Icons.arrow_back_rounded),
+            ),
           ),
           backgroundColor: Colors.transparent,
-          title: const Text('Smart Scan'),
+          surfaceTintColor: Colors.transparent,
+          foregroundColor: isDark ? Colors.white : const Color(0xFF080E24),
+          titleSpacing: 17,
+          title: Transform.translate(
+            offset: const Offset(0, 12),
+            child: const Text(
+              'Smart Scan',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -.6,
+              ),
+            ),
+          ),
         ),
         body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xl,
-              AppSpacing.lg,
-              AppSpacing.xl,
-              AppSpacing.xl,
-            ),
-            child: Column(
-              children: <Widget>[
-                _PrivacyBadge(isDark: isDark),
-                const SizedBox(height: AppSpacing.xl),
-                Text(
-                  _scanTitle,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                    color: isDark
-                        ? theme.colorScheme.onSurface
-                        : HomeUpperStyle.textPrimary,
+          child: SmartScanProgress(
+            snapshot: shown,
+            activity: shown?.displayStage == null
+                ? _activity
+                : '${shown!.displayStage!.name}...',
+            description: _support(shown),
+            active: !_finished && _scanError == null,
+            completed: _completed,
+            succeeded: _snapshot?.successful ?? false,
+            footer: _scanError == null
+                ? null
+                : _ScanErrorCard(
+                    onRetry: _startScan,
+                    onCancel: () => context.go(AppRoutes.home),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  _scanSubtitle,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    color: isDark
-                        ? theme.colorScheme.onSurfaceVariant
-                        : HomeUpperStyle.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xxl),
-                CircularFileScanner(
-                  key: const Key('scan_progress_ring'),
-                  scanId: shown?.id,
-                  stageId: shown?.displayStage?.id,
-                  progress: shown?.stageFraction,
-                  active: !_finished && _scanError == null,
-                  completed: _completed,
-                  succeeded: _snapshot?.successful ?? false,
-                ),
-                const SizedBox(height: AppSpacing.xxl),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  child: _scanError == null
-                      ? _ScanStatusCard(
-                          key: const Key('scan_status_card'),
-                          completed: _completed,
-                          progress: shown?.stageFraction,
-                          status: _completed
-                              ? 'Scan complete'
-                              : shown?.stageDescription ?? _scanStatus,
-                          isDark: isDark,
-                        )
-                      : _ScanErrorCard(
-                          onRetry: _startScan,
-                          onCancel: () => context.go(AppRoutes.home),
-                        ),
-                ),
-              ],
-            ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _PrivacyBadge extends StatelessWidget {
-  const _PrivacyBadge({required this.isDark});
-
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkInfoSurface : HomeUpperStyle.softBlue,
-        borderRadius: BorderRadius.circular(99),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : const Color(0xFFD7E3FF),
-        ),
-      ),
-      child: const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 13, vertical: 7),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(
-              Icons.shield_rounded,
-              size: 16,
-              color: HomeUpperStyle.primaryBlue,
-            ),
-            SizedBox(width: 7),
-            Text(
-              'Private, on-device scan',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ScanStatusCard extends StatelessWidget {
-  const _ScanStatusCard({
-    required this.completed,
-    this.progress,
-    required this.status,
-    required this.isDark,
-    super.key,
-  });
-
-  final bool completed;
-  final double? progress;
-  final String status;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: isDark ? null : HomeUpperStyle.card,
-        gradient: isDark
-            ? const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: <Color>[
-                  Color(0xFF152235),
-                  AppColors.darkSurfaceElevated,
-                ],
-              )
-            : null,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : HomeUpperStyle.border,
-        ),
-        boxShadow: isDark
-            ? null
-            : const <BoxShadow>[
-                BoxShadow(
-                  color: Color(0x0D12356B),
-                  blurRadius: 26,
-                  offset: Offset(0, 10),
-                ),
-              ],
-      ),
-      child: Column(
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              const Icon(
-                Icons.auto_awesome_rounded,
-                color: HomeUpperStyle.primaryBlue,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  status,
-                  key: const Key('scan_progress_status'),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: ReferenceProgressBar(value: completed ? 1 : progress),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Icon(
-                Icons.lock_outline_rounded,
-                size: 16,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  'Nothing is removed without your approval',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

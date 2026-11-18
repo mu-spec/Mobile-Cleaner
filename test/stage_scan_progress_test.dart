@@ -378,16 +378,16 @@ void main() {
       ),
     );
     await tester.pumpWidget(host(view('Hashing', 0, 10)));
-    expect(find.textContaining('Stage: Hashing · 0 / 10'), findsOneWidget);
+    expect(find.text('Stage: Hashing'), findsOneWidget);
+    expect(find.text('0 / 10 files checked'), findsOneWidget);
     await tester.pumpWidget(host(view('Hashing', 10, 10)));
-    expect(find.textContaining('stage complete'), findsOneWidget);
+    expect(find.text('10 / 10 files checked'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('100%'), findsOneWidget);
     expect(find.byKey(const Key('scan_complete_icon')), findsNothing);
     await tester.pumpWidget(host(view('Discovery', 230, null)));
     await tester.pump(const Duration(milliseconds: 240));
-    expect(
-      find.textContaining('Stage: Discovery · 230 files checked'),
-      findsOneWidget,
-    );
+    expect(find.text('230 files checked'), findsOneWidget);
     expect(
       tester
           .widget<CircularFileScanner>(find.byType(CircularFileScanner))

@@ -1,0 +1,45 @@
+{
+  "reference": {
+    "file": "/home/user/uploads/image-1.png",
+    "sha256": "d9e01cc41592cce58e4b9749e926add84a862a17f00c1f6330c8f1fa368405b9"
+  },
+  "capture": {
+    "file": "smart-scan-1024x1536.png",
+    "logical_viewport": [
+      512,
+      768
+    ],
+    "pixel_ratio": 2,
+    "physical_image": [
+      1024,
+      1536
+    ],
+    "fixture": "110 / 500 files checked delivered through ScanOperation from a held test repository",
+    "current_path": "omitted; actual production scan telemetry has no path",
+    "system_status_bar": "24 logical pixels reserved; OS-drawn status glyphs are not part of the Flutter capture"
+  },
+  "geometry": {
+    "scan_content_max_width": 960,
+    "nominal_radar_width_fraction": 0.72,
+    "reference_viewport_radar_logical_diameter": 368.64,
+    "reference_viewport_radar_physical_diameter": 737.28,
+    "reference_viewport_center_physical": [
+      512,
+      552.64
+    ],
+    "reference_value": 0.22,
+    "arc_sweep_degrees": 79.2
+  },
+  "validation": {
+    "flutter_tests_passed": 834,
+    "analyzer_errors": 0,
+    "analyzer_warnings": 1,
+    "analyzer_infos": 112,
+    "version": "1.0.1+2",
+    "commit_before_and_after": "7a61974676c869f9694aa3fba0b983e844919c0d",
+    "dependencies_changed": false,
+    "native_changes": false,
+    "broom_baseline_sha256": "cb666b879c21d18186ba5029d7ccb90e99f03708dc593cb7a3b923e23b4b3f23",
+    "broom_capture_sha256": "cb666b879c21d18186ba5029d7ccb90e99f03708dc593cb7a3b923e23b4b3f23"
+  }
+}

@@ -16,6 +16,7 @@ class CircularFileScanner extends StatefulWidget {
     this.completed = false,
     this.succeeded = false,
     this.size = 228,
+    this.presentationBuilder,
     super.key,
   }) : assert(progress == null || (progress >= 0 && progress <= 1)),
        assert(size > 0);
@@ -34,6 +35,17 @@ class CircularFileScanner extends StatefulWidget {
   /// Entire operation succeeded, independently of the completion transition.
   final bool succeeded;
   final double size;
+
+  /// Optional surrounding scan presentation. Receives this exact animated
+  /// measured fill so the external number, arc and bar cannot drift apart.
+  /// Cleaning does not use this and keeps its independently approved layout.
+  final Widget Function(
+    BuildContext,
+    Widget radar,
+    double? fill,
+    Animation<double> motion,
+  )?
+  presentationBuilder;
 
   // Slow continuous radar rotation; independent of measured work.
   static const Duration motionDuration = Duration(milliseconds: 5800);
@@ -140,7 +152,7 @@ class _CircularFileScannerState extends State<CircularFileScanner>
         : widget.progress == null
         ? null
         : _confirmed;
-    return Semantics(
+    final radar = Semantics(
       key: const Key('scan_progress_semantics'),
       label: widget.cleaning
           ? 'Cleaning progress'
@@ -188,6 +200,17 @@ class _CircularFileScannerState extends State<CircularFileScanner>
             ),
           ),
         ),
+      ),
+    );
+    final builder = widget.presentationBuilder;
+    if (builder == null) return radar;
+    return AnimatedBuilder(
+      animation: _fill,
+      builder: (context, _) => builder(
+        context,
+        radar,
+        progress == null ? null : _fill.value.clamp(0.0, _confirmed),
+        _motion,
       ),
     );
   }
