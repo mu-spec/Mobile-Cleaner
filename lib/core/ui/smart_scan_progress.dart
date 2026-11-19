@@ -61,6 +61,15 @@ class SmartScanProgress extends StatelessWidget {
           : '$processed${total == null ? '' : ' / $total'} $unit';
       final path = currentPath?.trim();
       final running = active && !completed && !succeeded;
+      final compactFactor = textScale > 1.15 ? 0.75 : 1.0;
+      final topGap = (height * 0.065 * compactFactor).clamp(
+        12 * scale,
+        56 * scale,
+      );
+      final radarToPercentGap = (height * 0.032 * compactFactor).clamp(
+        12 * scale,
+        28 * scale,
+      );
 
       return Align(
         alignment: Alignment.topCenter,
@@ -73,7 +82,7 @@ class SmartScanProgress extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(
                   width * .0586,
-                  12 * scale,
+                  topGap,
                   width * .0586,
                   36 * scale,
                 ),
@@ -89,7 +98,7 @@ class SmartScanProgress extends StatelessWidget {
                   presentationBuilder: (context, radar, fill, motion) =>
                       ConstrainedBox(
                         constraints: BoxConstraints(
-                          minHeight: math.max(0, height - 48 * scale),
+                          minHeight: math.max(0, height - topGap - 36 * scale),
                         ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -97,6 +106,7 @@ class SmartScanProgress extends StatelessWidget {
                             Column(
                               children: [
                                 radar,
+                                SizedBox(height: radarToPercentGap),
                                 if (fill != null)
                                   Text(
                                     '${(fill * 100).floor()}%',
