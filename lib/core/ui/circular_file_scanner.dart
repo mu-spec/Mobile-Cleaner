@@ -89,8 +89,7 @@ class _CircularFileScannerState extends State<CircularFileScanner>
   @override
   void didUpdateWidget(CircularFileScanner oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.scanId != widget.scanId ||
-        oldWidget.stageId != widget.stageId) {
+    if (oldWidget.scanId != widget.scanId) {
       _confirmed = 0;
       _fill.value = 0;
     }

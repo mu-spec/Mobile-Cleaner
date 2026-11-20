@@ -58,27 +58,13 @@ Future<GoRouter> _mount(WidgetTester tester, _ControlledScanner scanner) async {
 }
 
 void main() {
-  testWidgets('fast scan retains the original 2800/650/420 ms timing gates', (
+  testWidgets('fast scan navigates immediately without artificial timing gates', (
     WidgetTester tester,
   ) async {
     final _ControlledScanner scanner = _ControlledScanner();
     final GoRouter router = await _mount(tester, scanner);
     expect(scanner.calls, 1);
     scanner.pending.complete(FileScanResult.empty);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 2799));
-    expect(find.text('Results'), findsNothing);
-    expect(find.byKey(const Key('scan_complete_icon')), findsNothing);
-    await tester.pump(const Duration(milliseconds: 2));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 649));
-    expect(find.byKey(const Key('scan_complete_icon')), findsNothing);
-    await tester.pump(const Duration(milliseconds: 2));
-    await tester.pump();
-    expect(find.byKey(const Key('scan_complete_icon')), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 419));
-    expect(find.text('Results'), findsNothing);
-    await tester.pump(const Duration(milliseconds: 2));
     await tester.pumpAndSettle();
     expect(find.text('Results'), findsOneWidget);
     expect(scanner.calls, 1);

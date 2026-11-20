@@ -91,7 +91,7 @@ class SmartScanProgress extends StatelessWidget {
                   size: diameter,
                   scanId: snapshot?.id,
                   stageId: stage?.id ?? snapshot?.stage,
-                  progress: snapshot?.stageFraction,
+                  progress: snapshot?.fraction,
                   active: active,
                   completed: completed,
                   succeeded: succeeded,
@@ -158,18 +158,19 @@ class SmartScanProgress extends StatelessWidget {
                                     ),
                                   ),
                                 ],
-                                Padding(
-                                  padding: EdgeInsets.fromLTRB(
-                                    width * .095,
-                                    18 * scale,
-                                    width * .095,
-                                    0,
+                                if (fill != null)
+                                  Padding(
+                                    padding: EdgeInsets.fromLTRB(
+                                      width * .095,
+                                      18 * scale,
+                                      width * .095,
+                                      0,
+                                    ),
+                                    child: _ScanMeasuredBar(
+                                      value: fill,
+                                      scale: scale,
+                                    ),
                                   ),
-                                  child: _ScanMeasuredBar(
-                                    value: fill,
-                                    scale: scale,
-                                  ),
-                                ),
                               ],
                             ),
                             Padding(

@@ -34,14 +34,12 @@ class ScanProgressScreen extends ConsumerStatefulWidget {
   ConsumerState<ScanProgressScreen> createState() => _ScanProgressScreenState();
 }
 
-class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
-    with TickerProviderStateMixin {
-  late final AnimationController _progressController;
-  late final AnimationController _completionController;
+class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen> {
   Object? _scanError;
   bool _completed = false;
   bool _running = false;
   bool _finished = false;
+  bool _navigated = false;
   ScanOperation? _operation;
   ScanSnapshot? _snapshot;
   StreamSubscription<ScanSnapshot>? _progressSubscription;
@@ -49,14 +47,6 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
   @override
   void initState() {
     super.initState();
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2800),
-    );
-    _completionController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 650),
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) => _startScan());
   }
 
@@ -65,8 +55,6 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
     unawaited(_progressSubscription?.cancel());
     _progressSubscription = null;
     _operation?.cancel();
-    _progressController.dispose();
-    _completionController.dispose();
     super.dispose();
   }
 
@@ -95,36 +83,33 @@ class _ScanProgressScreenState extends ConsumerState<ScanProgressScreen>
       _scanError = null;
       _completed = false;
       _finished = false;
+      _navigated = false;
     });
-    _progressController.reset();
-    _completionController.reset();
 
     try {
-      await Future.wait<void>(<Future<void>>[
-        _progressController.forward(),
-        operation.run(_runRealScan),
-      ]);
-      if (!mounted) {
+      await operation.run(_runRealScan);
+      if (!mounted || !identical(_operation, operation)) {
         return;
       }
-      await _completionController.forward();
-      if (!mounted) {
+      if (!operation.snapshot.successful) {
         return;
       }
       setState(() {
-        _completed = operation.snapshot.successful;
+        _completed = true;
         _finished = true;
       });
-      await Future<void>.delayed(const Duration(milliseconds: 420));
-      if (mounted) {
+      if (!_navigated) {
+        _navigated = true;
         _openResults();
       }
     } catch (error) {
-      if (mounted) {
+      if (mounted && identical(_operation, operation)) {
         setState(() => _scanError = error);
       }
     } finally {
-      _running = false;
+      if (identical(_operation, operation)) {
+        _running = false;
+      }
     }
   }
 

@@ -339,16 +339,35 @@ class ScanOperation {
   }
 
   void _publish() {
+    final raw = _overallFraction();
     snapshot = ScanSnapshot(
       id: id,
       stage: _displayStage?.name ?? 'Discovering',
       processed: _displayStage?.processed ?? 0,
       total: _displayStage?.total,
       unit: _displayStage?.unit ?? 'items checked',
-      fraction: _displayStage?.fraction,
+      fraction: raw,
       displayStage: _displayStage,
     );
     _updates.add(snapshot);
+  }
+
+  double _maxFraction = 0;
+  final Set<String> _seenStageIds = <String>{};
+
+  double? _overallFraction() {
+    final stageId = _displayStage?.id;
+    if (stageId != null) {
+      _seenStageIds.add(stageId);
+    }
+    if (!numeric || _sources.length > 1 || _seenStageIds.length > 1) {
+      return null;
+    }
+    final stageFrac = _displayStage?.fraction;
+    if (stageFrac == null) return _maxFraction > 0 ? _maxFraction : null;
+    final capped = stageFrac >= 1.0 ? 0.99 : stageFrac;
+    if (capped > _maxFraction) _maxFraction = capped;
+    return _maxFraction;
   }
 
   void _accept(
@@ -368,7 +387,7 @@ class ScanOperation {
       processed: _displayStage?.processed ?? processed,
       total: _displayStage == null ? total : _displayStage!.total,
       unit: _displayStage?.unit ?? unit,
-      fraction: _displayStage?.fraction,
+      fraction: _overallFraction(),
     );
     _updates.add(snapshot);
   }
@@ -386,7 +405,7 @@ class ScanOperation {
       processed: snapshot.processed,
       total: snapshot.total,
       unit: snapshot.unit,
-      fraction: outcome == ScanOutcome.succeeded ? 1 : _displayStage?.fraction,
+      fraction: outcome == ScanOutcome.succeeded ? 1 : _overallFraction(),
       displayStage: _displayStage,
       outcome: outcome,
     );
