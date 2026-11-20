@@ -25,6 +25,9 @@ ScanSnapshot sample(
   String scan = 'scan',
 }) => ScanSnapshot(
   id: scan,
+  fraction: total != null && total > 0
+      ? (done / total >= 1.0 ? 0.99 : done / total)
+      : null,
   displayStage: ScanStage(
     id: stage,
     name: stage,

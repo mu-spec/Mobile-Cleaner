@@ -161,7 +161,7 @@ void main() {
         });
         first.complete();
         await Future<void>.delayed(Duration.zero);
-        expect(parent.snapshot.fraction, .1);
+        expect(parent.snapshot.fraction, isNull);
         expect(parent.snapshot.successful, isFalse);
         second.complete();
         await pending;

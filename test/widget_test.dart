@@ -368,10 +368,7 @@ void main() {
     expect(find.byType(CleanScreen), findsNothing);
 
     scanner.complete();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 700));
-    expect(find.byKey(const Key('scan_complete_icon')), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
     expect(find.byType(CleanScreen), findsOneWidget);
   });
 

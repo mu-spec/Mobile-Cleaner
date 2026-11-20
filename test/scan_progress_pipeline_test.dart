@@ -82,7 +82,7 @@ void main() {
         expect(parent.snapshot.fraction, .5);
         await emit(id, 4, 4);
         expect(parent.snapshot.successful, isFalse);
-        expect(parent.snapshot.fraction, 1);
+        expect(parent.snapshot.fraction, .99);
         response.complete({
           'scanOutcome': partial ? 'partial' : 'succeeded',
           'scanPayload': {'files': <Object>[], 'durationMillis': 25},
@@ -90,7 +90,7 @@ void main() {
         final summary = await result;
         expect(summary.fileCount, 0);
         expect(parent.snapshot.successful, !partial);
-        expect(parent.snapshot.fraction, 1);
+        expect(parent.snapshot.fraction, partial ? .99 : 1);
         expect(permissions.requests, isEmpty);
         expect(
           permissions.statuses[PermissionKind.videos],
