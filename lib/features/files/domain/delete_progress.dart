@@ -167,8 +167,9 @@ class DeleteProgressOperation extends ChangeNotifier {
     if (sequence is! int ||
         sequence <= _sequence ||
         outcomes is! Map ||
-        sizes is! Map)
+        sizes is! Map) {
       return;
+    }
     final deleted = <String>{}, failed = <String>{}, skipped = <String>{};
     var bytes = 0;
     for (final entry in outcomes.entries) {
@@ -192,8 +193,9 @@ class DeleteProgressOperation extends ChangeNotifier {
     if (!deleted.containsAll(snapshot.deleted) ||
         !failed.containsAll(snapshot.failed) ||
         !skipped.containsAll(snapshot.skipped) ||
-        bytes < snapshot.confirmedBytes)
+        bytes < snapshot.confirmedBytes) {
       return;
+    }
     for (final entry in _sizes.entries) {
       if (sizes[entry.key] != entry.value) return;
     }

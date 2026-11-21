@@ -42,11 +42,12 @@ class _ScanStagePresentationState extends State<ScanStagePresentation> {
       // Keep label/count/ring atomic while a boundary settles. Read the latest
       // real snapshot at expiry, skipping intermediate fast stages entirely.
       _boundary ??= Timer(const Duration(milliseconds: 240), () {
-        if (mounted)
+        if (mounted) {
           setState(() {
             _shown = widget.snapshot;
             _boundary = null;
           });
+        }
       });
     }
   }

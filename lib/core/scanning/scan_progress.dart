@@ -245,24 +245,28 @@ class ScanOperation {
     if (_closed ||
         event['requestId'] != requestId ||
         !_requests.any((request) => request.id == requestId) ||
-        _finishedSources.contains(requestId))
+        _finishedSources.contains(requestId)) {
       return;
+    }
     final processed = event['processed'];
     final total = event['total'];
     if (processed is! int ||
         processed < 0 ||
-        (total != null && (total is! int || total < processed)))
+        (total != null && (total is! int || total < processed))) {
       return;
+    }
     final sequence = event['sequence'];
     final ordinal = event['stageIndex'];
     if (sequence is! int ||
         sequence < 0 ||
-        sequence <= (_sequences[requestId] ?? -1))
+        sequence <= (_sequences[requestId] ?? -1)) {
       return;
+    }
     if (ordinal is! int ||
         ordinal < 0 ||
-        ordinal < (_ordinals[requestId] ?? -1))
+        ordinal < (_ordinals[requestId] ?? -1)) {
       return;
+    }
     final name = event['stage'] is String
         ? event['stage']! as String
         : 'Scanning';
@@ -271,8 +275,9 @@ class ScanOperation {
     if (previous?.id == stageId &&
         (processed < previous!.processed ||
             previous.name != name ||
-            (previous.total != null && previous.total != total)))
+            (previous.total != null && previous.total != total))) {
       return;
+    }
     final outcome = switch (event['outcome']) {
       'succeeded' || 'stageComplete' => ScanOutcome.succeeded,
       'failed' => ScanOutcome.failed,
@@ -285,8 +290,9 @@ class ScanOperation {
     _ordinals[requestId] = ordinal;
     if (outcome == ScanOutcome.failed ||
         outcome == ScanOutcome.partial ||
-        outcome == ScanOutcome.cancelled)
+        outcome == ScanOutcome.cancelled) {
       _incomplete = true;
+    }
     final measured = ScanStage(
       id: stageId,
       name: name,

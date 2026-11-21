@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
 import 'package:phone_storage_cleaner/features/files/domain/delete_progress.dart';
+import 'package:phone_storage_cleaner/features/files/domain/delete_result.dart';
 import 'package:phone_storage_cleaner/features/files/domain/scanned_file.dart';
 
 /// Deletes files the user selected and confirmed.
