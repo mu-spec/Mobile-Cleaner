@@ -381,7 +381,8 @@ void main() {
     expect(find.text('Stage: Hashing'), findsOneWidget);
     expect(find.text('0 / 10 files checked'), findsOneWidget);
     await tester.pumpWidget(host(view('Hashing', 10, 10)));
-    expect(find.text('10 / 10 files checked'), findsOneWidget);
+    expect(find.text('Stage: Analyzing scanned items'), findsOneWidget);
+    expect(find.text('10 / 10 files checked'), findsNothing);
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('100%'), findsNothing);
     expect(find.byKey(const Key('scan_complete_icon')), findsNothing);
