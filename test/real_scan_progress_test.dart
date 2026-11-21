@@ -513,19 +513,14 @@ void main() {
         final postProcessing = Completer<void>();
         final future = operation.run(() async {
           final req = operation.request();
-          operation.accept(
-            source: req.id,
-            stage: 'Fingerprinting photos',
-            processed: 500,
-            total: 500,
-            sourceFinished: true,
-          );
-          expect(operation.snapshot.displayStage?.name, 'Analyzing scanned items');
+          sample(operation, 500, 500, stage: 'Fingerprinting photos');
+          operation.endRequest(req.id);
+          expect(operation.snapshot.stageFraction, 1);
           expect(operation.snapshot.successful, isFalse);
           await postProcessing.future;
         });
         await Future<void>.delayed(Duration.zero);
-        expect(operation.snapshot.displayStage?.name, 'Analyzing scanned items');
+        expect(operation.snapshot.stageFraction, 1);
         expect(operation.snapshot.successful, isFalse);
         postProcessing.complete();
         await future;

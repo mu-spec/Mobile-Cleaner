@@ -52,15 +52,19 @@ class SmartScanProgress extends StatelessWidget {
       final foreground = dark ? Colors.white : ink;
       final muted = dark ? const Color(0xFFAABAD6) : const Color(0xFF7487A5);
       final stage = snapshot?.displayStage;
-      final name = stage?.name ?? snapshot?.stage;
+      final running = active && !completed && !succeeded;
+      final postProcessing =
+          running && stage != null && stage.complete && snapshot?.fraction == null;
+      final name = postProcessing
+          ? 'Analyzing scanned items'
+          : stage?.name ?? snapshot?.stage;
       final processed = stage?.processed ?? snapshot?.processed;
       final total = stage?.total ?? (stage == null ? snapshot?.total : null);
       final unit = stage?.unit ?? snapshot?.unit ?? 'items checked';
-      final count = processed == null
+      final count = postProcessing || processed == null
           ? null
           : '$processed${total == null ? '' : ' / $total'} $unit';
       final path = currentPath?.trim();
-      final running = active && !completed && !succeeded;
       final compactFactor = textScale > 1.15 ? 0.75 : 1.0;
       final topGap = (height * 0.065 * compactFactor).clamp(
         12 * scale,
