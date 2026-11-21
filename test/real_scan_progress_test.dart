@@ -460,6 +460,52 @@ void main() {
     });
   });
 
+  group(':pending stage regression coverage', () {
+    test('pending placeholder followed by one real stage reports numeric progress', () async {
+      final operation = ScanOperation(numeric: true);
+      await operation.run(() async {
+        final req = operation.request();
+        expect(operation.snapshot.fraction, isNull);
+        req.accept(stage: 'Screenshots', processed: 1, total: 4);
+        expect(operation.snapshot.fraction, .25);
+        req.accept(stage: 'Screenshots', processed: 4, total: 4);
+        expect(operation.snapshot.fraction, .99);
+        expect(operation.snapshot.successful, isFalse);
+      });
+      expect(operation.snapshot.successful, isTrue);
+      expect(operation.snapshot.fraction, 1);
+    });
+
+    test('pending placeholder followed by multiple real stages becomes indeterminate', () async {
+      final operation = ScanOperation(numeric: true);
+      await operation.run(() async {
+        final req = operation.request();
+        req.accept(stage: 'Discovering', processed: 1, total: 4);
+        expect(operation.snapshot.fraction, .25);
+        req.accept(stage: 'Hashing', processed: 1, total: 4);
+        expect(operation.snapshot.fraction, isNull);
+      });
+      expect(operation.snapshot.successful, isTrue);
+      expect(operation.snapshot.fraction, 1);
+    });
+
+    test('cancelled scan never reports 100% or success', () async {
+      final operation = ScanOperation(numeric: true);
+      final completer = Completer<void>();
+      final future = operation.run(() async {
+        final req = operation.request();
+        req.accept(stage: 'Screenshots', processed: 2, total: 4);
+        expect(operation.snapshot.fraction, .5);
+        await completer.future;
+      });
+      operation.cancel();
+      completer.complete();
+      await expectLater(future, throwsA(anything));
+      expect(operation.snapshot.successful, isFalse);
+      expect(operation.snapshot.fraction, isNot(1));
+    });
+  });
+
   test('release version and Android Flutter wiring remain correct', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     expect(pubspec, contains('version: 1.0.1+2'));

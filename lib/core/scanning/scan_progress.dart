@@ -357,7 +357,7 @@ class ScanOperation {
 
   double? _overallFraction() {
     final stageId = _displayStage?.id;
-    if (stageId != null) {
+    if (stageId != null && !stageId.endsWith(':pending')) {
       _seenStageIds.add(stageId);
     }
     if (!numeric || _sources.length > 1 || _seenStageIds.length > 1) {
