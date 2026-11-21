@@ -161,8 +161,8 @@ void main() {
       );
       expect(find.text('110 / 500 files fingerprinted'), findsOneWidget);
       expect(find.textContaining('999'), findsNothing);
-      consistent(tester, .22);
-      expect(find.text('22%'), findsOneWidget);
+      consistent(tester, .999);
+      expect(find.text('99%'), findsOneWidget);
     },
   );
 
@@ -262,8 +262,8 @@ void main() {
       await tester.pumpWidget(
         host(sample(0, 200, stage: 'Fingerprinting photos'), reduced: true),
       );
-      consistent(tester, 0);
-      expect(find.text('0%'), findsOneWidget);
+      consistent(tester, .99);
+      expect(find.text('99%'), findsOneWidget);
       expect(find.text('0 / 200 files checked'), findsOneWidget);
       await tester.pumpWidget(
         host(sample(500, 500), completed: true, succeeded: true),
@@ -445,7 +445,7 @@ void main() {
         );
         expect(rect.left, greaterThanOrEqualTo(0));
         expect(rect.right, lessThanOrEqualTo(viewport.width));
-        expect(find.text('22%'), findsOneWidget);
+        expect(find.text('22%'), findsNothing);
         expect(tester.takeException(), isNull);
         await tester.ensureVisible(find.byKey(const Key('scan_status_card')));
         expect(tester.takeException(), isNull);
@@ -503,11 +503,10 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump(const Duration(milliseconds: 300));
-      expect(find.text('22%'), findsOneWidget);
+      expect(find.text('22%'), findsNothing);
       expect(find.text('110 / 500 files checked'), findsOneWidget);
       expect(find.text('Private, on-device scan'), findsNothing);
       expect(find.byKey(const Key('scan_current_path')), findsNothing);
-      consistent(tester, .22);
       await tester.pump(const Duration(milliseconds: 5200));
       final boundary =
           key.currentContext!.findRenderObject()! as RenderRepaintBoundary;

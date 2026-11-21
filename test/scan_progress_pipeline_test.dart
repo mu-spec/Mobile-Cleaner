@@ -98,7 +98,7 @@ void main() {
         );
         // A queued message for the now-closed native request cannot mutate it.
         await emit(id, 0, 4);
-        expect(parent.snapshot.fraction, 1);
+        expect(parent.snapshot.fraction, partial ? .99 : 1);
       },
     );
   }

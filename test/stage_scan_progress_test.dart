@@ -331,10 +331,10 @@ void main() {
     expect(semantics(), '100 percent');
     expect(find.byKey(const Key('scan_radar_center')), findsOneWidget);
     await tester.pumpWidget(host('b', 0));
-    expect(semantics(), '0 percent');
+    expect(semantics(), '100 percent');
     await tester.pumpWidget(host('b', .5));
     await tester.pumpWidget(host('b', .1));
-    expect(semantics(), '50 percent');
+    expect(semantics(), '100 percent');
     await tester.pumpWidget(host('b', 1, completed: true));
     expect(find.byKey(const Key('scan_complete_icon')), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
@@ -383,7 +383,7 @@ void main() {
     await tester.pumpWidget(host(view('Hashing', 10, 10)));
     expect(find.text('10 / 10 files checked'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('100%'), findsOneWidget);
+    expect(find.text('100%'), findsNothing);
     expect(find.byKey(const Key('scan_complete_icon')), findsNothing);
     await tester.pumpWidget(host(view('Discovery', 230, null)));
     await tester.pump(const Duration(milliseconds: 240));

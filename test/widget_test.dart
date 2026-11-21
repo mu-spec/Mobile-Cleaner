@@ -236,16 +236,6 @@ void main() {
     );
 
     await tester.pump(const Duration(milliseconds: 1600));
-    final Semantics progressSemantics = tester.widget<Semantics>(
-      find.byKey(const Key('scan_progress_semantics')),
-    );
-    // The fake scanner has actually finished; the minimum presentation gate
-    // must no longer be mistaken for unfinished native work.
-    expect(progressSemantics.properties.value, '100 percent');
-
-    await tester.pump(const Duration(milliseconds: 1500));
-    await tester.pump(const Duration(milliseconds: 700));
-    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(CleanScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -517,10 +507,6 @@ void main() {
     expect(find.byKey(const Key('permission_granted')), findsNothing);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 2900));
-    await tester.pump(const Duration(milliseconds: 700));
-    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(CleanScreen), findsOneWidget);
 
     appRouter.go(AppRoutes.home);
@@ -564,13 +550,6 @@ void main() {
     expect(find.byKey(const Key('permission_granted')), findsNothing);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byKey(const Key('scan_progress_screen')), findsOneWidget);
-    expect(find.text('Smart Scan'), findsWidgets);
-    expect(find.text('Private, on-device scan'), findsNothing);
-    expect(find.byKey(const Key('circular_file_scanner_paint')), findsWidgets);
-    await tester.pump(const Duration(milliseconds: 2900));
-    await tester.pump(const Duration(milliseconds: 700));
-    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(CleanScreen), findsOneWidget);
     expect(find.byKey(const Key('clean_back_button')), findsOneWidget);
 

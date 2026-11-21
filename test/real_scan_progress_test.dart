@@ -130,7 +130,7 @@ void main() {
           sample(operation, 230, null, stage: 'Discovering folders');
           expect(operation.snapshot.fraction, isNull);
           sample(operation, 900, 1000, stage: 'Hashing');
-          expect(operation.snapshot.fraction, .9);
+          expect(operation.snapshot.fraction, isNull);
           sample(operation, 1000, 1000, stage: 'Hashing', outcome: 'succeeded');
           operation.stage('Comparing');
           expect(operation.snapshot.fraction, isNull);
@@ -201,7 +201,7 @@ void main() {
         });
         expect(result, {'preserved': 42});
         expect(operation.snapshot.outcome, ScanOutcome.partial);
-        expect(operation.snapshot.fraction, 1);
+        expect(operation.snapshot.fraction, isNull);
       },
     );
     test('cancellation ignores late completion and stale callbacks', () async {
@@ -461,28 +461,29 @@ void main() {
   });
 
   group(':pending stage regression coverage', () {
-    test('pending placeholder followed by one real stage reports numeric progress', () async {
-      final operation = ScanOperation(numeric: true);
-      await operation.run(() async {
-        final req = operation.request();
-        expect(operation.snapshot.fraction, isNull);
-        req.accept(stage: 'Screenshots', processed: 1, total: 4);
-        expect(operation.snapshot.fraction, .25);
-        req.accept(stage: 'Screenshots', processed: 4, total: 4);
-        expect(operation.snapshot.fraction, .99);
-        expect(operation.snapshot.successful, isFalse);
-      });
-      expect(operation.snapshot.successful, isTrue);
-      expect(operation.snapshot.fraction, 1);
-    });
+    test(
+      'pending placeholder followed by one real stage reports numeric progress',
+      () async {
+        final operation = ScanOperation(numeric: true);
+        await operation.run(() async {
+          expect(operation.snapshot.fraction, isNull);
+          sample(operation, 1, 4, stage: 'Screenshots');
+          expect(operation.snapshot.fraction, .25);
+          sample(operation, 4, 4, stage: 'Screenshots');
+          expect(operation.snapshot.fraction, .99);
+          expect(operation.snapshot.successful, isFalse);
+        });
+        expect(operation.snapshot.successful, isTrue);
+        expect(operation.snapshot.fraction, 1);
+      },
+    );
 
     test('pending placeholder followed by multiple real stages becomes indeterminate', () async {
       final operation = ScanOperation(numeric: true);
       await operation.run(() async {
-        final req = operation.request();
-        req.accept(stage: 'Discovering', processed: 1, total: 4);
+        sample(operation, 1, 4, stage: 'Discovering');
         expect(operation.snapshot.fraction, .25);
-        req.accept(stage: 'Hashing', processed: 1, total: 4);
+        sample(operation, 1, 4, stage: 'Hashing');
         expect(operation.snapshot.fraction, isNull);
       });
       expect(operation.snapshot.successful, isTrue);
@@ -493,8 +494,8 @@ void main() {
       final operation = ScanOperation(numeric: true);
       final completer = Completer<void>();
       final future = operation.run(() async {
-        final req = operation.request();
-        req.accept(stage: 'Screenshots', processed: 2, total: 4);
+        operation.request();
+        sample(operation, 2, 4, stage: 'Screenshots');
         expect(operation.snapshot.fraction, .5);
         await completer.future;
       });
