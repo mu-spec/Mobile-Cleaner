@@ -332,6 +332,11 @@ class ScanOperation {
     }
     if (_selectedSource != null) {
       _displayStage = _sources[_selectedSource];
+    } else if (finished && !numeric) {
+      _displayStage = ScanStage(
+        id: '$id:analyzing',
+        name: 'Analyzing scanned items',
+      );
     } else if (wasSelected || _displayStage?.id == stage?.id) {
       _displayStage = stage;
     }

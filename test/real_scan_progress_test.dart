@@ -505,6 +505,34 @@ void main() {
       expect(operation.snapshot.successful, isFalse);
       expect(operation.snapshot.fraction, isNot(1));
     });
+
+    test(
+      'composite scan transitions from finished 500/500 stage to Analyzing scanned items while parent continues',
+      () async {
+        final operation = ScanOperation(numeric: false);
+        final postProcessing = Completer<void>();
+        final future = operation.run(() async {
+          final req = operation.request();
+          operation.accept(
+            source: req.id,
+            stage: 'Fingerprinting photos',
+            processed: 500,
+            total: 500,
+            sourceFinished: true,
+          );
+          expect(operation.snapshot.displayStage?.name, 'Analyzing scanned items');
+          expect(operation.snapshot.successful, isFalse);
+          await postProcessing.future;
+        });
+        await Future<void>.delayed(Duration.zero);
+        expect(operation.snapshot.displayStage?.name, 'Analyzing scanned items');
+        expect(operation.snapshot.successful, isFalse);
+        postProcessing.complete();
+        await future;
+        expect(operation.snapshot.successful, isTrue);
+        expect(operation.snapshot.fraction, 1);
+      },
+    );
   });
 
   test('release version and Android Flutter wiring remain correct', () {
